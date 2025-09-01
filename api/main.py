@@ -13,7 +13,7 @@ from starlette.types import Scope
 
 from api.background_tasks import task_runner
 from api.middleware.error_handler import add_request_id_middleware, global_error_handler
-from api.routers import agents, ai_providers, config, controllers, dashboard, logs, sessions, websocket_router
+from api.routers import agents, ai_providers, config, controllers, dashboard, logs, sessions, websocket_router, workflows
 from api.routers.websocket_router import ConnectionManager
 from libs.core.error_handling import YesmanError
 
@@ -100,6 +100,7 @@ app.include_router(config.router, prefix="/api", tags=["configuration"])
 app.include_router(logs.router, prefix="/api", tags=["logs"])
 app.include_router(agents.router, tags=["agents"])
 app.include_router(ai_providers.router, prefix="/api", tags=["ai-providers"])
+app.include_router(workflows.router, prefix="/api", tags=["workflows"])
 
 # Include dashboard API router (for SvelteKit)
 app.include_router(dashboard.router, tags=["dashboard-api"])
@@ -171,6 +172,7 @@ async def api_info() -> dict[str, str | dict[str, str] | None]:
             "logs": "/api/logs",
             "agents": "/api/agents",
             "ai_providers": "/api/ai-providers",
+            "workflows": "/api/workflows",
             "dashboard": "/api/dashboard",
             "websocket": "/ws",
             "health": "/healthz",

@@ -10,6 +10,8 @@ from libs.core.container import container
 from libs.core.session_manager import SessionManager
 from libs.tmux_manager import TmuxManager
 from libs.yesman_config import YesmanConfig
+from libs.workflows.workflow_service import WorkflowService
+from libs.workflows.execution_engine import WorkflowExecutionEngine
 
 # Auto-initialize services when module is imported
 
@@ -31,6 +33,9 @@ def register_core_services() -> None:
 
     # Register Claude services
     register_claude_services()
+    
+    # Register Workflow services
+    register_workflow_services()
 
 
 def register_claude_services() -> None:
@@ -70,6 +75,33 @@ def register_claude_services() -> None:
 
     # Register Claude service factory
     container.register_factory(ClaudeAgentService, create_claude_service)
+
+
+def register_workflow_services() -> None:
+    """Register workflow-related services with the DI container."""
+    
+    def create_workflow_execution_engine() -> WorkflowExecutionEngine:
+        """Factory function to create workflow execution engine."""
+        config = container.resolve(YesmanConfig)
+        tmux_manager = container.resolve(TmuxManager)
+        return WorkflowExecutionEngine(config=config, tmux_manager=tmux_manager)
+    
+    def create_workflow_service() -> WorkflowService:
+        """Factory function to create workflow service."""
+        config = container.resolve(YesmanConfig)
+        tmux_manager = container.resolve(TmuxManager)
+        execution_engine = container.resolve(WorkflowExecutionEngine)
+        return WorkflowService(
+            config=config,
+            tmux_manager=tmux_manager,
+            execution_engine=execution_engine
+        )
+    
+    # Register WorkflowExecutionEngine as singleton factory
+    container.register_factory(WorkflowExecutionEngine, create_workflow_execution_engine)
+    
+    # Register WorkflowService as singleton factory
+    container.register_factory(WorkflowService, create_workflow_service)
 
 
 def register_test_services(config: YesmanConfig | None = None, tmux_manager: TmuxManager | None = None) -> None:
@@ -133,13 +165,34 @@ def get_claude_service() -> ClaudeAgentService:
     return container.resolve(ClaudeAgentService)
 
 
+def get_workflow_service() -> WorkflowService:
+    """Convenience function to get WorkflowService from container.
+
+    Returns:
+        WorkflowService: The configured workflow service
+    """
+    return container.resolve(WorkflowService)
+
+
+def get_workflow_execution_engine() -> WorkflowExecutionEngine:
+    """Convenience function to get WorkflowExecutionEngine from container.
+
+    Returns:
+        WorkflowExecutionEngine: The configured workflow execution engine
+    """
+    return container.resolve(WorkflowExecutionEngine)
+
+
 def is_container_initialized() -> bool:
     """Check if the container has been initialized with core services.
 
     Returns:
         bool: Description of return value.
     """
-    return container.is_registered(YesmanConfig) and container.is_registered(TmuxManager) and container.is_registered(SessionManager)
+    return (container.is_registered(YesmanConfig) and
+            container.is_registered(TmuxManager) and
+            container.is_registered(SessionManager) and
+            container.is_registered(WorkflowService))
 
 
 def initialize_services() -> None:

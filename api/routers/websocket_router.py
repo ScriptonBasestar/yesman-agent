@@ -58,6 +58,7 @@ class ConnectionManager:
         self.batch_processor.register_message_handler("health", self._send_to_health)
         self.batch_processor.register_message_handler("activity", self._send_to_activity)
         self.batch_processor.register_message_handler("logs", self._send_to_logs)
+        self.batch_processor.register_message_handler("workflows", self._send_to_workflows)
 
     async def _send_to_dashboard(self, messages: list[dict]) -> None:
         """Send batched messages to dashboard channel."""
@@ -78,6 +79,10 @@ class ConnectionManager:
     async def _send_to_logs(self, messages: list[dict]) -> None:
         """Send batched messages to logs channel."""
         await self._broadcast_messages_to_channel("logs", messages)
+
+    async def _send_to_workflows(self, messages: list[dict]) -> None:
+        """Send batched messages to workflows channel."""
+        await self._broadcast_messages_to_channel("workflows", messages)
 
     async def _broadcast_messages_to_channel(self, channel: str, messages: list[dict]) -> None:
         """Broadcast multiple messages to a specific channel."""
@@ -173,6 +178,36 @@ class ConnectionManager:
                 activity = await get_activity_data()
                 initial_data["activity"] = activity
 
+            if channel in {"dashboard", "workflows"}:
+                # Get workflow data
+                try:
+                    from libs.core.services import get_workflow_service
+                    workflow_service = get_workflow_service()
+                    
+                    # Get templates and executions
+                    templates = workflow_service.list_templates()
+                    executions = workflow_service.list_executions()
+                    
+                    initial_data["workflows"] = {
+                        "templates": templates,
+                        "executions": [
+                            {
+                                "execution_id": exec.execution_id,
+                                "template_id": exec.template_id,
+                                "status": exec.status.value,
+                                "progress": exec.get_progress(),
+                                "current_step": exec.current_step,
+                                "created_at": exec.created_at.isoformat(),
+                                "updated_at": exec.updated_at.isoformat(),
+                                "error": exec.error,
+                            }
+                            for exec in executions
+                        ]
+                    }
+                except Exception as e:
+                    logger.warning(f"Failed to get workflow data for initial load: {e}")
+                    initial_data["workflows"] = {"templates": {}, "executions": []}
+
             if channel == "dashboard":
                 stats = await get_dashboard_stats()
                 initial_data["stats"] = stats
@@ -265,6 +300,41 @@ class ConnectionManager:
         }
 
         await self.broadcast_to_channel("logs", message)
+        await self.broadcast_to_channel("dashboard", message)
+
+    async def broadcast_workflow_update(self, workflow_data: dict) -> None:
+        """Broadcast workflow update to relevant channels."""
+        message = {
+            "type": "workflow_update",
+            "timestamp": datetime.now(UTC).isoformat(),
+            "data": workflow_data,
+        }
+
+        await self.broadcast_to_channel("workflows", message)
+        await self.broadcast_to_channel("dashboard", message)
+
+    async def broadcast_workflow_progress(self, execution_id: str, progress_data: dict) -> None:
+        """Broadcast workflow progress update."""
+        message = {
+            "type": "workflow_progress",
+            "timestamp": datetime.now(UTC).isoformat(),
+            "execution_id": execution_id,
+            "data": progress_data,
+        }
+
+        await self.broadcast_to_channel("workflows", message)
+        await self.broadcast_to_channel("dashboard", message)
+
+    async def broadcast_workflow_status(self, execution_id: str, status_data: dict) -> None:
+        """Broadcast workflow status change."""
+        message = {
+            "type": "workflow_status",
+            "timestamp": datetime.now(UTC).isoformat(),
+            "execution_id": execution_id,
+            "data": status_data,
+        }
+
+        await self.broadcast_to_channel("workflows", message)
         await self.broadcast_to_channel("dashboard", message)
 
     async def ping_connections(self) -> None:
@@ -506,6 +576,51 @@ async def websocket_logs(websocket: WebSocket) -> None:
         logger.info("Logs WebSocket disconnected")
     except Exception:
         logger.exception("Logs WebSocket error:")
+        manager.disconnect(websocket)
+
+
+@router.websocket("/workflows")
+async def websocket_workflows(websocket: WebSocket) -> None:
+    """Workflows WebSocket endpoint."""
+    await manager.connect(websocket, "workflows")
+
+    try:
+        while True:
+            data = await websocket.receive_json()
+
+            if data.get("type") == "pong":
+                logger.debug("Received pong from workflows client")
+
+            elif data.get("type") == "refresh":
+                # Client requests fresh workflow data
+                await manager.send_initial_data(websocket, "workflows")
+
+            elif data.get("type") == "subscribe_execution":
+                # Client wants to subscribe to specific execution updates
+                execution_id = data.get("execution_id")
+                if execution_id:
+                    # Store execution subscription in metadata
+                    if websocket in manager.connection_metadata:
+                        subscriptions = manager.connection_metadata[websocket].get("workflow_subscriptions", set())
+                        subscriptions.add(execution_id)
+                        manager.connection_metadata[websocket]["workflow_subscriptions"] = subscriptions
+                        logger.info(f"Client subscribed to workflow execution: {execution_id}")
+
+            elif data.get("type") == "unsubscribe_execution":
+                # Client wants to unsubscribe from specific execution updates
+                execution_id = data.get("execution_id")
+                if execution_id and websocket in manager.connection_metadata:
+                    subscriptions = manager.connection_metadata[websocket].get("workflow_subscriptions", set())
+                    if execution_id in subscriptions:
+                        subscriptions.remove(execution_id)
+                        manager.connection_metadata[websocket]["workflow_subscriptions"] = subscriptions
+                        logger.info(f"Client unsubscribed from workflow execution: {execution_id}")
+
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+        logger.info("Workflows WebSocket disconnected")
+    except Exception:
+        logger.exception("Workflows WebSocket error:")
         manager.disconnect(websocket)
 
 
