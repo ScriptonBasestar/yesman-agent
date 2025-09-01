@@ -1,0 +1,114 @@
+# Claude Code Headless 모드 설정 템플릿
+# 파일명을 yesman.yaml로 변경하여 사용하세요
+
+# 전체 시스템 설정
+mode: "merge"  # merge, isolated, local
+root_dir: "~/.scripton/yesman"
+
+# Claude Code 통합 설정
+claude:
+  # 동작 모드: interactive(기본) 또는 headless
+  mode: "headless"
+  
+  # Headless 모드 상세 설정
+  headless:
+    # Headless 모드 활성화
+    enabled: true
+    
+    # Claude CLI 바이너리 경로
+    # 시스템에 설치된 claude 바이너리 위치
+    claude_binary_path: "/usr/local/bin/claude"
+    
+    # 에이전트 워크스페이스 루트 디렉토리
+    # 에이전트들이 작업할 샌드박스 기본 경로
+    workspace_root: "~/.scripton/yesman/workspaces"
+    
+    # 허용된 도구 목록
+    # 에이전트가 사용할 수 있는 Claude Code 도구들
+    allowed_tools:
+      - "Read"        # 파일 읽기
+      - "Edit"        # 파일 편집
+      - "Write"       # 파일 쓰기
+      - "Bash"        # 셸 명령 실행
+      # - "WebFetch"  # 웹 페이지 가져오기 (필요시 활성화)
+      # - "WebSearch" # 웹 검색 (필요시 활성화)
+    
+    # 최대 동시 에이전트 수
+    # 시스템 리소스에 맞게 조정
+    max_concurrent_agents: 5
+    
+    # 에이전트 타임아웃 (초)
+    # 단일 태스크 최대 실행 시간
+    agent_timeout: 300
+    
+    # 접근 금지 경로 목록
+    # 보안상 에이전트가 접근할 수 없는 디렉토리
+    forbidden_paths:
+      - "/etc"           # 시스템 설정 파일
+      - "~/.ssh"         # SSH 키 파일
+      - "/root"          # 루트 홈 디렉토리
+      - "/sys"           # 시스템 파일시스템
+      - "/proc"          # 프로세스 파일시스템
+      - "/dev"           # 디바이스 파일
+      - "/boot"          # 부트 파일
+      - "/var/log"       # 시스템 로그
+    
+    # 백그라운드 정리 작업 간격 (초)
+    # orphaned 샌드박스 및 좀비 프로세스 정리
+    cleanup_interval: 300
+
+# Tmux 설정 (Interactive 모드에서 계속 사용됨)
+tmux:
+  default_shell: "/bin/bash"
+  base_index: 0
+  pane_base_index: 0
+  mouse: true
+  status_position: "bottom"
+  status_interval: 1
+
+# 로깅 설정
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  log_path: "~/.scripton/yesman/logs/"
+  max_size: 10485760  # 10MB
+  backup_count: 5
+
+# 세션 관리 설정
+session:
+  sessions_dir: "sessions"
+  templates_dir: "templates" 
+  default_window_name: "main"
+  default_layout: "even-horizontal"
+
+# AI/LLM 일반 설정
+ai:
+  provider: "anthropic"
+  model: "claude-3-opus-20240229"
+  temperature: 0.7
+  max_tokens: 4096
+  api_key_env: "ANTHROPIC_API_KEY"
+
+# 서버 설정
+server:
+  host: "localhost"
+  port: 10501
+
+# 데이터베이스 설정 (선택사항)
+database:
+  enabled: false
+  url: "sqlite:///~/.scripton/yesman/yesman.db"
+  pool_size: 5
+  echo: false
+
+# 기타 설정
+confidence_threshold: 0.8
+auto_cleanup_days: 30
+enable_telemetry: false
+
+# 사용자 정의 설정
+custom:
+  # 프로젝트별 커스터마이징 항목들
+  headless_log_level: "DEBUG"  # 헤드리스 모드 전용 로깅 레벨
+  workspace_quota_mb: 1024     # 워크스페이스당 최대 용량(MB)
+  session_history_days: 7      # 세션 이력 보관 기간

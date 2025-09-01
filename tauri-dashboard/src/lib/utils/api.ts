@@ -43,6 +43,41 @@ export interface PerformanceMetrics {
   };
 }
 
+// Headless Agents Types
+export interface AgentInfo {
+  agent_id: string;
+  status: 'created' | 'idle' | 'running' | 'error' | 'disposed';
+  created_at: string;
+  workspace_path: string;
+  model: string;
+  allowed_tools: string[];
+  last_activity: string | null;
+  current_run_id: string | null;
+  error_message: string | null;
+}
+
+export interface AgentConfigRequest {
+  workspace_path: string;
+  model: string;
+  allowed_tools?: string[];
+  timeout?: number;
+  max_tokens?: number;
+  temperature?: number;
+}
+
+export interface TaskRequest {
+  prompt: string;
+  timeout?: number;
+  tools?: string[];
+  resume_session?: boolean;
+}
+
+export interface TaskResponse {
+  run_id: string;
+  agent_id: string;
+  status: 'running' | 'completed' | 'error';
+}
+
 // Tauri 환경 감지 (웹에선 false)
 // @ts-ignore
 const isTauri = typeof window !== 'undefined' && typeof window.__TAURI_IPC__ === 'function' && typeof window.__TAURI__ === 'object';
@@ -235,6 +270,48 @@ export class ApiClient {
 
   async rollbackDeployment(deploymentId: string): Promise<ApiResponse<any>> {
     return this.invoke('rollback_deployment', { deploymentId });
+  }
+
+  // Headless Agents Management
+  async getAgents(): Promise<ApiResponse<AgentInfo[]>> {
+    return this.fetchJson<AgentInfo[]>('/api/agents/');
+  }
+
+  async getAgentStatus(agentId: string): Promise<ApiResponse<AgentInfo>> {
+    return this.fetchJson<AgentInfo>(`/api/agents/${agentId}`);
+  }
+
+  async createAgent(config: AgentConfigRequest): Promise<ApiResponse<string>> {
+    return this.fetchJson<string>('/api/agents/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(config)
+    });
+  }
+
+  async runTask(agentId: string, task: TaskRequest): Promise<ApiResponse<TaskResponse>> {
+    return this.fetchJson<TaskResponse>(`/api/agents/${agentId}/tasks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(task)
+    });
+  }
+
+  async cancelTask(agentId: string, runId: string): Promise<ApiResponse<any>> {
+    return this.fetchJson(`/api/agents/${agentId}/tasks/${runId}/cancel`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
+  async disposeAgent(agentId: string): Promise<ApiResponse<any>> {
+    return this.fetchJson(`/api/agents/${agentId}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async getAgentsHealth(): Promise<ApiResponse<{status: string; agents_count: number; timestamp: number}>> {
+    return this.fetchJson('/api/agents/health');
   }
 
   // Error handling utilities

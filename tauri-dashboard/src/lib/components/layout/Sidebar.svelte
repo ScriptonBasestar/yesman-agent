@@ -30,6 +30,12 @@
       description: 'Claude managers'
     },
     {
+      path: '/agents',
+      icon: '🧠',
+      label: 'Agents',
+      description: 'Headless agents'
+    },
+    {
       path: '/logs',
       icon: '📋',
       label: 'Logs',

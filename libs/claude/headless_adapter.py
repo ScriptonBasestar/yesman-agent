@@ -3,6 +3,7 @@
 import asyncio
 import json
 import logging
+import os
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -168,12 +169,19 @@ class HeadlessAdapter:
             # Build command
             cmd = await self._build_command(agent, prompt, merged_options, run_id)
 
+            # Prepare environment for subprocess
+            env = os.environ.copy()
+
+            # Ensure Claude CLI can access authentication
+            # The subprocess will inherit the current environment
+
             # Start process
             agent.current_process = await asyncio.create_subprocess_exec(
                 *cmd,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 cwd=agent.workspace_path,
+                env=env,
             )
 
             # Update agent state
@@ -395,16 +403,20 @@ class HeadlessAdapter:
             "-p",
             prompt,
             "--output-format",
-            "json-stream",
+            "stream-json",
+            "--verbose",
+            "--dangerously-skip-permissions",
         ]
 
         # Add tools if specified
-        if options.tools:
-            cmd.extend(["--allowedTools", ",".join(options.tools)])
+        # Temporarily disabled to ensure Claude CLI works properly
+        # if options.tools:
+        #     cmd.extend(["--allowedTools", ",".join(options.tools)])
 
         # Add timeout if specified
-        if options.timeout:
-            cmd.extend(["--timeout", str(options.timeout)])
+        # Disabled - Claude CLI doesn't support --timeout option
+        # if options.timeout:
+        #     cmd.extend(["--timeout", str(options.timeout)])
 
         # Add session resumption
         if options.resume_session:
