@@ -1,0 +1,134 @@
+# Feature Development Workflow Template
+# Complete feature development workflow from analysis to testing
+
+metadata:
+  name: "Feature Development Workflow"
+  description: "Complete feature development workflow from analysis to testing"
+  version: "1.0.0"
+  author: "Yesman CLI"
+  tags: ["development", "testing", "implementation", "planning"]
+  created_at: "2024-01-01T00:00:00Z"
+
+workflow:
+  name: "feature-development"
+  description: "Complete feature development workflow from analysis to testing"
+  timeout: 3600  # 60 minutes
+  continue_on_error: false
+  checkpoint_interval: 1  # More frequent checkpoints for development
+  recovery_strategies: ["retry", "skip", "context_reset"]
+  
+  variables:
+    - name: "feature_name"
+      description: "Name of the feature to develop"
+      type: "string"
+      required: true
+    - name: "target_coverage"
+      description: "Target test coverage percentage"
+      default: "90"
+      type: "number"
+    - name: "implementation_style"
+      description: "Implementation approach (tdd, bdd, traditional)"
+      default: "traditional"
+      type: "string"
+    - name: "review_required"
+      description: "Whether code review is required"
+      default: "true"
+      type: "boolean"
+  
+  steps:
+    - id: "requirements_analysis"
+      name: "Requirements Analysis"
+      type: "analysis"
+      prompt: "Analyze the requirements for feature '{{feature_name}}' and create a detailed implementation plan."
+      context:
+        create_tasks: true
+        estimate_effort: true
+        identify_dependencies: true
+        feature_name: "{{feature_name}}"
+      timeout: 300
+      
+    - id: "design_review"
+      name: "System Design Review"
+      type: "analysis"
+      prompt: "Review system design and architecture for the new feature. Ensure compatibility with existing codebase."
+      context:
+        check_compatibility: true
+        suggest_patterns: true
+        identify_interfaces: true
+        feature_name: "{{feature_name}}"
+      timeout: 300
+      dependencies: ["requirements_analysis"]
+      
+    - id: "api_design"
+      name: "API Design"
+      type: "design"
+      prompt: "Design the API interfaces, data models, and contracts for the new feature."
+      context:
+        create_schemas: true
+        define_endpoints: true
+        validate_contracts: true
+        feature_name: "{{feature_name}}"
+      timeout: 300
+      dependencies: ["design_review"]
+      
+    - id: "implementation"
+      name: "Feature Implementation"
+      type: "implementation"
+      prompt: "Implement the feature following {{implementation_style}} approach and best practices."
+      context:
+        follow_conventions: true
+        add_logging: true
+        error_handling: true
+        implementation_style: "{{implementation_style}}"
+        feature_name: "{{feature_name}}"
+      timeout: 600
+      dependencies: ["api_design"]
+      
+    - id: "unit_tests"
+      name: "Unit Test Development"
+      type: "testing"
+      prompt: "Create comprehensive unit tests for the new feature with {{target_coverage}}% coverage target."
+      context:
+        coverage_target: "{{target_coverage}}"
+        edge_cases: true
+        mock_dependencies: true
+        feature_name: "{{feature_name}}"
+      timeout: 400
+      dependencies: ["implementation"]
+      
+    - id: "integration_tests"
+      name: "Integration Testing"
+      type: "testing"
+      prompt: "Create integration tests and verify system compatibility with existing components."
+      context:
+        test_endpoints: true
+        verify_contracts: true
+        check_performance: true
+        feature_name: "{{feature_name}}"
+      timeout: 400
+      dependencies: ["unit_tests"]
+      
+    - id: "documentation"
+      name: "Documentation Creation"
+      type: "documentation"
+      prompt: "Create comprehensive documentation for the new feature including API docs and usage examples."
+      context:
+        api_documentation: true
+        usage_examples: true
+        update_readme: true
+        feature_name: "{{feature_name}}"
+      timeout: 300
+      dependencies: ["integration_tests"]
+      
+    - id: "final_validation"
+      name: "Final Feature Validation"
+      type: "testing"
+      prompt: "Perform final validation of the feature including end-to-end testing and quality checks."
+      condition: "{{review_required}} == true"
+      context:
+        e2e_testing: true
+        quality_gates: true
+        performance_check: true
+        feature_name: "{{feature_name}}"
+      timeout: 300
+      dependencies: ["documentation"]

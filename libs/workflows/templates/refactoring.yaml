@@ -1,0 +1,146 @@
+# Code Refactoring Workflow Template
+# Systematic code refactoring with safety checks
+
+metadata:
+  name: "Code Refactoring Workflow"
+  description: "Systematic code refactoring workflow with safety checks and validation"
+  version: "1.0.0"
+  author: "Yesman CLI"
+  tags: ["refactoring", "quality", "maintenance", "improvement"]
+  created_at: "2024-01-01T00:00:00Z"
+
+workflow:
+  name: "refactoring"
+  description: "Code refactoring workflow with safety checks"
+  timeout: 2400  # 40 minutes
+  continue_on_error: false  # Stop on errors for safety
+  checkpoint_interval: 1
+  recovery_strategies: ["retry", "context_reset"]
+  
+  variables:
+    - name: "target_files"
+      description: "Files to refactor (glob pattern)"
+      default: "**/*.py"
+      type: "string"
+    - name: "refactor_scope"
+      description: "Scope of refactoring (methods, classes, modules, architecture)"
+      default: "methods"
+      type: "string"
+    - name: "preserve_behavior"
+      description: "Whether to preserve existing behavior strictly"
+      default: "true"
+      type: "boolean"
+    - name: "backup_enabled"
+      description: "Create backup before refactoring"
+      default: "true"
+      type: "boolean"
+  
+  steps:
+    - id: "create_backup"
+      name: "Create Code Backup"
+      type: "general"
+      prompt: "Create a backup of the target files before starting refactoring."
+      condition: "{{backup_enabled}} == true"
+      context:
+        target_files: "{{target_files}}"
+        backup_location: ".backup/refactoring"
+      timeout: 120
+      
+    - id: "identify_hotspots"
+      name: "Identify Refactoring Hotspots"
+      type: "analysis"
+      prompt: "Identify code hotspots and areas needing refactoring based on {{refactor_scope}} scope."
+      context:
+        complexity_analysis: true
+        technical_debt: true
+        maintainability_metrics: true
+        refactor_scope: "{{refactor_scope}}"
+        target_files: "{{target_files}}"
+      timeout: 300
+      dependencies: ["create_backup"]
+      
+    - id: "analyze_dependencies"
+      name: "Dependency Analysis"
+      type: "analysis"
+      prompt: "Analyze dependencies and identify potential impact of refactoring changes."
+      context:
+        map_dependencies: true
+        identify_risks: true
+        impact_assessment: true
+        target_files: "{{target_files}}"
+      timeout: 200
+      dependencies: ["identify_hotspots"]
+      
+    - id: "extract_methods"
+      name: "Extract Methods and Functions"
+      type: "implementation"
+      prompt: "Extract methods and improve code organization while preserving behavior."
+      condition: "{{refactor_scope}} in ['methods', 'classes', 'modules']"
+      context:
+        preserve_behavior: "{{preserve_behavior}}"
+        improve_readability: true
+        reduce_complexity: true
+        target_files: "{{target_files}}"
+      timeout: 400
+      dependencies: ["analyze_dependencies"]
+      
+    - id: "remove_duplicates"
+      name: "Remove Code Duplication"
+      type: "implementation"
+      prompt: "Remove code duplication and create reusable components following DRY principle."
+      context:
+        dry_principle: true
+        create_utilities: true
+        maintain_interfaces: true
+        preserve_behavior: "{{preserve_behavior}}"
+        target_files: "{{target_files}}"
+      timeout: 400
+      dependencies: ["extract_methods"]
+      
+    - id: "improve_naming"
+      name: "Improve Naming Conventions"
+      type: "implementation"
+      prompt: "Improve variable, function, and class names for better readability and consistency."
+      context:
+        naming_conventions: true
+        consistency_check: true
+        readability_focus: true
+        target_files: "{{target_files}}"
+      timeout: 300
+      dependencies: ["remove_duplicates"]
+      
+    - id: "verify_behavior"
+      name: "Verify Behavior Preservation"
+      type: "testing"
+      prompt: "Verify that refactoring preserves original behavior through comprehensive testing."
+      context:
+        regression_tests: true
+        performance_check: true
+        behavior_validation: true
+        target_files: "{{target_files}}"
+      timeout: 400
+      dependencies: ["improve_naming"]
+      
+    - id: "quality_validation"
+      name: "Code Quality Validation"
+      type: "testing"
+      prompt: "Validate that refactoring improved code quality metrics and maintainability."
+      context:
+        quality_metrics: true
+        complexity_reduction: true
+        maintainability_check: true
+        target_files: "{{target_files}}"
+      timeout: 300
+      dependencies: ["verify_behavior"]
+      
+    - id: "documentation_update"
+      name: "Update Documentation"
+      type: "documentation"
+      prompt: "Update documentation to reflect refactoring changes and improvements."
+      context:
+        update_comments: true
+        api_documentation: true
+        architecture_docs: true
+        target_files: "{{target_files}}"
+      timeout: 200
+      dependencies: ["quality_validation"]

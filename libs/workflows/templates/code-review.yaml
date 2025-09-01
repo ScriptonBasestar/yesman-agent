@@ -1,0 +1,87 @@
+# Code Review Workflow Template
+# Comprehensive code review with security and quality analysis
+
+metadata:
+  name: "Code Review Workflow"
+  description: "Comprehensive code review workflow with security and quality analysis"
+  version: "1.0.0"
+  author: "Yesman CLI"
+  tags: ["analysis", "quality", "security", "review"]
+  created_at: "2024-01-01T00:00:00Z"
+
+workflow:
+  name: "code-review"
+  description: "Comprehensive code review workflow with security and quality analysis"
+  timeout: 1800  # 30 minutes
+  continue_on_error: false
+  checkpoint_interval: 2
+  recovery_strategies: ["retry", "skip", "context_reset"]
+  
+  variables:
+    - name: "target_files"
+      description: "Files to review (glob pattern)"
+      default: "**/*.py"
+      type: "string"
+    - name: "coverage_threshold"
+      description: "Minimum test coverage percentage"
+      default: "80"
+      type: "number"
+    - name: "security_level"
+      description: "Security analysis level (basic, standard, strict)"
+      default: "standard"
+      type: "string"
+  
+  steps:
+    - id: "security_scan"
+      name: "Security Vulnerability Scan"
+      type: "analysis"
+      prompt: "Scan the codebase for security vulnerabilities and potential issues. Focus on {{security_level}} level analysis."
+      context:
+        focus: "security"
+        severity: "all"
+        files: "{{target_files}}"
+      timeout: 300
+      
+    - id: "code_quality"
+      name: "Code Quality Analysis"
+      type: "analysis"
+      prompt: "Analyze code quality, style consistency, and best practices adherence for the specified files."
+      context:
+        standards: ["pep8", "clean_code", "solid_principles"]
+        metrics: true
+        files: "{{target_files}}"
+      timeout: 300
+      dependencies: ["security_scan"]
+      
+    - id: "test_coverage"
+      name: "Test Coverage Analysis"
+      type: "testing"
+      prompt: "Check test coverage and identify untested code paths. Generate missing tests if coverage is below threshold."
+      context:
+        coverage_threshold: "{{coverage_threshold}}"
+        generate_missing: true
+        files: "{{target_files}}"
+      timeout: 400
+      dependencies: ["code_quality"]
+      
+    - id: "documentation_review"
+      name: "Documentation Review"
+      type: "analysis"
+      prompt: "Review documentation completeness and accuracy. Check API docs and update README if needed."
+      context:
+        check_api_docs: true
+        update_readme: true
+        files: "{{target_files}}"
+      timeout: 300
+      dependencies: ["test_coverage"]
+      
+    - id: "final_report"
+      name: "Generate Review Report"
+      type: "general"
+      prompt: "Generate a comprehensive code review report based on all previous analyses."
+      context:
+        include_recommendations: true
+        priority_ranking: true
+        action_items: true
+      timeout: 200
+      dependencies: ["security_scan", "code_quality", "test_coverage", "documentation_review"]
