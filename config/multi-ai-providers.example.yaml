@@ -1,0 +1,94 @@
+# Multi-AI Provider Configuration Example
+# 다양한 AI 제공업체를 통합 관리하는 설정 예제
+
+# AI 제공업체 설정
+ai_providers:
+  # Claude Code (기본 제공업체)
+  claude_code:
+    enabled: true
+    config:
+      claude_binary_path: "/opt/homebrew/bin/claude"
+      workspace_base: "/tmp/yesman-workspaces"
+      max_workspace_size_mb: 1000
+      max_workspaces: 10
+      # ANTHROPIC_API_KEY는 환경변수로 설정하거나 여기에 직접 입력
+      # ANTHROPIC_API_KEY: "your-anthropic-api-key"
+    default_model: "claude-3-5-sonnet-20241022"
+    timeout: 300
+
+  # Ollama (로컬 AI)  
+  ollama:
+    enabled: false
+    config:
+      base_url: "http://localhost:11434"
+      timeout: 300
+    default_model: "llama3.1"
+    
+  # OpenAI ChatGPT
+  openai_gpt:
+    enabled: false
+    config:
+      api_key: "your-openai-api-key"
+      base_url: "https://api.openai.com/v1"
+      organization: ""  # Optional
+    default_model: "gpt-4o"
+    timeout: 300
+    
+  # Google Gemini
+  gemini:
+    enabled: false
+    config:
+      api_key: "your-gemini-api-key"
+      base_url: "https://generativelanguage.googleapis.com/v1beta"
+      safety_settings:
+        harassment: "BLOCK_MEDIUM_AND_ABOVE"
+        hate_speech: "BLOCK_MEDIUM_AND_ABOVE"
+        sexually_explicit: "BLOCK_MEDIUM_AND_ABOVE"
+        dangerous_content: "BLOCK_MEDIUM_AND_ABOVE"
+    default_model: "gemini-1.5-pro"
+    timeout: 300
+    
+  # Google Gemini Code (코딩 전용)
+  gemini_code:
+    enabled: false
+    config:
+      api_key: "your-gemini-api-key"
+      base_url: "https://generativelanguage.googleapis.com/v1beta"
+      code_execution: false
+    default_model: "gemini-1.5-pro"
+    timeout: 300
+
+# 기본 설정
+default_provider: "claude_code"
+
+# 작업별 제공업체 우선순위
+task_routing:
+  coding:
+    - "claude_code"
+    - "gemini_code" 
+    - "openai_gpt"
+  general:
+    - "claude_code"
+    - "gemini"
+    - "openai_gpt"
+  local:
+    - "ollama"
+    - "claude_code"
+
+# 자동 장애 조치 설정
+failover:
+  enabled: true
+  max_retries: 2
+  timeout_threshold: 30  # seconds
+
+# 모니터링 설정
+monitoring:
+  health_check_interval: 60  # seconds
+  log_requests: true
+  metrics_enabled: true
+
+# 보안 설정
+security:
+  api_key_rotation: false
+  request_rate_limit: 100  # per minute
+  workspace_isolation: true

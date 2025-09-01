@@ -78,6 +78,47 @@ export interface TaskResponse {
   status: 'running' | 'completed' | 'error';
 }
 
+// Multi-AI Provider Types
+export interface AIProviderInfo {
+  provider_type: string;
+  initialized: boolean;
+  status: string;
+  available_models: string[];
+  health_info: Record<string, any>;
+  config_schema: Record<string, any>;
+}
+
+export interface AIProviderConfigRequest {
+  provider_type: string;
+  config: Record<string, any>;
+  name?: string;
+  description?: string;
+}
+
+export interface AITaskRequest {
+  prompt: string;
+  provider: string;
+  model: string;
+  workspace_path?: string;
+  tools?: string[];
+  temperature?: number;
+  max_tokens?: number;
+  timeout?: number;
+  stream?: boolean;
+  context?: Array<{role: string; content: string; metadata?: any}>;
+}
+
+export interface AITaskResponse {
+  task_id: string;
+  status: string;
+  content?: string;
+  provider: string;
+  model: string;
+  usage?: Record<string, any>;
+  metadata?: Record<string, any>;
+  error?: string;
+}
+
 // Tauri 환경 감지 (웹에선 false)
 // @ts-ignore
 const isTauri = typeof window !== 'undefined' && typeof window.__TAURI_IPC__ === 'function' && typeof window.__TAURI__ === 'object';
@@ -312,6 +353,58 @@ export class ApiClient {
 
   async getAgentsHealth(): Promise<ApiResponse<{status: string; agents_count: number; timestamp: number}>> {
     return this.fetchJson('/api/agents/health');
+  }
+
+  // Multi-AI Provider Management
+  async getAIProviders(): Promise<ApiResponse<AIProviderInfo[]>> {
+    return this.fetchJson<AIProviderInfo[]>('/api/ai-providers/');
+  }
+
+  async getAIProviderStatus(providerType: string): Promise<ApiResponse<AIProviderInfo>> {
+    return this.fetchJson<AIProviderInfo>(`/api/ai-providers/${providerType}/status`);
+  }
+
+  async registerAIProvider(config: AIProviderConfigRequest): Promise<ApiResponse<any>> {
+    return this.fetchJson('/api/ai-providers/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(config)
+    });
+  }
+
+  async unregisterAIProvider(providerType: string): Promise<ApiResponse<any>> {
+    return this.fetchJson(`/api/ai-providers/${providerType}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async getAIProviderModels(providerType: string): Promise<ApiResponse<{provider: string; models: string[]}>> {
+    return this.fetchJson(`/api/ai-providers/${providerType}/models`);
+  }
+
+  async executeAITask(task: AITaskRequest): Promise<ApiResponse<AITaskResponse>> {
+    return this.fetchJson<AITaskResponse>('/api/ai-providers/tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(task)
+    });
+  }
+
+  async cancelAITask(taskId: string): Promise<ApiResponse<any>> {
+    return this.fetchJson(`/api/ai-providers/tasks/${taskId}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async getActiveAITasks(): Promise<ApiResponse<{active_tasks: number; tasks: any[]}>> {
+    return this.fetchJson('/api/ai-providers/tasks');
+  }
+
+  async healthCheckAllAIProviders(): Promise<ApiResponse<{overall_status: string; providers: any}>> {
+    return this.fetchJson('/api/ai-providers/health-check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 
   // Error handling utilities

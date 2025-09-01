@@ -36,6 +36,12 @@
       description: 'Headless agents'
     },
     {
+      path: '/ai-providers',
+      icon: '🤖',
+      label: 'AI Providers',
+      description: 'Multi-AI support'
+    },
+    {
       path: '/logs',
       icon: '📋',
       label: 'Logs',
