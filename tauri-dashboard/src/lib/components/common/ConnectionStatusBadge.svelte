@@ -8,6 +8,7 @@
   export let size: 'sm' | 'md' | 'lg' = 'md';
   export let refreshInterval = 30000; // 30 seconds
   export let clickable = true;
+  export const position: string = 'relative'; // Position prop for external reference only
 
   let refreshTimer: NodeJS.Timeout | null = null;
   let isRefreshing = false;

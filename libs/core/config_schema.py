@@ -62,6 +62,36 @@ class AIConfig(BaseModel):
     base_url: str | None = None
 
 
+class HeadlessConfig(BaseModel):
+    """Claude Code Headless configuration settings."""
+
+    enabled: bool = False
+    claude_binary_path: str = "claude"
+    workspace_root: str = "~/.scripton/yesman/workspaces"
+    allowed_tools: list[str] = Field(default_factory=lambda: ["Read", "Edit", "Bash", "Write"])
+    max_concurrent_agents: int = Field(default=5, ge=1, le=20)
+    agent_timeout: int = Field(default=300, ge=30, le=3600)  # seconds
+    forbidden_paths: list[str] = Field(default_factory=lambda: ["/etc", "~/.ssh", "/root", "/sys", "/proc"])
+    cleanup_interval: int = Field(default=300, ge=60, le=3600)  # seconds
+
+    @field_validator("workspace_root", "forbidden_paths", mode="after")
+    @classmethod
+    def expand_paths(cls, v):
+        """Expand user home directory in paths."""
+        if isinstance(v, str):
+            return str(Path(v).expanduser())
+        elif isinstance(v, list):
+            return [str(Path(path).expanduser()) for path in v]
+        return v
+
+
+class ClaudeConfig(BaseModel):
+    """Claude Code integration configuration."""
+
+    mode: str = Field(default="interactive", pattern="^(interactive|headless)$")
+    headless: HeadlessConfig = Field(default_factory=HeadlessConfig)
+
+
 class DatabaseConfig(BaseModel):
     """Database configuration (optional)."""
 
@@ -92,6 +122,7 @@ class YesmanConfigSchema(BaseModel):
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
     session: SessionConfig = Field(default_factory=SessionConfig)
     ai: AIConfig = Field(default_factory=AIConfig)
+    claude: ClaudeConfig = Field(default_factory=ClaudeConfig)
     database: DatabaseConfig = Field(default_factory=DatabaseConfig)
     server: ServerConfig = Field(default_factory=ServerConfig)
 

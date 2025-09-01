@@ -8,14 +8,8 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	compilerOptions: {
-		// Disable unused CSS selector warnings for DaisyUI compatibility
-		warningFilter: (warning) => {
-			// Suppress CSS selector warnings for DaisyUI-generated classes
-			if (warning.code === 'css_unused_selector' && warning.message.includes('toast-close-btn')) {
-				return false;
-			}
-			return true;
-		}
+		// Note: warningFilter was removed in Svelte 5
+		// CSS unused selector warnings are now handled differently
 	},
 
 	kit: {

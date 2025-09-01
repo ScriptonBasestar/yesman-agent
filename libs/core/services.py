@@ -1,5 +1,11 @@
 # Copyright notice.
 
+from pathlib import Path
+
+from libs.claude.headless_adapter import HeadlessAdapter
+from libs.claude.interactive_adapter import InteractiveAdapter
+from libs.claude.interfaces import ClaudeAgentService
+from libs.claude.workspace import DefaultSecurityPolicy, DefaultWorkspaceManager
 from libs.core.container import container
 from libs.core.session_manager import SessionManager
 from libs.tmux_manager import TmuxManager
@@ -22,6 +28,48 @@ def register_core_services() -> None:
 
     # Register SessionManager as a singleton factory
     container.register_factory(SessionManager, SessionManager)
+
+    # Register Claude services
+    register_claude_services()
+
+
+def register_claude_services() -> None:
+    """Register Claude-related services with the DI container."""
+
+    def create_claude_service() -> ClaudeAgentService:
+        """Factory function to create appropriate Claude service based on config."""
+        config = container.resolve(YesmanConfig)
+        claude_config = config._config_schema.claude
+
+        if claude_config.mode == "headless" and claude_config.headless.enabled:
+            # Create headless adapter
+            security_policy = DefaultSecurityPolicy(
+                allowed_tools=claude_config.headless.allowed_tools,
+                forbidden_paths=[Path(p) for p in claude_config.headless.forbidden_paths],
+                max_concurrent_agents=claude_config.headless.max_concurrent_agents,
+            )
+
+            workspace_manager = DefaultWorkspaceManager(
+                base_path=Path(claude_config.headless.workspace_root),
+                allowed_paths=[Path(config.root_dir), Path.cwd()],
+                security_policy=security_policy,
+            )
+
+            adapter = HeadlessAdapter(
+                workspace_manager=workspace_manager,
+                claude_binary=claude_config.headless.claude_binary_path,
+                max_concurrent=claude_config.headless.max_concurrent_agents,
+            )
+
+            # Start cleanup task
+            adapter.start_cleanup_task()
+            return adapter
+        else:
+            # Create interactive adapter (fallback)
+            return InteractiveAdapter()
+
+    # Register Claude service factory
+    container.register_factory(ClaudeAgentService, create_claude_service)
 
 
 def register_test_services(config: YesmanConfig | None = None, tmux_manager: TmuxManager | None = None) -> None:
@@ -74,6 +122,15 @@ def get_session_manager() -> SessionManager:
         SessionManager: Description of return value.
     """
     return container.resolve(SessionManager)
+
+
+def get_claude_service() -> ClaudeAgentService:
+    """Convenience function to get ClaudeAgentService from container.
+
+    Returns:
+        ClaudeAgentService: The configured Claude agent service
+    """
+    return container.resolve(ClaudeAgentService)
 
 
 def is_container_initialized() -> bool:
