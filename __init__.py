@@ -1,0 +1,1 @@
+"""Yesman CLI package."""

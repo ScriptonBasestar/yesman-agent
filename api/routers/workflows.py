@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from libs.core.error_handling import ErrorCategory, YesmanError
 from libs.core.services import get_workflow_execution_engine, get_workflow_service
-from libs.workflows.execution_engine import AsyncWorkflowExecutionEngine
+from libs.workflows.execution_engine import WorkflowExecutionEngine
 from libs.workflows.models import WorkflowExecution
 from libs.workflows.workflow_service import WorkflowService
 
@@ -53,7 +53,7 @@ class WorkflowTemplateResponse(BaseModel):
 class WorkflowAPIService:
     """Service class for workflow API operations."""
 
-    def __init__(self, workflow_service: WorkflowService, execution_engine: AsyncWorkflowExecutionEngine) -> None:
+    def __init__(self, workflow_service: WorkflowService, execution_engine: WorkflowExecutionEngine) -> None:
         self.workflow_service = workflow_service
         self.execution_engine = execution_engine
         self.logger = logging.getLogger("yesman.api.workflows.service")

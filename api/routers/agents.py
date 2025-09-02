@@ -15,7 +15,7 @@ from libs.core.services import get_claude_service
 # Licensed under the MIT License
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/api/agents", tags=["agents"])
+router = APIRouter(prefix="/agents", tags=["agents"])
 
 
 # Request/Response Models
