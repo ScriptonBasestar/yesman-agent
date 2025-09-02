@@ -3,7 +3,6 @@
 import asyncio
 import json
 import logging
-from typing import Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -27,7 +26,7 @@ class AgentConfigRequest(BaseModel):
 
     workspace_path: str
     model: str = "claude-3-5-sonnet-20241022"
-    allowed_tools: List[str] = Field(default_factory=lambda: ["Read", "Edit", "Bash", "Write"])
+    allowed_tools: list[str] = Field(default_factory=lambda: ["Read", "Edit", "Bash", "Write"])
     timeout: int = Field(default=300, ge=30, le=3600)
     max_tokens: int = Field(default=4000, ge=100, le=32000)
     temperature: float = Field(default=0.0, ge=0.0, le=1.0)
@@ -50,10 +49,10 @@ class TaskRequest(BaseModel):
     """Request model for task execution."""
 
     prompt: str
-    tools: Optional[List[str]] = None
-    timeout: Optional[int] = Field(default=None, ge=30, le=3600)
-    max_tokens: Optional[int] = Field(default=None, ge=100, le=32000)
-    temperature: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    tools: list[str] | None = None
+    timeout: int | None = Field(default=None, ge=30, le=3600)
+    max_tokens: int | None = Field(default=None, ge=100, le=32000)
+    temperature: float | None = Field(default=None, ge=0.0, le=1.0)
     resume_session: bool = True
 
     def to_task_options(self) -> TaskOptions:
@@ -75,10 +74,10 @@ class AgentResponse(BaseModel):
     created_at: str
     workspace_path: str
     model: str
-    allowed_tools: List[str]
-    last_activity: Optional[str] = None
-    current_run_id: Optional[str] = None
-    error_message: Optional[str] = None
+    allowed_tools: list[str]
+    last_activity: str | None = None
+    current_run_id: str | None = None
+    error_message: str | None = None
 
 
 class TaskResponse(BaseModel):
@@ -117,15 +116,15 @@ async def create_agent(config_request: AgentConfigRequest) -> str:
         logger.warning(f"Invalid agent configuration: {e}")
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
-        logger.error(f"Agent creation failed: {e}")
+        logger.exception("Agent creation failed")
         raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
-        logger.error(f"Unexpected error creating agent: {e}")
+        logger.exception("Unexpected error creating agent")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/", response_model=List[AgentResponse])
-async def list_agents() -> List[AgentResponse]:
+@router.get("/", response_model=list[AgentResponse])
+async def list_agents() -> list[AgentResponse]:
     """List all active agents.
 
     Returns:
@@ -154,13 +153,13 @@ async def list_agents() -> List[AgentResponse]:
         ]
 
     except Exception as e:
-        logger.error(f"Failed to list agents: {e}")
+        logger.exception("Failed to list agents")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Health check endpoint for agents subsystem - must be before /{agent_id} route
 @router.get("/health", include_in_schema=False)
-async def agents_health():
+async def agents_health() -> dict[str, str | int | float]:
     """Health check for agents subsystem.
 
     Returns:
@@ -177,7 +176,7 @@ async def agents_health():
         }
 
     except Exception as e:
-        logger.error(f"Agents health check failed: {e}")
+        logger.exception("Agents health check failed")
         return {
             "status": "unhealthy",
             "error": str(e),
@@ -218,7 +217,7 @@ async def get_agent_status(agent_id: str) -> AgentResponse:
         logger.warning(f"Agent not found: {agent_id}")
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        logger.error(f"Failed to get agent status {agent_id}: {e}")
+        logger.exception(f"Failed to get agent status {agent_id}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -248,15 +247,15 @@ async def run_task(agent_id: str, task_request: TaskRequest) -> TaskResponse:
         logger.warning(f"Agent not found or invalid request: {agent_id}")
         raise HTTPException(status_code=404, detail=str(e))
     except RuntimeError as e:
-        logger.error(f"Task execution failed for agent {agent_id}: {e}")
+        logger.exception(f"Task execution failed for agent {agent_id}")
         raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
-        logger.error(f"Unexpected error running task for agent {agent_id}: {e}")
+        logger.exception(f"Unexpected error running task for agent {agent_id}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/{agent_id}/events")
-async def stream_events(agent_id: str):
+async def stream_events(agent_id: str) -> EventSourceResponse:
     """Stream real-time events from the specified agent.
 
     Args:
@@ -284,7 +283,7 @@ async def stream_events(agent_id: str):
                         "id": f"{event.agent_id}-{event.timestamp}",
                     }
             except Exception as e:
-                logger.error(f"Error streaming events for agent {agent_id}: {e}")
+                logger.exception(f"Error streaming events for agent {agent_id}")
                 yield {
                     "event": "error",
                     "data": json.dumps({"error": str(e)}),
@@ -296,12 +295,12 @@ async def stream_events(agent_id: str):
         logger.warning(f"Agent not found for streaming: {agent_id}")
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        logger.error(f"Failed to setup event stream for agent {agent_id}: {e}")
+        logger.exception(f"Failed to setup event stream for agent {agent_id}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/{agent_id}/cancel/{run_id}")
-async def cancel_task(agent_id: str, run_id: str) -> Dict[str, str]:
+async def cancel_task(agent_id: str, run_id: str) -> dict[str, str]:
     """Cancel a running task.
 
     Args:
@@ -329,12 +328,12 @@ async def cancel_task(agent_id: str, run_id: str) -> Dict[str, str]:
         logger.warning(f"Agent or run not found: {agent_id}/{run_id}")
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        logger.error(f"Error cancelling task {run_id} for agent {agent_id}: {e}")
+        logger.exception(f"Error cancelling task {run_id} for agent {agent_id}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.delete("/{agent_id}")
-async def dispose_agent(agent_id: str) -> Dict[str, str]:
+async def dispose_agent(agent_id: str) -> dict[str, str]:
     """Dispose of an agent and clean up resources.
 
     Args:
@@ -361,5 +360,5 @@ async def dispose_agent(agent_id: str) -> Dict[str, str]:
         logger.warning(f"Agent not found for disposal: {agent_id}")
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        logger.error(f"Error disposing agent {agent_id}: {e}")
+        logger.exception(f"Error disposing agent {agent_id}")
         raise HTTPException(status_code=500, detail="Internal server error")

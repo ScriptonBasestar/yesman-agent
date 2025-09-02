@@ -76,7 +76,7 @@ class HeadlessConfig(BaseModel):
 
     @field_validator("workspace_root", "forbidden_paths", mode="after")
     @classmethod
-    def expand_paths(cls, v):
+    def expand_paths(cls, v) -> str | list[str]:
         """Expand user home directory in paths."""
         if isinstance(v, str):
             return str(Path(v).expanduser())

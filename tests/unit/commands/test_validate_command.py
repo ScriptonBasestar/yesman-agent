@@ -4,10 +4,8 @@
 """Test for validate command."""
 
 from unittest.mock import MagicMock, patch
-import pytest
-import os
-import tempfile
 
+import pytest
 from click.testing import CliRunner
 
 from commands.validate import ValidateCommand, validate
@@ -76,7 +74,7 @@ class TestValidateCommand:
         mock_console = MagicMock()
         mock_console_class.return_value = mock_console
 
-        with patch.object(ValidateCommand, '__init__', lambda x: None):
+        with patch.object(ValidateCommand, "__init__", lambda _: None):
             command = ValidateCommand()
             command.tmux_manager = MagicMock()
             command.tmux_manager.load_projects.return_value = {"sessions": {}}
@@ -92,7 +90,7 @@ class TestValidateCommand:
         mock_console = MagicMock()
         mock_console_class.return_value = mock_console
 
-        with patch.object(ValidateCommand, '__init__', lambda x: None):
+        with patch.object(ValidateCommand, "__init__", lambda _: None):
             command = ValidateCommand()
             command.tmux_manager = MagicMock()
             command.tmux_manager.load_projects.return_value = {
@@ -110,21 +108,21 @@ class TestValidateCommand:
     @patch("commands.validate.pathlib.Path")
     @patch("commands.validate._display_success")
     def test_execute_all_directories_valid(
-        self, 
+        self,
         mock_display_success: MagicMock,
-        mock_path: MagicMock, 
+        mock_path: MagicMock,
         mock_console_class: MagicMock
     ) -> None:
         """Test execute when all directories are valid."""
         mock_console = MagicMock()
         mock_console_class.return_value = mock_console
-        
+
         # Mock path exists
         mock_path_instance = MagicMock()
         mock_path_instance.exists.return_value = True
         mock_path.return_value = mock_path_instance
 
-        with patch.object(ValidateCommand, '__init__', lambda x: None):
+        with patch.object(ValidateCommand, "__init__", lambda _: None):
             command = ValidateCommand()
             command.tmux_manager = MagicMock()
             command.tmux_manager.load_projects.return_value = {
@@ -147,7 +145,7 @@ class TestValidateCommand:
             assert result["valid_sessions"] == 1
             assert result["invalid_sessions"] == 0
             assert result["missing_directories"] == []
-            
+
             # Check that success display function was called
             mock_display_success.assert_called_once()
 
@@ -155,21 +153,21 @@ class TestValidateCommand:
     @patch("commands.validate.pathlib.Path")
     @patch("commands.validate._display_table_format")
     def test_execute_with_missing_directories(
-        self, 
+        self,
         mock_display_table: MagicMock,
-        mock_path: MagicMock, 
+        mock_path: MagicMock,
         mock_console_class: MagicMock
     ) -> None:
         """Test execute when some directories are missing."""
         mock_console = MagicMock()
         mock_console_class.return_value = mock_console
-        
+
         # Mock path doesn't exist
         mock_path_instance = MagicMock()
         mock_path_instance.exists.return_value = False
         mock_path.return_value = mock_path_instance
 
-        with patch.object(ValidateCommand, '__init__', lambda x: None):
+        with patch.object(ValidateCommand, "__init__", lambda _: None):
             command = ValidateCommand()
             command.tmux_manager = MagicMock()
             command.tmux_manager.load_projects.return_value = {
@@ -192,24 +190,25 @@ class TestValidateCommand:
             assert result["valid_sessions"] == 0
             assert result["invalid_sessions"] == 1
             assert len(result["missing_directories"]) == 1
-            
+
             # Check that table display function was called
             mock_display_table.assert_called_once()
 
     @patch("commands.validate.Console")
     @patch("commands.validate.pathlib.Path")
     def test_execute_with_windows_and_panes(
-        self, 
-        mock_path: MagicMock, 
+        self,
+        mock_path: MagicMock,
         mock_console_class: MagicMock
     ) -> None:
         """Test execute validates window and pane directories."""
         mock_console = MagicMock()
         mock_console_class.return_value = mock_console
-        
+
         # Mock different path existence scenarios
         def mock_exists_side_effect():
             call_count = 0
+
             def side_effect(*args):
                 nonlocal call_count
                 call_count += 1
@@ -222,7 +221,7 @@ class TestValidateCommand:
         mock_path_instance.is_absolute.return_value = True
         mock_path.return_value = mock_path_instance
 
-        with patch.object(ValidateCommand, '__init__', lambda x: None):
+        with patch.object(ValidateCommand, "__init__", lambda _: None):
             command = ValidateCommand()
             command.tmux_manager = MagicMock()
             command.tmux_manager.load_projects.return_value = {
@@ -254,7 +253,7 @@ class TestValidateCommand:
 
     def test_execute_handles_exceptions(self) -> None:
         """Test execute handles exceptions and raises CommandError."""
-        with patch.object(ValidateCommand, '__init__', lambda x: None):
+        with patch.object(ValidateCommand, "__init__", lambda _: None):
             command = ValidateCommand()
             command.tmux_manager = MagicMock()
             command.tmux_manager.load_projects.side_effect = Exception("Test error")
@@ -267,15 +266,15 @@ class TestValidateCommand:
     @patch("commands.validate.Console")
     @patch("commands.validate.pathlib.Path")
     def test_execute_handles_session_processing_errors(
-        self, 
-        mock_path: MagicMock, 
+        self,
+        mock_path: MagicMock,
         mock_console_class: MagicMock
     ) -> None:
         """Test execute handles errors when processing individual sessions."""
         mock_console = MagicMock()
         mock_console_class.return_value = mock_console
 
-        with patch.object(ValidateCommand, '__init__', lambda x: None):
+        with patch.object(ValidateCommand, "__init__", lambda _: None):
             command = ValidateCommand()
             command.tmux_manager = MagicMock()
             command.tmux_manager.load_projects.return_value = {
@@ -301,6 +300,6 @@ class TestValidateCommand:
             assert result["success"] is True
             assert result["total_sessions"] == 2
             assert result["valid_sessions"] == 1
-            
+
             # Check that error was printed
             mock_console.print.assert_called()

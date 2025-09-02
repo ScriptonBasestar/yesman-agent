@@ -3,41 +3,30 @@
 """AI-powered automation and learning components."""
 
 from .adaptive_response import AdaptiveResponse
-from .response_analyzer import ResponseAnalyzer
 
 # Multi-Provider AI Integration
-from .provider_interface import (
-    AIProvider,
-    AIProviderType,
-    AITask,
-    AIResponse,
-    TaskStatus,
-    AIMessage,
-    AIProviderManager,
-    ai_provider_manager
-)
-
+from .provider_interface import AIMessage, AIProvider, AIProviderManager, AIProviderType, AIResponse, AITask, TaskStatus, ai_provider_manager
 from .providers.claude_code_provider import ClaudeCodeProvider
+from .providers.gemini_provider import GeminiCodeProvider, GeminiProvider
 from .providers.ollama_provider import OllamaProvider
 from .providers.openai_provider import OpenAIProvider
-from .providers.gemini_provider import GeminiProvider, GeminiCodeProvider
-
+from .response_analyzer import ResponseAnalyzer
 
 __all__ = [
     "AdaptiveResponse",
     "ResponseAnalyzer",
     # Multi-Provider AI
-    'AIProvider',
-    'AIProviderType', 
-    'AITask',
-    'AIResponse',
-    'TaskStatus',
-    'AIMessage',
-    'AIProviderManager',
-    'ai_provider_manager',
-    'ClaudeCodeProvider',
-    'OllamaProvider', 
-    'OpenAIProvider',
-    'GeminiProvider',
-    'GeminiCodeProvider'
+    "AIProvider",
+    "AIProviderType",
+    "AITask",
+    "AIResponse",
+    "TaskStatus",
+    "AIMessage",
+    "AIProviderManager",
+    "ai_provider_manager",
+    "ClaudeCodeProvider",
+    "OllamaProvider",
+    "OpenAIProvider",
+    "GeminiProvider",
+    "GeminiCodeProvider"
 ]

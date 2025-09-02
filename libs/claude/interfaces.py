@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import json
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, AsyncIterator, Dict, List, Optional, Protocol
+from typing import Any, Protocol
 
 
 class AgentStatus(Enum):
@@ -39,17 +40,17 @@ class AgentEvent:
 
     event_type: EventType
     timestamp: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
     agent_id: str
-    run_id: Optional[str] = None
+    run_id: str | None = None
 
     @classmethod
     def create(
         cls,
         event_type: EventType,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         agent_id: str,
-        run_id: Optional[str] = None,
+        run_id: str | None = None,
     ) -> AgentEvent:
         """Create a new event with current timestamp."""
         return cls(
@@ -60,7 +61,7 @@ class AgentEvent:
             run_id=run_id,
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             "event_type": self.event_type.value,
@@ -81,12 +82,12 @@ class AgentConfig:
 
     workspace_path: Path
     model: str = "claude-3-5-sonnet-20241022"
-    allowed_tools: List[str] = field(default_factory=lambda: ["Read", "Edit", "Bash"])
+    allowed_tools: list[str] = field(default_factory=lambda: ["Read", "Edit", "Bash"])
     timeout: int = 300  # seconds
     max_tokens: int = 4000
     temperature: float = 0.0
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate configuration after initialization."""
         self.workspace_path = Path(self.workspace_path).resolve()
         if not self.workspace_path.exists():
@@ -106,10 +107,10 @@ class AgentConfig:
 class TaskOptions:
     """Options for task execution."""
 
-    tools: Optional[List[str]] = None
-    timeout: Optional[int] = None
-    max_tokens: Optional[int] = None
-    temperature: Optional[float] = None
+    tools: list[str] | None = None
+    timeout: int | None = None
+    max_tokens: int | None = None
+    temperature: float | None = None
     resume_session: bool = True
 
     def merge_with_config(self, config: AgentConfig) -> TaskOptions:
@@ -131,11 +132,11 @@ class AgentInfo:
     config: AgentConfig
     status: AgentStatus
     created_at: str
-    last_activity: Optional[str] = None
-    current_run_id: Optional[str] = None
-    error_message: Optional[str] = None
+    last_activity: str | None = None
+    current_run_id: str | None = None
+    error_message: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             "agent_id": self.agent_id,
@@ -177,7 +178,7 @@ class ClaudeAgentService(Protocol):
         self,
         agent_id: str,
         prompt: str,
-        options: Optional[TaskOptions] = None,
+        options: TaskOptions | None = None,
     ) -> str:
         """Run a task on the specified agent.
 
@@ -238,7 +239,7 @@ class ClaudeAgentService(Protocol):
         """
         ...
 
-    async def list_agents(self) -> List[AgentInfo]:
+    async def list_agents(self) -> list[AgentInfo]:
         """List all active agents.
 
         Returns:
@@ -280,7 +281,7 @@ class WorkspaceManager(ABC):
         ...
 
     @abstractmethod
-    def get_allowed_tools(self) -> List[str]:
+    def get_allowed_tools(self) -> list[str]:
         """Get list of allowed tools for agents."""
         ...
 

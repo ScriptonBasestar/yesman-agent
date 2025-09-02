@@ -9,9 +9,9 @@ from libs.claude.workspace import DefaultSecurityPolicy, DefaultWorkspaceManager
 from libs.core.container import container
 from libs.core.session_manager import SessionManager
 from libs.tmux_manager import TmuxManager
-from libs.yesman_config import YesmanConfig
-from libs.workflows.workflow_service import WorkflowService
 from libs.workflows.execution_engine import WorkflowExecutionEngine
+from libs.workflows.workflow_service import WorkflowService
+from libs.yesman_config import YesmanConfig
 
 # Auto-initialize services when module is imported
 
@@ -33,7 +33,7 @@ def register_core_services() -> None:
 
     # Register Claude services
     register_claude_services()
-    
+
     # Register Workflow services
     register_workflow_services()
 
@@ -79,13 +79,13 @@ def register_claude_services() -> None:
 
 def register_workflow_services() -> None:
     """Register workflow-related services with the DI container."""
-    
+
     def create_workflow_execution_engine() -> WorkflowExecutionEngine:
         """Factory function to create workflow execution engine."""
         config = container.resolve(YesmanConfig)
         tmux_manager = container.resolve(TmuxManager)
         return WorkflowExecutionEngine(config=config, tmux_manager=tmux_manager)
-    
+
     def create_workflow_service() -> WorkflowService:
         """Factory function to create workflow service."""
         config = container.resolve(YesmanConfig)
@@ -96,10 +96,10 @@ def register_workflow_services() -> None:
             tmux_manager=tmux_manager,
             execution_engine=execution_engine
         )
-    
+
     # Register WorkflowExecutionEngine as singleton factory
     container.register_factory(WorkflowExecutionEngine, create_workflow_execution_engine)
-    
+
     # Register WorkflowService as singleton factory
     container.register_factory(WorkflowService, create_workflow_service)
 

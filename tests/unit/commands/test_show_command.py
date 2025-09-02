@@ -39,7 +39,7 @@ class TestShowCommand:
 
     def test_execute_calls_list_running_sessions(self) -> None:
         """Test execute calls tmux_manager.list_running_sessions()."""
-        with patch.object(ShowCommand, '__init__', lambda x: None):
+        with patch.object(ShowCommand, "__init__", lambda _: None):
             command = ShowCommand()
             command.tmux_manager = MagicMock()
 
@@ -51,7 +51,7 @@ class TestShowCommand:
 
     def test_execute_returns_correct_result(self) -> None:
         """Test execute returns expected result format."""
-        with patch.object(ShowCommand, '__init__', lambda x: None):
+        with patch.object(ShowCommand, "__init__", lambda _: None):
             command = ShowCommand()
             command.tmux_manager = MagicMock()
             command.tmux_manager.list_running_sessions.return_value = None
@@ -65,7 +65,7 @@ class TestShowCommand:
 
     def test_execute_with_kwargs(self) -> None:
         """Test execute handles extra kwargs gracefully."""
-        with patch.object(ShowCommand, '__init__', lambda x: None):
+        with patch.object(ShowCommand, "__init__", lambda _: None):
             command = ShowCommand()
             command.tmux_manager = MagicMock()
 

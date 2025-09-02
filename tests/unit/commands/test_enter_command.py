@@ -4,9 +4,8 @@
 """Test for enter command."""
 
 from unittest.mock import MagicMock, patch
-import sys
-import pytest
 
+import pytest
 from click.testing import CliRunner
 
 from commands.enter import EnterCommand, enter
@@ -74,9 +73,9 @@ class TestEnterCommand:
         """Test validate_preconditions raises error for non-interactive terminal."""
         mock_isatty.return_value = False
 
-        with patch.object(EnterCommand, '__init__', lambda x: None):
+        with patch.object(EnterCommand, "__init__", lambda _: None):
             command = EnterCommand()
-            
+
             with pytest.raises(CommandError) as exc_info:
                 command.validate_preconditions()
 
@@ -87,10 +86,10 @@ class TestEnterCommand:
         """Test validate_preconditions passes for interactive terminal."""
         mock_isatty.return_value = True
 
-        with patch.object(EnterCommand, '__init__', lambda x: None):
-            with patch('libs.core.base_command.BaseCommand.validate_preconditions'):
+        with patch.object(EnterCommand, "__init__", lambda _: None):
+            with patch("libs.core.base_command.BaseCommand.validate_preconditions"):
                 command = EnterCommand()
-                
+
                 # Should not raise exception
                 try:
                     command.validate_preconditions()
@@ -99,7 +98,7 @@ class TestEnterCommand:
 
     def test_execute_list_sessions(self) -> None:
         """Test execute with list_sessions=True."""
-        with patch.object(EnterCommand, '__init__', lambda x: None):
+        with patch.object(EnterCommand, "__init__", lambda _: None):
             command = EnterCommand()
             command.tmux_manager = MagicMock()
 
@@ -118,7 +117,7 @@ class TestEnterCommand:
         mock_session = MagicMock()
         mock_server_instance.sessions.get.return_value = mock_session
 
-        with patch.object(EnterCommand, '__init__', lambda x: None):
+        with patch.object(EnterCommand, "__init__", lambda _: None):
             command = EnterCommand()
             command.server = mock_server_instance
             command.tmux_manager = MagicMock()
@@ -137,7 +136,7 @@ class TestEnterCommand:
         mock_server.return_value = mock_server_instance
         mock_server_instance.sessions.get.return_value = None
 
-        with patch.object(EnterCommand, '__init__', lambda x: None):
+        with patch.object(EnterCommand, "__init__", lambda _: None):
             command = EnterCommand()
             command.server = mock_server_instance
             command.tmux_manager = MagicMock()
@@ -159,7 +158,7 @@ class TestEnterCommand:
         mock_server.return_value = mock_server_instance
         mock_server_instance.sessions.get.return_value = None
 
-        with patch.object(EnterCommand, '__init__', lambda x: None):
+        with patch.object(EnterCommand, "__init__", lambda _: None):
             command = EnterCommand()
             command.server = mock_server_instance
             command.tmux_manager = MagicMock()
@@ -189,7 +188,7 @@ class TestEnterCommand:
         mock_server_instance.sessions.get.return_value = mock_session
         mock_selector.return_value = "selected-session"
 
-        with patch.object(EnterCommand, '__init__', lambda x: None):
+        with patch.object(EnterCommand, "__init__", lambda _: None):
             command = EnterCommand()
             command.server = mock_server_instance
             command.tmux_manager = MagicMock()
@@ -211,9 +210,9 @@ class TestEnterCommand:
     def test_attach_to_session_inside_tmux(self, mock_subprocess: MagicMock) -> None:
         """Test _attach_to_session when already inside tmux."""
         EnterCommand._attach_to_session("test-session")
-        
+
         mock_subprocess.assert_called_once_with(
-            ["tmux", "switch-client", "-t", "test-session"], 
+            ["tmux", "switch-client", "-t", "test-session"],
             check=False
         )
 
@@ -222,9 +221,9 @@ class TestEnterCommand:
     def test_attach_to_session_outside_tmux(self, mock_subprocess: MagicMock) -> None:
         """Test _attach_to_session when outside tmux."""
         EnterCommand._attach_to_session("test-session")
-        
+
         mock_subprocess.assert_called_once_with(
-            ["tmux", "attach-session", "-t", "test-session"], 
+            ["tmux", "attach-session", "-t", "test-session"],
             check=False
         )
 
@@ -237,7 +236,7 @@ class TestEnterCommand:
         mock_session = MagicMock()
         mock_server_instance.sessions.get.return_value = mock_session
 
-        with patch.object(EnterCommand, '__init__', lambda x: None):
+        with patch.object(EnterCommand, "__init__", lambda _: None):
             command = EnterCommand()
             command.server = mock_server_instance
 
@@ -251,7 +250,7 @@ class TestEnterCommand:
         # Setup mocks
         mock_server_instance = MagicMock()
         mock_server.return_value = mock_server_instance
-        
+
         def mock_sessions_get(session_name=None, default=None):
             if session_name == "actual-session-name":
                 return MagicMock()  # Session exists
@@ -259,7 +258,7 @@ class TestEnterCommand:
 
         mock_server_instance.sessions.get.side_effect = mock_sessions_get
 
-        with patch.object(EnterCommand, '__init__', lambda x: None):
+        with patch.object(EnterCommand, "__init__", lambda _: None):
             command = EnterCommand()
             command.server = mock_server_instance
             command.tmux_manager = MagicMock()

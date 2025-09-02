@@ -4,7 +4,6 @@ import logging
 import shutil
 import uuid
 from pathlib import Path
-from typing import List, Set
 
 from .interfaces import SecurityPolicy, WorkspaceManager
 
@@ -15,9 +14,9 @@ class DefaultWorkspaceManager(WorkspaceManager):
     def __init__(
         self,
         base_path: Path,
-        allowed_paths: List[Path],
+        allowed_paths: list[Path],
         security_policy: SecurityPolicy,
-    ):
+    ) -> None:
         """Initialize workspace manager.
 
         Args:
@@ -34,7 +33,7 @@ class DefaultWorkspaceManager(WorkspaceManager):
         self.base_path.mkdir(parents=True, exist_ok=True)
 
         # Track active sandboxes
-        self.active_sandboxes: Set[str] = set()
+        self.active_sandboxes: set[str] = set()
 
     def validate_path(self, path: Path) -> bool:
         """Validate if a path is accessible within security policy.
@@ -54,10 +53,7 @@ class DefaultWorkspaceManager(WorkspaceManager):
                     return True
 
             # Check if it's within an agent sandbox
-            if resolved_path.is_relative_to(self.base_path):
-                return True
-
-            return False
+            return bool(resolved_path.is_relative_to(self.base_path))
 
         except (OSError, ValueError) as e:
             self.logger.warning(f"Path validation failed for {path}: {e}")
@@ -125,7 +121,7 @@ class DefaultWorkspaceManager(WorkspaceManager):
             return sandbox_path
 
         except Exception as e:
-            self.logger.error(f"Failed to create sandbox for agent {agent_id}: {e}")
+            self.logger.exception(f"Failed to create sandbox for agent {agent_id}")
             raise RuntimeError(f"Sandbox creation failed: {e}") from e
 
     def cleanup_sandbox(self, agent_id: str) -> bool:
@@ -158,10 +154,10 @@ class DefaultWorkspaceManager(WorkspaceManager):
             return True
 
         except Exception as e:
-            self.logger.error(f"Failed to cleanup sandbox for agent {agent_id}: {e}")
+            self.logger.exception(f"Failed to cleanup sandbox for agent {agent_id}")
             return False
 
-    def get_allowed_tools(self) -> List[str]:
+    def get_allowed_tools(self) -> list[str]:
         """Get list of allowed tools for agents.
 
         Returns:
@@ -184,7 +180,7 @@ class DefaultWorkspaceManager(WorkspaceManager):
         sandbox_paths = list(self.base_path.glob(pattern))
         return sandbox_paths[0] if sandbox_paths else None
 
-    def list_active_sandboxes(self) -> List[str]:
+    def list_active_sandboxes(self) -> list[str]:
         """List all active agent sandboxes.
 
         Returns:
@@ -224,7 +220,7 @@ class DefaultWorkspaceManager(WorkspaceManager):
             return cleaned_count
 
         except Exception as e:
-            self.logger.error(f"Failed to cleanup orphaned sandboxes: {e}")
+            self.logger.exception("Failed to cleanup orphaned sandboxes")
             return 0
 
     def _secure_rmtree(self, path: Path) -> None:
@@ -256,12 +252,12 @@ class DefaultWorkspaceManager(WorkspaceManager):
             shutil.rmtree(path)
 
         except Exception as e:
-            self.logger.error(f"Failed to securely remove {path}: {e}")
+            self.logger.exception(f"Failed to securely remove {path}")
             # Fallback to regular rmtree
             try:
                 shutil.rmtree(path)
             except Exception as fallback_e:
-                self.logger.error(f"Fallback removal also failed: {fallback_e}")
+                self.logger.exception("Fallback removal also failed")
                 raise
 
     def get_sandbox_stats(self, agent_id: str) -> dict:
@@ -307,7 +303,7 @@ class DefaultWorkspaceManager(WorkspaceManager):
             }
 
         except Exception as e:
-            self.logger.error(f"Failed to get sandbox stats for {agent_id}: {e}")
+            self.logger.exception(f"Failed to get sandbox stats for {agent_id}")
             return {"error": str(e)}
 
     def enforce_quota(self, agent_id: str, max_size_mb: int = 100) -> bool:
@@ -344,7 +340,7 @@ class DefaultWorkspaceManager(WorkspaceManager):
                             return True
 
                     except Exception as e:
-                        self.logger.error(f"Failed to clean temp directory for {agent_id}: {e}")
+                        self.logger.exception(f"Failed to clean temp directory for {agent_id}")
 
             return False
 
@@ -356,10 +352,10 @@ class DefaultSecurityPolicy(SecurityPolicy):
 
     def __init__(
         self,
-        allowed_tools: List[str] | None = None,
-        forbidden_paths: List[Path] | None = None,
+        allowed_tools: list[str] | None = None,
+        forbidden_paths: list[Path] | None = None,
         max_concurrent_agents: int = 5,
-    ):
+    ) -> None:
         """Initialize security policy.
 
         Args:
@@ -623,7 +619,7 @@ class DefaultSecurityPolicy(SecurityPolicy):
             self.logger.warning("psutil not available for resource monitoring")
             return True  # Assume OK if can't monitor
         except Exception as e:
-            self.logger.error(f"Failed to validate resource usage for {agent_id}: {e}")
+            self.logger.exception(f"Failed to validate resource usage for {agent_id}")
             return True  # Assume OK on error to avoid blocking agents
 
     def get_security_report(self) -> dict:

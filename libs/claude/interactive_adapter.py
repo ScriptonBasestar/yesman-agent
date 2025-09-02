@@ -3,8 +3,8 @@
 import asyncio
 import logging
 import uuid
+from collections.abc import AsyncIterator
 from datetime import datetime
-from typing import AsyncIterator, List, Optional
 
 from libs.core.claude_manager import DashboardController
 
@@ -21,7 +21,7 @@ from .interfaces import (
 class InteractiveAdapter:
     """Interactive Claude Code adapter wrapping existing tmux-based system."""
 
-    def __init__(self, claude_manager=None):
+    def __init__(self, claude_manager=None) -> None:
         """Initialize interactive adapter.
 
         Args:
@@ -73,14 +73,14 @@ class InteractiveAdapter:
             return session_name
 
         except Exception as e:
-            self.logger.error(f"Failed to create interactive agent: {e}")
+            self.logger.exception("Failed to create interactive agent")
             raise RuntimeError(f"Agent creation failed: {e}") from e
 
     async def run_task(
         self,
         agent_id: str,
         prompt: str,
-        options: Optional[TaskOptions] = None,
+        options: TaskOptions | None = None,
     ) -> str:
         """Run a task on the specified agent.
 
@@ -127,7 +127,7 @@ class InteractiveAdapter:
             return run_id
 
         except Exception as e:
-            self.logger.error(f"Failed to start task for agent {agent_id}: {e}")
+            self.logger.exception(f"Failed to start task for agent {agent_id}")
             agent_info.status = AgentStatus.ERROR
             agent_info.error_message = str(e)
             raise RuntimeError(f"Task execution failed: {e}") from e
@@ -171,7 +171,7 @@ class InteractiveAdapter:
                 # You would integrate with the existing status and activity callbacks here
 
             except Exception as e:
-                self.logger.error(f"Error streaming events for agent {agent_id}: {e}")
+                self.logger.exception(f"Error streaming events for agent {agent_id}")
                 yield AgentEvent.create(
                     event_type=EventType.ERROR,
                     data={"error": str(e)},
@@ -217,7 +217,7 @@ class InteractiveAdapter:
             return True
 
         except Exception as e:
-            self.logger.error(f"Failed to cancel task {run_id} for agent {agent_id}: {e}")
+            self.logger.exception(f"Failed to cancel task {run_id} for agent {agent_id}")
             return False
 
     async def get_status(self, agent_id: str) -> AgentInfo:
@@ -248,7 +248,7 @@ class InteractiveAdapter:
 
         return agent_info
 
-    async def list_agents(self) -> List[AgentInfo]:
+    async def list_agents(self) -> list[AgentInfo]:
         """List all active agents.
 
         Returns:
@@ -303,7 +303,7 @@ class InteractiveAdapter:
             return True
 
         except Exception as e:
-            self.logger.error(f"Failed to dispose agent {agent_id}: {e}")
+            self.logger.exception(f"Failed to dispose agent {agent_id}")
             return False
 
     async def shutdown(self) -> None:
@@ -313,6 +313,6 @@ class InteractiveAdapter:
             try:
                 await self.dispose_agent(agent_id)
             except Exception as e:
-                self.logger.error(f"Error disposing agent {agent_id} during shutdown: {e}")
+                self.logger.exception(f"Error disposing agent {agent_id} during shutdown")
 
         self.logger.info("Interactive adapter shutdown complete")

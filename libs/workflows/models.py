@@ -2,10 +2,10 @@
 
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -35,19 +35,19 @@ class WorkflowStep:
     id: str
     type: StepType
     prompt: str
-    context: Dict[str, Any] = field(default_factory=dict)
-    timeout: Optional[int] = None
+    context: dict[str, Any] = field(default_factory=dict)
+    timeout: int | None = None
     retry_count: int = 3
-    dependencies: List[str] = field(default_factory=list)
-    
+    dependencies: list[str] = field(default_factory=list)
+
 
 @dataclass
 class ExecutionCheckpoint:
     """Checkpoint data for workflow execution."""
     step_index: int
-    results: Dict[str, Any]
+    results: dict[str, Any]
     timestamp: datetime
-    session_state: Dict[str, Any] = field(default_factory=dict)
+    session_state: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -57,44 +57,44 @@ class ExecutionResult:
     status: WorkflowStatus
     steps_completed: int
     total_steps: int
-    results: Dict[str, Any] = field(default_factory=dict)
-    error_message: Optional[str] = None
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    execution_time: Optional[float] = None
+    results: dict[str, Any] = field(default_factory=dict)
+    error_message: str | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    execution_time: float | None = None
 
 
 class WorkflowConfig(BaseModel):
     """Configuration for a workflow template."""
-    
+
     name: str = Field(..., description="Workflow template name")
     description: str = Field(..., description="Workflow description")
     version: str = Field(default="1.0.0", description="Template version")
-    author: Optional[str] = Field(None, description="Template author")
-    
+    author: str | None = Field(None, description="Template author")
+
     # Execution settings
     timeout: int = Field(default=3600, description="Max execution time in seconds")
     checkpoint_interval: int = Field(default=2, description="Steps between checkpoints")
     allow_parallel: bool = Field(default=False, description="Allow parallel step execution")
-    
+
     # Context and environment
-    working_directory: Optional[str] = Field(None, description="Working directory for execution")
-    environment_variables: Dict[str, str] = Field(default_factory=dict)
-    
+    working_directory: str | None = Field(None, description="Working directory for execution")
+    environment_variables: dict[str, str] = Field(default_factory=dict)
+
     # Steps definition
-    steps: List[Dict[str, Any]] = Field(..., description="Workflow steps")
-    
+    steps: list[dict[str, Any]] = Field(..., description="Workflow steps")
+
     # Error handling
     continue_on_error: bool = Field(default=False, description="Continue execution on step failure")
-    recovery_strategies: List[str] = Field(
+    recovery_strategies: list[str] = Field(
         default_factory=lambda: ["retry", "skip", "prompt"],
         description="Error recovery strategies"
     )
-    
-    def to_workflow_steps(self) -> List[WorkflowStep]:
+
+    def to_workflow_steps(self) -> list[WorkflowStep]:
         """Convert steps configuration to WorkflowStep objects."""
         workflow_steps = []
-        
+
         for step_data in self.steps:
             step = WorkflowStep(
                 id=step_data["id"],
@@ -106,51 +106,51 @@ class WorkflowConfig(BaseModel):
                 dependencies=step_data.get("dependencies", [])
             )
             workflow_steps.append(step)
-            
+
         return workflow_steps
 
 
 @dataclass
 class WorkflowExecution:
     """Active workflow execution state."""
-    
+
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     config: WorkflowConfig = field(default=None)
     status: WorkflowStatus = WorkflowStatus.PENDING
-    current_step: Optional[int] = None
-    
+    current_step: int | None = None
+
     # Execution tracking
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+
     # Results and state
-    step_results: Dict[str, Any] = field(default_factory=dict)
-    checkpoints: Dict[int, ExecutionCheckpoint] = field(default_factory=dict)
-    error_log: List[Dict[str, Any]] = field(default_factory=list)
-    
+    step_results: dict[str, Any] = field(default_factory=dict)
+    checkpoints: dict[int, ExecutionCheckpoint] = field(default_factory=dict)
+    error_log: list[dict[str, Any]] = field(default_factory=list)
+
     # Session management
-    claude_session_id: Optional[str] = None
-    project_path: Optional[Path] = None
-    
+    claude_session_id: str | None = None
+    project_path: Path | None = None
+
     def get_progress(self) -> float:
         """Get execution progress as percentage."""
         if not self.config or not self.config.steps:
             return 0.0
-            
+
         completed_steps = len(self.step_results)
         total_steps = len(self.config.steps)
-        
+
         return (completed_steps / total_steps) * 100.0
-    
-    def get_execution_time(self) -> Optional[float]:
+
+    def get_execution_time(self) -> float | None:
         """Get total execution time in seconds."""
         if not self.started_at:
             return None
-            
+
         end_time = self.completed_at or datetime.now(UTC)
         return (end_time - self.started_at).total_seconds()
-    
-    def add_error(self, step_id: str, error: str, recovery_action: Optional[str] = None) -> None:
+
+    def add_error(self, step_id: str, error: str, recovery_action: str | None = None) -> None:
         """Add error to execution log."""
         error_entry = {
             "timestamp": datetime.now(UTC).isoformat(),
@@ -159,8 +159,8 @@ class WorkflowExecution:
             "recovery_action": recovery_action
         }
         self.error_log.append(error_entry)
-    
-    def create_checkpoint(self, step_index: int, session_state: Optional[Dict[str, Any]] = None) -> None:
+
+    def create_checkpoint(self, step_index: int, session_state: dict[str, Any] | None = None) -> None:
         """Create execution checkpoint."""
         checkpoint = ExecutionCheckpoint(
             step_index=step_index,
@@ -173,10 +173,10 @@ class WorkflowExecution:
 
 class WorkflowTemplate(BaseModel):
     """Predefined workflow template."""
-    
-    template_id: str = Field(..., description="Unique template identifier") 
+
+    template_id: str = Field(..., description="Unique template identifier")
     config: WorkflowConfig = Field(..., description="Workflow configuration")
-    tags: List[str] = Field(default_factory=list, description="Template tags")
+    tags: list[str] = Field(default_factory=list, description="Template tags")
     is_builtin: bool = Field(default=False, description="Whether this is a built-in template")
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

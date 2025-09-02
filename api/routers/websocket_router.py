@@ -183,11 +183,11 @@ class ConnectionManager:
                 try:
                     from libs.core.services import get_workflow_service
                     workflow_service = get_workflow_service()
-                    
+
                     # Get templates and executions
                     templates = workflow_service.list_templates()
                     executions = workflow_service.list_executions()
-                    
+
                     initial_data["workflows"] = {
                         "templates": templates,
                         "executions": [

@@ -4,36 +4,37 @@
 # Licensed under the MIT License
 """Unit tests for ConfigValidator."""
 
+import sys
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
-import pytest
 import yaml
 
+
 # Test the validator can be imported and basic functionality works
-def test_config_validator_import():
+def test_config_validator_import() -> bool | None:
     """Test that ConfigValidator can be imported."""
     try:
         # Avoid circular imports by importing directly
         import sys
         sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
-        
+
         # Mock dependencies to avoid import issues
-        sys.modules['libs.dashboard'] = Mock()
-        sys.modules['libs.dashboard.health_calculator'] = Mock()
-        
-        from libs.core.config_validator import ConfigValidator, ValidationResult, ValidationError, ValidationLevel
-        
+        sys.modules["libs.dashboard"] = Mock()
+        sys.modules["libs.dashboard.health_calculator"] = Mock()
+
+        from libs.core.config_validator import ConfigValidator, ValidationError, ValidationLevel, ValidationResult
+
         # Test basic instantiation
         validator = ConfigValidator()
         assert validator is not None
-        
+
         # Test ValidationResult
         result = ValidationResult()
         assert result.is_valid is True
         assert len(result.errors) == 0
-        
+
         # Test ValidationError
         error = ValidationError(
             message="test error",
@@ -42,10 +43,10 @@ def test_config_validator_import():
         )
         assert error.message == "test error"
         assert error.level == ValidationLevel.ERROR
-        
+
         print("✅ ConfigValidator basic functionality test passed")
         return True
-        
+
     except ImportError as e:
         print(f"❌ Import error: {e}")
         return False
@@ -54,49 +55,48 @@ def test_config_validator_import():
         return False
 
 
-def test_yaml_validation():
+def test_yaml_validation() -> bool | None:
     """Test YAML file validation logic."""
-    
     # Test valid YAML
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+    with tempfile.NamedTemporaryFile(encoding="utf-8", mode="w", suffix=".yaml", delete=False) as f:
         yaml.safe_dump({
-            'tmux': {
-                'default_shell': '/bin/bash',
-                'status_position': 'bottom'
+            "tmux": {
+                "default_shell": "/bin/bash",
+                "status_position": "bottom"
             },
-            'logging': {
-                'level': 'INFO'
+            "logging": {
+                "level": "INFO"
             }
         }, f)
         valid_yaml_file = Path(f.name)
-    
+
     # Test invalid YAML
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+    with tempfile.NamedTemporaryFile(encoding="utf-8", mode="w", suffix=".yaml", delete=False) as f:
         f.write("invalid: yaml: content: [\n")  # Malformed YAML
         invalid_yaml_file = Path(f.name)
-    
+
     try:
         # Test valid YAML parsing
-        with open(valid_yaml_file, 'r') as f:
+        with open(valid_yaml_file, encoding="utf-8") as f:
             config = yaml.safe_load(f)
         assert config is not None
-        assert 'tmux' in config
-        
+        assert "tmux" in config
+
         # Test invalid YAML parsing
         try:
-            with open(invalid_yaml_file, 'r') as f:
+            with open(invalid_yaml_file, encoding="utf-8") as f:
                 yaml.safe_load(f)
-            assert False, "Should have raised YAML error"
+            raise AssertionError("Should have raised YAML error")
         except yaml.YAMLError:
             pass  # Expected
-        
+
         print("✅ YAML validation test passed")
         return True
-        
+
     except Exception as e:
         print(f"❌ YAML validation test error: {e}")
         return False
-        
+
     finally:
         # Cleanup
         valid_yaml_file.unlink(missing_ok=True)
@@ -108,15 +108,15 @@ if __name__ == "__main__":
     results = []
     results.append(test_config_validator_import())
     results.append(test_yaml_validation())
-    
+
     passed = sum(results)
     total = len(results)
-    
+
     print(f"\n📊 Test Results: {passed}/{total} passed")
-    
+
     if passed == total:
         print("🎉 All tests passed!")
-        exit(0)
+        sys.exit(0)
     else:
         print("❌ Some tests failed")
-        exit(1)
+        sys.exit(1)

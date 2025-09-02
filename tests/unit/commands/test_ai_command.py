@@ -4,14 +4,11 @@
 """Test for ai command."""
 
 from unittest.mock import MagicMock, patch
-import pytest
 
+import pytest
 from click.testing import CliRunner
 
-from commands.ai import (
-    AIStatusCommand, AIConfigCommand, AIHistoryCommand, 
-    AIExportCommand, AICleanupCommand, AIPredictCommand, ai
-)
+from commands.ai import AICleanupCommand, AIConfigCommand, AIExportCommand, AIHistoryCommand, AIPredictCommand, AIStatusCommand, ai
 from libs.core.base_command import BaseCommand, CommandError
 
 
@@ -141,9 +138,9 @@ class TestAICommands:
         """Test AIStatusCommand validate_preconditions handles initialization failure."""
         mock_adaptive.side_effect = Exception("Initialization failed")
 
-        with patch.object(AIStatusCommand, '__init__', lambda x: None):
+        with patch.object(AIStatusCommand, "__init__", lambda _: None):
             command = AIStatusCommand()
-            
+
             with pytest.raises(CommandError) as exc_info:
                 command.validate_preconditions()
 
@@ -164,7 +161,7 @@ class TestAICommands:
         }
         mock_adaptive_instance.get_learning_statistics.return_value = mock_stats
 
-        with patch.object(AIStatusCommand, '__init__', lambda x: None):
+        with patch.object(AIStatusCommand, "__init__", lambda _: None):
             command = AIStatusCommand()
             command.console = MagicMock()
             command.adaptive = mock_adaptive_instance
@@ -181,7 +178,7 @@ class TestAICommands:
         mock_adaptive_instance = MagicMock()
         mock_adaptive.return_value = mock_adaptive_instance
 
-        with patch.object(AIConfigCommand, '__init__', lambda x: None):
+        with patch.object(AIConfigCommand, "__init__", lambda _: None):
             command = AIConfigCommand()
             command.console = MagicMock()
             command.adaptive = mock_adaptive_instance
@@ -196,7 +193,7 @@ class TestAICommands:
     @patch("commands.ai.AdaptiveResponse")
     def test_ai_config_execute_invalid_threshold(self, mock_adaptive: MagicMock) -> None:
         """Test AIConfigCommand execute with invalid threshold."""
-        with patch.object(AIConfigCommand, '__init__', lambda x: None):
+        with patch.object(AIConfigCommand, "__init__", lambda _: None):
             command = AIConfigCommand()
             command.adaptive = MagicMock()
 
@@ -220,7 +217,7 @@ class TestAICommands:
         mock_analyzer_instance.response_history = [mock_record]
         mock_analyzer.return_value = mock_analyzer_instance
 
-        with patch.object(AIHistoryCommand, '__init__', lambda x: None):
+        with patch.object(AIHistoryCommand, "__init__", lambda _: None):
             command = AIHistoryCommand()
             command.console = MagicMock()
             command.analyzer = mock_analyzer_instance
@@ -243,7 +240,7 @@ class TestAICommands:
         mock_path_instance.__str__ = lambda x: "test_export.json"
         mock_path.return_value = mock_path_instance
 
-        with patch.object(AIExportCommand, '__init__', lambda x: None):
+        with patch.object(AIExportCommand, "__init__", lambda _: None):
             command = AIExportCommand()
             command.console = MagicMock()
             command.adaptive = mock_adaptive_instance
@@ -263,7 +260,7 @@ class TestAICommands:
         mock_analyzer_instance.cleanup_old_data.return_value = 15
         mock_analyzer.return_value = mock_analyzer_instance
 
-        with patch.object(AICleanupCommand, '__init__', lambda x: None):
+        with patch.object(AICleanupCommand, "__init__", lambda _: None):
             command = AICleanupCommand()
             command.console = MagicMock()
             command.analyzer = mock_analyzer_instance
@@ -283,7 +280,7 @@ class TestAICommands:
         mock_adaptive.return_value = mock_adaptive_instance
         mock_asyncio_run.return_value = (True, "Predicted response", 0.85)
 
-        with patch.object(AIPredictCommand, '__init__', lambda x: None):
+        with patch.object(AIPredictCommand, "__init__", lambda _: None):
             command = AIPredictCommand()
             command.console = MagicMock()
             command.adaptive = mock_adaptive_instance

@@ -4,8 +4,8 @@
 """Test for teardown command."""
 
 from unittest.mock import MagicMock, patch
-import pytest
 
+import pytest
 from click.testing import CliRunner
 
 from commands.teardown import TeardownCommand, teardown
@@ -57,7 +57,7 @@ class TestTeardownCommand:
     @patch("commands.teardown.subprocess.run")
     def test_execute_with_no_sessions_defined(self, mock_subprocess: MagicMock, mock_server: MagicMock) -> None:
         """Test execute when no sessions are defined in projects.yaml."""
-        with patch.object(TeardownCommand, '__init__', lambda x: None):
+        with patch.object(TeardownCommand, "__init__", lambda _: None):
             command = TeardownCommand()
             command.tmux_manager = MagicMock()
             command.tmux_manager.load_projects.return_value = {"sessions": {}}
@@ -75,12 +75,12 @@ class TestTeardownCommand:
         # Setup mocks
         mock_server_instance = MagicMock()
         mock_server.return_value = mock_server_instance
-        
+
         # Mock session exists
         mock_session = MagicMock()
         mock_server_instance.sessions.get.return_value = mock_session
 
-        with patch.object(TeardownCommand, '__init__', lambda x: None):
+        with patch.object(TeardownCommand, "__init__", lambda _: None):
             command = TeardownCommand()
             command.tmux_manager = MagicMock()
             command.tmux_manager.load_projects.return_value = {
@@ -107,7 +107,7 @@ class TestTeardownCommand:
     @patch("commands.teardown.subprocess.run")
     def test_execute_with_specific_session_not_defined(self, mock_subprocess: MagicMock, mock_server: MagicMock) -> None:
         """Test execute with specific session that's not defined in projects.yaml."""
-        with patch.object(TeardownCommand, '__init__', lambda x: None):
+        with patch.object(TeardownCommand, "__init__", lambda _: None):
             command = TeardownCommand()
             command.tmux_manager = MagicMock()
             command.tmux_manager.load_projects.return_value = {
@@ -129,11 +129,11 @@ class TestTeardownCommand:
         # Setup mocks
         mock_server_instance = MagicMock()
         mock_server.return_value = mock_server_instance
-        
+
         # Mock session doesn't exist
         mock_server_instance.sessions.get.return_value = None
 
-        with patch.object(TeardownCommand, '__init__', lambda x: None):
+        with patch.object(TeardownCommand, "__init__", lambda _: None):
             command = TeardownCommand()
             command.tmux_manager = MagicMock()
             command.tmux_manager.load_projects.return_value = {
@@ -157,7 +157,7 @@ class TestTeardownCommand:
 
     def test_execute_handles_exceptions(self) -> None:
         """Test execute handles exceptions and raises CommandError."""
-        with patch.object(TeardownCommand, '__init__', lambda x: None):
+        with patch.object(TeardownCommand, "__init__", lambda _: None):
             command = TeardownCommand()
             command.tmux_manager = MagicMock()
             command.tmux_manager.load_projects.side_effect = Exception("Test error")
@@ -174,12 +174,12 @@ class TestTeardownCommand:
         # Setup mocks
         mock_server_instance = MagicMock()
         mock_server.return_value = mock_server_instance
-        
+
         # Mock session exists
         mock_session = MagicMock()
         mock_server_instance.sessions.get.return_value = mock_session
 
-        with patch.object(TeardownCommand, '__init__', lambda x: None):
+        with patch.object(TeardownCommand, "__init__", lambda _: None):
             command = TeardownCommand()
             command.tmux_manager = MagicMock()
             command.tmux_manager.load_projects.return_value = {

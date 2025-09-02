@@ -36,7 +36,7 @@ class SetupCommand(BaseCommand, SessionCommandMixin, ConfigCommandMixin):
         session_name = kwargs.get("session_name")
         dry_run = kwargs.get("dry_run", False)
         force = kwargs.get("force", False)
-        
+
         with with_startup_progress("🔧 Initializing session setup...") as update:  # type: ignore
             setup_service = SessionSetupService(self.tmux_manager)
             update("🚀 Setting up tmux sessions...")

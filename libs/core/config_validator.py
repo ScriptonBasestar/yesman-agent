@@ -15,11 +15,9 @@ import yaml
 from pydantic import ValidationError as PydanticValidationError
 from rich.console import Console
 from rich.table import Table
-from rich.text import Text
 
 from .config_loader import ConfigLoader
 from .config_schema import YesmanConfigSchema
-from .error_handling import ErrorCategory, ErrorSeverity, YesmanError
 
 
 class ValidationLevel(Enum):
@@ -33,7 +31,7 @@ class ValidationLevel(Enum):
 @dataclass
 class ValidationError:
     """Represents a configuration validation error."""
-    
+
     message: str
     level: ValidationLevel
     category: str
@@ -45,22 +43,22 @@ class ValidationError:
 @dataclass
 class ValidationResult:
     """Results from configuration validation."""
-    
+
     is_valid: bool = True
     errors: list[ValidationError] = field(default_factory=list)
     warnings: list[ValidationError] = field(default_factory=list)
     info: list[ValidationError] = field(default_factory=list)
-    
+
     def add_error(self, error: ValidationError) -> None:
         """Add a validation error and update validity status."""
-        if error.level == ValidationLevel.ERROR or error.level == ValidationLevel.CRITICAL:
+        if error.level in {ValidationLevel.ERROR, ValidationLevel.CRITICAL}:
             self.errors.append(error)
             self.is_valid = False
         elif error.level == ValidationLevel.WARNING:
             self.warnings.append(error)
         else:
             self.info.append(error)
-    
+
     @property
     def total_issues(self) -> int:
         """Total number of issues found."""
@@ -69,15 +67,15 @@ class ValidationResult:
 
 class ConfigValidator:
     """Service for validating Yesman configuration files."""
-    
+
     def __init__(self) -> None:
         self.config_loader = ConfigLoader()
         self.console = Console()
-    
+
     def validate_all(self) -> ValidationResult:
         """Validate all configuration files and dependencies."""
         result = ValidationResult()
-        
+
         # Validate main configuration
         try:
             config = self.config_loader.load_config()
@@ -90,22 +88,22 @@ class ConfigValidator:
                 suggestion="Check configuration file syntax and permissions"
             ))
             return result
-        
+
         # Validate file existence and permissions
         self._validate_file_permissions(result)
-        
+
         # Validate external dependencies
         self._validate_dependencies(result)
-        
+
         # Validate configuration values
         self._validate_configuration_values(result)
-        
+
         return result
-    
+
     def validate_file(self, file_path: Path) -> ValidationResult:
         """Validate a specific configuration file."""
         result = ValidationResult()
-        
+
         if not file_path.exists():
             result.add_error(ValidationError(
                 message=f"Configuration file does not exist: {file_path}",
@@ -115,11 +113,11 @@ class ConfigValidator:
                 suggestion="Create the configuration file or check the path"
             ))
             return result
-        
+
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, encoding="utf-8") as f:
                 config_data = yaml.safe_load(f)
-            
+
             if config_data is None:
                 result.add_error(ValidationError(
                     message=f"Configuration file is empty: {file_path}",
@@ -129,17 +127,17 @@ class ConfigValidator:
                     suggestion="Add configuration settings to the file"
                 ))
                 return result
-            
+
             # Validate against schema
             YesmanConfigSchema(**config_data)
-            
+
             result.add_error(ValidationError(
                 message=f"Configuration file is valid: {file_path}",
                 level=ValidationLevel.INFO,
                 category="validation_success",
                 file_path=str(file_path)
             ))
-            
+
         except yaml.YAMLError as e:
             result.add_error(ValidationError(
                 message=f"Invalid YAML syntax in {file_path}: {e}",
@@ -166,9 +164,9 @@ class ConfigValidator:
                 file_path=str(file_path),
                 suggestion="Check file permissions and content"
             ))
-        
+
         return result
-    
+
     def _validate_schema(self, config: dict[str, Any], result: ValidationResult) -> None:
         """Validate configuration against Pydantic schema."""
         try:
@@ -187,18 +185,18 @@ class ConfigValidator:
                     category="schema_validation",
                     suggestion="Check configuration field types and required values"
                 ))
-    
+
     def _validate_file_permissions(self, result: ValidationResult) -> None:
         """Validate file and directory permissions."""
         config_dirs = [
             Path("~/.scripton/yesman").expanduser(),
             Path("./.scripton/yesman").expanduser() if Path("./.scripton").exists() else None
         ]
-        
+
         for config_dir in config_dirs:
             if config_dir is None:
                 continue
-                
+
             if config_dir.exists():
                 if not config_dir.is_dir():
                     result.add_error(ValidationError(
@@ -221,14 +219,14 @@ class ConfigValidator:
                         level=ValidationLevel.INFO,
                         category="file_permissions"
                     ))
-    
+
     def _validate_dependencies(self, result: ValidationResult) -> None:
         """Validate external tool dependencies."""
         dependencies = {
             "tmux": "brew install tmux (macOS) or apt install tmux (Ubuntu)",
             "git": "install git from https://git-scm.com/downloads",
         }
-        
+
         for tool, install_hint in dependencies.items():
             if shutil.which(tool):
                 result.add_error(ValidationError(
@@ -244,16 +242,16 @@ class ConfigValidator:
                     category="dependencies",
                     suggestion=install_hint
                 ))
-    
+
     def _validate_configuration_values(self, result: ValidationResult) -> None:
         """Validate configuration value constraints."""
         try:
             config = self.config_loader.load_config()
-            
+
             # Example validations - extend as needed
             if "tmux" in config:
                 tmux_config = config["tmux"]
-                
+
                 # Check default shell exists
                 if "default_shell" in tmux_config:
                     shell_path = Path(tmux_config["default_shell"])
@@ -276,63 +274,63 @@ class ConfigValidator:
                 level=ValidationLevel.WARNING,
                 category="configuration_values"
             ))
-    
+
     def display_results(self, result: ValidationResult, verbose: bool = False) -> None:
         """Display validation results with Rich formatting."""
         if result.is_valid and not result.warnings and not verbose:
             self.console.print("✅ All configuration validation passed", style="green bold")
             return
-        
+
         # Summary
         if result.is_valid:
             self.console.print("✅ Configuration is valid", style="green bold")
         else:
             self.console.print("❌ Configuration has issues", style="red bold")
-        
+
         self.console.print()
-        
+
         # Create summary table
         table = Table(title="Validation Summary")
         table.add_column("Category", style="cyan")
         table.add_column("Status", style="white")
         table.add_column("Count", justify="right", style="magenta")
-        
+
         if result.errors:
             table.add_row("Errors", "❌", str(len(result.errors)), style="red")
         if result.warnings:
             table.add_row("Warnings", "⚠️", str(len(result.warnings)), style="yellow")
         if verbose and result.info:
             table.add_row("Info", "ℹ️", str(len(result.info)), style="blue")
-        
+
         self.console.print(table)
         self.console.print()
-        
+
         # Detailed issues
         for error in result.errors:
             self.console.print(f"❌ {error.message}", style="red")
             if error.suggestion:
                 self.console.print(f"   💡 {error.suggestion}", style="yellow")
             self.console.print()
-        
+
         for warning in result.warnings:
             self.console.print(f"⚠️  {warning.message}", style="yellow")
             if warning.suggestion:
                 self.console.print(f"   💡 {warning.suggestion}", style="cyan")
             self.console.print()
-        
+
         if verbose:
             for info in result.info:
                 self.console.print(f"ℹ️  {info.message}", style="blue")
                 self.console.print()
-    
+
     def auto_fix(self, result: ValidationResult) -> int:
         """Attempt to automatically fix fixable issues."""
         fixed_count = 0
-        
+
         for error in result.errors + result.warnings:
             if not error.auto_fixable:
                 continue
-                
+
             try:
                 if "permissions" in error.category and error.file_path:
                     # Fix directory permissions
@@ -342,5 +340,5 @@ class ConfigValidator:
                     self.console.print(f"✅ Fixed permissions for: {error.file_path}", style="green")
             except Exception as e:
                 self.console.print(f"❌ Failed to fix {error.message}: {e}", style="red")
-        
+
         return fixed_count

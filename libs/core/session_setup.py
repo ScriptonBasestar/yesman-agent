@@ -419,21 +419,21 @@ class SessionSetupService:
 
         for session_name, session_conf in sessions.items():
             click.echo(f"\n🔧 Would set up session: {session_name}")
-            
+
             try:
                 # Build configuration (validation only)
                 config_dict = self.config_builder.build_session_config(session_name, session_conf)
-                
+
                 # Show session details
                 click.echo(f"  📁 Working directory: {config_dict.get('start_directory', 'current')}")
-                windows = config_dict.get('windows', [])
+                windows = config_dict.get("windows", [])
                 click.echo(f"  🪟 Windows: {len(windows)}")
-                
+
                 for i, window in enumerate(windows, 1):
-                    window_name = window.get('window_name', f'window-{i}')
-                    panes = window.get('panes', [])
+                    window_name = window.get("window_name", f"window-{i}")
+                    panes = window.get("panes", [])
                     click.echo(f"    {i}. {window_name} ({len(panes)} panes)")
-                
+
                 # Check validation (but don't modify anything)
                 if not self.validator.validate_session_config(session_name, config_dict):
                     click.echo("  ❌ Validation errors:")
@@ -445,10 +445,10 @@ class SessionSetupService:
                     if self._session_exists(session_name):
                         click.echo(f"  ⚠️  Session '{session_name}' already exists (would be recreated)")
                     else:
-                        click.echo(f"  ✨ New session would be created")
-                    
+                        click.echo("  ✨ New session would be created")
+
                     planned_count += 1
-                    
+
             except Exception as e:
                 click.echo(f"  ❌ Configuration error: {e}")
                 validation_errors_count += 1

@@ -4,8 +4,8 @@
 """Test for async commands (browse_async, status_async)."""
 
 from unittest.mock import MagicMock, patch
-import pytest
 
+import pytest
 from click.testing import CliRunner
 
 # Import async commands - may fail due to missing dependencies
@@ -24,8 +24,6 @@ except ImportError:
     STATUS_ASYNC_AVAILABLE = False
     AsyncStatusCommand = None
 
-from libs.core.base_command import BaseCommand
-
 
 class TestAsyncCommands:
     """Test async command functionality."""
@@ -38,16 +36,16 @@ class TestAsyncCommands:
     def test_async_browse_command_inheritance(self) -> None:
         """Test that AsyncBrowseCommand properly inherits from BaseCommand."""
         # Check inheritance through the async command hierarchy
-        assert hasattr(AsyncBrowseCommand, 'execute')
-        assert hasattr(AsyncBrowseCommand, 'run')
+        assert hasattr(AsyncBrowseCommand, "execute")
+        assert hasattr(AsyncBrowseCommand, "run")
         # AsyncBrowseCommand inherits from AsyncMonitoringCommand which inherits from BaseCommand
 
     @pytest.mark.skipif(not STATUS_ASYNC_AVAILABLE, reason="status_async not available due to import issues")
     def test_async_status_command_inheritance(self) -> None:
         """Test that AsyncStatusCommand properly inherits from BaseCommand."""
         # Check inheritance through the async command hierarchy
-        assert hasattr(AsyncStatusCommand, 'execute')
-        assert hasattr(AsyncStatusCommand, 'run')
+        assert hasattr(AsyncStatusCommand, "execute")
+        assert hasattr(AsyncStatusCommand, "run")
         # AsyncStatusCommand inherits from AsyncMonitoringCommand which inherits from BaseCommand
 
     @pytest.mark.skipif(not BROWSE_ASYNC_AVAILABLE, reason="browse_async not available due to import issues")
@@ -86,14 +84,14 @@ class TestAsyncCommands:
     def test_browse_sync_mode_fallback(self) -> None:
         """Test browse command fallback behavior when sync mode is requested."""
         # Test the fallback logic directly without mocking
-        with patch('click.echo') as mock_echo, \
-             patch('commands.browse_async.AsyncBrowseCommand') as mock_command_class:
-            
+        with patch("click.echo") as mock_echo, \
+             patch("commands.browse_async.AsyncBrowseCommand") as mock_command_class:
+
             mock_command = MagicMock()
             mock_command_class.return_value = mock_command
-            
+
             result = self.runner.invoke(browse, ["--no-async-mode"])
-            
+
             # Should show warning messages about sync mode not being available
             assert result.exit_code == 0
             # The CLI should have printed fallback messages
@@ -102,17 +100,17 @@ class TestAsyncCommands:
     def test_async_interactive_browser_basic_structure(self) -> None:
         """Test AsyncInteractiveBrowser has expected interface."""
         from commands.browse_async import AsyncInteractiveBrowser
-        
+
         # Check that class has expected async methods
-        assert hasattr(AsyncInteractiveBrowser, 'start')
-        assert hasattr(AsyncInteractiveBrowser, 'stop')
-        assert hasattr(AsyncInteractiveBrowser, 'update_data')
+        assert hasattr(AsyncInteractiveBrowser, "start")
+        assert hasattr(AsyncInteractiveBrowser, "stop")
+        assert hasattr(AsyncInteractiveBrowser, "update_data")
 
     def test_async_commands_import_handling(self) -> None:
         """Test that async commands handle import failures gracefully."""
         # This test verifies that our test setup correctly handles import failures
         # and that the module structure allows for graceful degradation
-        
+
         if not BROWSE_ASYNC_AVAILABLE:
             # If browse_async is not available, ensure we handle it gracefully
             assert AsyncBrowseCommand is None
@@ -133,45 +131,45 @@ class TestAsyncCommands:
     def test_async_status_dashboard_basic_structure(self) -> None:
         """Test AsyncStatusDashboard has expected interface."""
         from commands.status_async import AsyncStatusDashboard
-        
+
         # Check that class has expected async methods
-        assert hasattr(AsyncStatusDashboard, 'start')
-        assert hasattr(AsyncStatusDashboard, 'stop')
-        assert hasattr(AsyncStatusDashboard, 'update_display')
+        assert hasattr(AsyncStatusDashboard, "start")
+        assert hasattr(AsyncStatusDashboard, "stop")
+        assert hasattr(AsyncStatusDashboard, "update_display")
 
     def test_async_base_command_pattern_compliance(self) -> None:
         """Test that async commands follow the BaseCommand pattern."""
         # This test ensures that even if async commands have import issues,
         # they still follow the expected command pattern when available
-        
+
         if BROWSE_ASYNC_AVAILABLE and AsyncBrowseCommand:
             # Should have execute method (from BaseCommand pattern)
-            assert hasattr(AsyncBrowseCommand, 'execute')
-            
+            assert hasattr(AsyncBrowseCommand, "execute")
+
         if STATUS_ASYNC_AVAILABLE and AsyncStatusCommand:
-            # Should have execute method (from BaseCommand pattern)  
-            assert hasattr(AsyncStatusCommand, 'execute')
+            # Should have execute method (from BaseCommand pattern)
+            assert hasattr(AsyncStatusCommand, "execute")
 
     @pytest.mark.skipif(not BROWSE_ASYNC_AVAILABLE, reason="browse_async not available due to import issues")
     def test_async_browse_execute_with_mocked_dependencies(self) -> None:
         """Test AsyncBrowseCommand execute with mocked dependencies."""
-        with patch.object(AsyncBrowseCommand, '__init__', lambda x: None):
+        with patch.object(AsyncBrowseCommand, "__init__", lambda _: None):
             command = AsyncBrowseCommand()
             # Mock the async methods to avoid actual async execution
             command.tmux_manager = MagicMock()
             command.console = MagicMock()
-            
+
             # Test that the command structure supports the expected interface
-            assert hasattr(command, 'execute')
+            assert hasattr(command, "execute")
 
     @pytest.mark.skipif(not STATUS_ASYNC_AVAILABLE, reason="status_async not available due to import issues")
     def test_async_status_execute_with_mocked_dependencies(self) -> None:
         """Test AsyncStatusCommand execute with mocked dependencies."""
-        with patch.object(AsyncStatusCommand, '__init__', lambda x: None):
+        with patch.object(AsyncStatusCommand, "__init__", lambda _: None):
             command = AsyncStatusCommand()
             # Mock the async methods to avoid actual async execution
             command.tmux_manager = MagicMock()
             command.console = MagicMock()
-            
+
             # Test that the command structure supports the expected interface
-            assert hasattr(command, 'execute')
+            assert hasattr(command, "execute")

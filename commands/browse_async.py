@@ -347,7 +347,7 @@ def browse(update_interval: float, async_mode: bool) -> None:
         click.echo("⚠️  Sync mode requested, but only async mode is available.")
         click.echo("💡 Use 'yesman status' for basic session information, or use --async-mode for full browser.")
         click.echo("🚀 Automatically switching to async mode...")
-        
+
         command = AsyncBrowseCommand()
         command.run(update_interval=update_interval)
 

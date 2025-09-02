@@ -5,10 +5,11 @@ import json
 import logging
 import os
 import uuid
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, AsyncIterator, Dict, List, Optional
+from typing import Any
 
 from .interfaces import (
     AgentConfig,
@@ -30,10 +31,10 @@ class AgentProcess:
     workspace_path: Path
     status: AgentStatus
     created_at: str
-    current_process: Optional[asyncio.subprocess.Process] = None
-    current_run_id: Optional[str] = None
-    last_activity: Optional[str] = None
-    error_message: Optional[str] = None
+    current_process: asyncio.subprocess.Process | None = None
+    current_run_id: str | None = None
+    last_activity: str | None = None
+    error_message: str | None = None
     event_queue: asyncio.Queue = field(default_factory=asyncio.Queue)
 
     def update_activity(self) -> None:
@@ -61,7 +62,7 @@ class HeadlessAdapter:
         workspace_manager: DefaultWorkspaceManager,
         claude_binary: str = "claude",
         max_concurrent: int = 5,
-    ):
+    ) -> None:
         """Initialize headless adapter.
 
         Args:
@@ -75,11 +76,11 @@ class HeadlessAdapter:
         self.logger = logging.getLogger(f"{__name__}.HeadlessAdapter")
 
         # Track active agents
-        self.active_agents: Dict[str, AgentProcess] = {}
+        self.active_agents: dict[str, AgentProcess] = {}
         self._shutdown_event = asyncio.Event()
 
         # Start background cleanup task
-        self._cleanup_task: Optional[asyncio.Task] = None
+        self._cleanup_task: asyncio.Task | None = None
 
     async def create_agent(self, config: AgentConfig) -> str:
         """Create a new Claude agent.
@@ -125,7 +126,7 @@ class HeadlessAdapter:
             return agent_id
 
         except Exception as e:
-            self.logger.error(f"Failed to create agent: {e}")
+            self.logger.exception("Failed to create agent")
             # Cleanup if partially created
             if agent_id in self.active_agents:
                 await self.dispose_agent(agent_id)
@@ -135,7 +136,7 @@ class HeadlessAdapter:
         self,
         agent_id: str,
         prompt: str,
-        options: Optional[TaskOptions] = None,
+        options: TaskOptions | None = None,
     ) -> str:
         """Run a task on the specified agent.
 
@@ -204,7 +205,7 @@ class HeadlessAdapter:
             return run_id
 
         except Exception as e:
-            self.logger.error(f"Failed to start task for agent {agent_id}: {e}")
+            self.logger.exception(f"Failed to start task for agent {agent_id}")
             agent.status = AgentStatus.ERROR
             agent.error_message = str(e)
             raise RuntimeError(f"Task execution failed: {e}") from e
@@ -230,10 +231,10 @@ class HeadlessAdapter:
                 # Wait for event with timeout
                 event = await asyncio.wait_for(agent.event_queue.get(), timeout=1.0)
                 yield event
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue
             except Exception as e:
-                self.logger.error(f"Error streaming events for agent {agent_id}: {e}")
+                self.logger.exception(f"Error streaming events for agent {agent_id}")
                 break
 
     async def cancel_task(self, agent_id: str, run_id: str) -> bool:
@@ -264,7 +265,7 @@ class HeadlessAdapter:
                 try:
                     # Wait for graceful termination
                     await asyncio.wait_for(agent.current_process.wait(), timeout=5.0)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     # Force kill if needed
                     agent.current_process.kill()
                     await agent.current_process.wait()
@@ -288,7 +289,7 @@ class HeadlessAdapter:
             return False
 
         except Exception as e:
-            self.logger.error(f"Failed to cancel task {run_id} for agent {agent_id}: {e}")
+            self.logger.exception(f"Failed to cancel task {run_id} for agent {agent_id}")
             return False
 
     async def get_status(self, agent_id: str) -> AgentInfo:
@@ -309,7 +310,7 @@ class HeadlessAdapter:
 
         return agent.to_agent_info()
 
-    async def list_agents(self) -> List[AgentInfo]:
+    async def list_agents(self) -> list[AgentInfo]:
         """List all active agents.
 
         Returns:
@@ -355,7 +356,7 @@ class HeadlessAdapter:
             return True
 
         except Exception as e:
-            self.logger.error(f"Failed to dispose agent {agent_id}: {e}")
+            self.logger.exception(f"Failed to dispose agent {agent_id}")
             return False
 
     async def shutdown(self) -> None:
@@ -376,7 +377,7 @@ class HeadlessAdapter:
             try:
                 await self.dispose_agent(agent_id)
             except Exception as e:
-                self.logger.error(f"Error disposing agent {agent_id} during shutdown: {e}")
+                self.logger.exception(f"Error disposing agent {agent_id} during shutdown")
 
         self.logger.info("Headless adapter shutdown complete")
 
@@ -386,7 +387,7 @@ class HeadlessAdapter:
         prompt: str,
         options: TaskOptions,
         run_id: str,
-    ) -> List[str]:
+    ) -> list[str]:
         """Build command for Claude execution.
 
         Args:
@@ -445,10 +446,10 @@ class HeadlessAdapter:
 
                     await self._process_output_line(agent, line.decode().strip())
 
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     continue
                 except Exception as e:
-                    self.logger.error(f"Error reading process output: {e}")
+                    self.logger.exception("Error reading process output")
                     break
 
             # Process completed
@@ -463,7 +464,7 @@ class HeadlessAdapter:
                 if remaining_stderr:
                     self.logger.warning(f"Agent {agent.agent_id} stderr: {remaining_stderr.decode()}")
             except Exception as e:
-                self.logger.error(f"Error reading remaining output: {e}")
+                self.logger.exception("Error reading remaining output")
 
             # Update agent status
             if return_code == 0:
@@ -492,7 +493,7 @@ class HeadlessAdapter:
             agent.update_activity()
 
         except Exception as e:
-            self.logger.error(f"Error monitoring process for agent {agent.agent_id}: {e}")
+            self.logger.exception(f"Error monitoring process for agent {agent.agent_id}")
             agent.status = AgentStatus.ERROR
             agent.error_message = str(e)
 
@@ -531,8 +532,8 @@ class HeadlessAdapter:
         self,
         agent: AgentProcess,
         event_type: EventType,
-        data: Dict[str, Any],
-        run_id: Optional[str] = None,
+        data: dict[str, Any],
+        run_id: str | None = None,
     ) -> None:
         """Emit an event for an agent.
 
@@ -552,7 +553,7 @@ class HeadlessAdapter:
         try:
             await agent.event_queue.put(event)
         except Exception as e:
-            self.logger.error(f"Failed to emit event for agent {agent.agent_id}: {e}")
+            self.logger.exception(f"Failed to emit event for agent {agent.agent_id}")
 
     def start_cleanup_task(self) -> None:
         """Start background cleanup task."""
@@ -581,5 +582,5 @@ class HeadlessAdapter:
                 await asyncio.sleep(300)  # 5 minutes
 
             except Exception as e:
-                self.logger.error(f"Error in background cleanup: {e}")
+                self.logger.exception("Error in background cleanup")
                 await asyncio.sleep(60)  # Wait 1 minute before retry
