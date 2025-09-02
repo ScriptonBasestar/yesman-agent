@@ -168,14 +168,12 @@ class WorkflowExecutionEngine:
             return claude_agent
 
         except Exception as e:
-            raise ExecutionEngineError(f"Failed to create Claude agent: {e}")
+            raise ExecutionEngineError(f"Failed to create Claude agent: {e}") from e
 
     async def _execute_steps(self, execution: WorkflowExecution, claude_agent: ClaudeAgent, variables: dict[str, str]) -> ExecutionResult:
         """Execute workflow steps with dependency resolution."""
         workflow_steps = execution.config.to_workflow_steps()
 
-        # Build dependency graph
-        step_dependencies = self._build_dependency_graph(workflow_steps)
         completed_steps = set()
 
         step_index = 0

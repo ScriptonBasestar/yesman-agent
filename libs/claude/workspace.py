@@ -153,7 +153,7 @@ class DefaultWorkspaceManager(WorkspaceManager):
 
             return True
 
-        except Exception as e:
+        except Exception:
             self.logger.exception(f"Failed to cleanup sandbox for agent {agent_id}")
             return False
 
@@ -219,7 +219,7 @@ class DefaultWorkspaceManager(WorkspaceManager):
 
             return cleaned_count
 
-        except Exception as e:
+        except Exception:
             self.logger.exception("Failed to cleanup orphaned sandboxes")
             return 0
 
@@ -251,12 +251,12 @@ class DefaultWorkspaceManager(WorkspaceManager):
             # Now remove the tree
             shutil.rmtree(path)
 
-        except Exception as e:
+        except Exception:
             self.logger.exception(f"Failed to securely remove {path}")
             # Fallback to regular rmtree
             try:
                 shutil.rmtree(path)
-            except Exception as fallback_e:
+            except Exception:
                 self.logger.exception("Fallback removal also failed")
                 raise
 
@@ -339,7 +339,7 @@ class DefaultWorkspaceManager(WorkspaceManager):
                         if new_stats.get("total_size_mb", 0) <= max_size_mb:
                             return True
 
-                    except Exception as e:
+                    except Exception:
                         self.logger.exception(f"Failed to clean temp directory for {agent_id}")
 
             return False
@@ -464,13 +464,13 @@ class DefaultSecurityPolicy(SecurityPolicy):
 
         import re
 
+        command_lower = command.lower().strip()
+
         # Check against dangerous patterns
         for pattern in dangerous_patterns:
             if re.search(pattern, command_lower, re.IGNORECASE):
                 self.logger.warning(f"Command execution denied for agent {agent_id}: {command} (matched pattern: {pattern})")
                 return False
-
-        command_lower = command.lower().strip()
 
         # Additional simple string checks for common dangerous commands
         simple_dangerous = {
@@ -575,8 +575,6 @@ class DefaultSecurityPolicy(SecurityPolicy):
             True if resource usage is within limits
         """
         try:
-            import os
-
             import psutil
 
             # Find processes associated with this agent
@@ -618,7 +616,7 @@ class DefaultSecurityPolicy(SecurityPolicy):
         except ImportError:
             self.logger.warning("psutil not available for resource monitoring")
             return True  # Assume OK if can't monitor
-        except Exception as e:
+        except Exception:
             self.logger.exception(f"Failed to validate resource usage for {agent_id}")
             return True  # Assume OK on error to avoid blocking agents
 

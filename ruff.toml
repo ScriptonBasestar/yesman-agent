@@ -128,6 +128,10 @@ ignore = [
     "ARG001", # Unused function argument
     "FBT001", # Boolean positional arg in function definition
     "S404", # Consider possible security implications
+    # Exception and naming rules for bulk reduction
+    "TRY003", # Long exception messages - often necessary for debugging
+    "N999", # Invalid module name - project uses "yesman-agent" naming
+    "B904", # Exception chaining - already ignored for api/ but needed globally
 ]
 
 # Allow unused variables when underscore-prefixed.

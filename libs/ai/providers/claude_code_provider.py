@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import Any
 
 from ...claude.headless_adapter import HeadlessAdapter
+from ...claude.workspace import WorkspaceSecurityManager
+from ...yesman_config import YesmanConfig
 from ..provider_interface import AIProvider, AIProviderType, AIResponse, AITask, TaskStatus
 
 
