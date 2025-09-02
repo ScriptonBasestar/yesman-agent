@@ -29,8 +29,8 @@ class ClaudeSession:
 class ClaudeCliTool(BaseTool):
     """Tool for executing Claude CLI commands with session continuity."""
 
-    name = "claude_cli"
-    description = "Execute Claude CLI commands with session management and context continuity"
+    name: str = "claude_cli"
+    description: str = "Execute Claude CLI commands with session management and context continuity"
 
     def __init__(self, session: ClaudeSession) -> None:
         super().__init__()

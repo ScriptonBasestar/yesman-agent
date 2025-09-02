@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from libs.core.error_handling import ErrorCategory, YesmanError
-from libs.workflows.execution_engine import AsyncWorkflowExecutionEngine
+from libs.workflows.execution_engine import WorkflowExecutionEngine
 from libs.workflows.models import WorkflowConfig, WorkflowExecution, WorkflowStatus
 from libs.workflows.template_manager import WorkflowTemplateManager
 
@@ -26,7 +26,7 @@ class WorkflowServiceError(YesmanError):
 class WorkflowService:
     """Service for managing workflow templates and executions."""
 
-    def __init__(self, execution_engine: AsyncWorkflowExecutionEngine, template_manager: WorkflowTemplateManager | None = None) -> None:
+    def __init__(self, execution_engine: WorkflowExecutionEngine, template_manager: WorkflowTemplateManager | None = None) -> None:
         self.execution_engine = execution_engine
         self.executions: dict[str, WorkflowExecution] = {}
         self.template_manager = template_manager or WorkflowTemplateManager()

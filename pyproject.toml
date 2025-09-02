@@ -36,6 +36,8 @@ dependencies = [
     "starlette>=0.47.2",
     "urllib3>=2.5.0",
     "sse-starlette>=3.0.2",
+    "aiohttp>=3.12.15",
+    "langchain>=0.3.27",
 ]
 
 [project.urls]
