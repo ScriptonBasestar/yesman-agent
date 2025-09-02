@@ -16,6 +16,8 @@ dependency_analysis.json
 integration_test_results.json
 safety-report.json
 
+.playwright-mcp/
+
 # =============================================================================
 # TAURI DASHBOARD PROTECTION
 # Critical Tauri dashboard files that should never be ignored
