@@ -320,7 +320,7 @@
       <div class="flex justify-end space-x-3 mt-6">
         <button 
           class="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
-          on:click={() => { showTaskForm = false; selectedAgent = ''; taskPrompt = ''; }}"
+          on:click={() => { showTaskForm = false; selectedAgent = ''; taskPrompt = ''; }}
         >
           Cancel
         </button>

@@ -123,6 +123,8 @@ async def create_agent(config_request: AgentConfigRequest) -> str:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
+# Handle both /agents and /agents/ paths
+@router.get("", response_model=list[AgentResponse])
 @router.get("/", response_model=list[AgentResponse])
 async def list_agents() -> list[AgentResponse]:
     """List all active agents.
