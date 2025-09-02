@@ -15,6 +15,7 @@ from typing import Any
 
 class AIProviderType(Enum):
     """지원하는 AI 제공업체 타입."""
+
     CLAUDE_CODE = "claude_code"
     CLAUDE_API = "claude_api"
     OLLAMA = "ollama"
@@ -25,6 +26,7 @@ class AIProviderType(Enum):
 
 class TaskStatus(Enum):
     """AI 작업 상태."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -35,6 +37,7 @@ class TaskStatus(Enum):
 @dataclass
 class AIMessage:
     """AI 메시지 표준 형식."""
+
     role: str  # "user", "assistant", "system"
     content: str
     timestamp: str | None = None
@@ -44,6 +47,7 @@ class AIMessage:
 @dataclass
 class AIResponse:
     """AI 응답 표준 형식."""
+
     content: str
     status: TaskStatus
     provider: AIProviderType
@@ -56,6 +60,7 @@ class AIResponse:
 @dataclass
 class AITask:
     """AI 작업 정의."""
+
     task_id: str
     prompt: str
     model: str
@@ -140,11 +145,7 @@ class AIProvider(ABC):
 
     def get_config_schema(self) -> dict[str, Any]:
         """설정 스키마 반환 (UI 생성용)."""
-        return {
-            "type": "object",
-            "properties": {},
-            "required": self.get_required_config_keys()
-        }
+        return {"type": "object", "properties": {}, "required": self.get_required_config_keys()}
 
 
 class AIProviderManager:
@@ -191,22 +192,10 @@ class AIProviderManager:
         """작업 실행."""
         provider = self.get_provider(task.provider)
         if not provider:
-            return AIResponse(
-                content="",
-                status=TaskStatus.FAILED,
-                provider=task.provider,
-                model=task.model,
-                error=f"Provider {task.provider} not found"
-            )
+            return AIResponse(content="", status=TaskStatus.FAILED, provider=task.provider, model=task.model, error=f"Provider {task.provider} not found")
 
         if not provider.is_initialized:
-            return AIResponse(
-                content="",
-                status=TaskStatus.FAILED,
-                provider=task.provider,
-                model=task.model,
-                error=f"Provider {task.provider} not initialized"
-            )
+            return AIResponse(content="", status=TaskStatus.FAILED, provider=task.provider, model=task.model, error=f"Provider {task.provider} not initialized")
 
         self._active_tasks[task.task_id] = task
 
@@ -214,13 +203,7 @@ class AIProviderManager:
             response = await provider.execute_task(task)
             return response
         except Exception as e:
-            return AIResponse(
-                content="",
-                status=TaskStatus.FAILED,
-                provider=task.provider,
-                model=task.model,
-                error=str(e)
-            )
+            return AIResponse(content="", status=TaskStatus.FAILED, provider=task.provider, model=task.model, error=str(e))
         finally:
             self._active_tasks.pop(task.task_id, None)
 
@@ -228,17 +211,11 @@ class AIProviderManager:
         """스트리밍 작업 실행."""
         provider = self.get_provider(task.provider)
         if not provider:
-            yield json.dumps({
-                "error": f"Provider {task.provider} not found",
-                "status": "failed"
-            })
+            yield json.dumps({"error": f"Provider {task.provider} not found", "status": "failed"})
             return
 
         if not provider.is_initialized:
-            yield json.dumps({
-                "error": f"Provider {task.provider} not initialized",
-                "status": "failed"
-            })
+            yield json.dumps({"error": f"Provider {task.provider} not initialized", "status": "failed"})
             return
 
         self._active_tasks[task.task_id] = task
@@ -247,10 +224,7 @@ class AIProviderManager:
             async for chunk in provider.stream_task(task):
                 yield chunk
         except Exception as e:
-            yield json.dumps({
-                "error": str(e),
-                "status": "failed"
-            })
+            yield json.dumps({"error": str(e), "status": "failed"})
         finally:
             self._active_tasks.pop(task.task_id, None)
 
@@ -282,11 +256,7 @@ class AIProviderManager:
         """제공업체 정보 반환."""
         info = {}
         for provider_type, provider in self._providers.items():
-            info[provider_type.value] = {
-                "initialized": provider.is_initialized,
-                "config_schema": provider.get_config_schema(),
-                "required_keys": provider.get_required_config_keys()
-            }
+            info[provider_type.value] = {"initialized": provider.is_initialized, "config_schema": provider.get_config_schema(), "required_keys": provider.get_required_config_keys()}
         return info
 
 

@@ -15,11 +15,7 @@ class TemplateManagerError(YesmanError):
     """Template manager specific error."""
 
     def __init__(self, message: str, **kwargs) -> None:
-        super().__init__(
-            message=message,
-            category=ErrorCategory.CONFIGURATION,
-            **kwargs
-        )
+        super().__init__(message=message, category=ErrorCategory.CONFIGURATION, **kwargs)
 
 
 class WorkflowTemplateManager:
@@ -158,14 +154,7 @@ class WorkflowTemplateManager:
             template_path = template_dir / f"{template_id}.yaml"
 
             # Add metadata
-            full_template = {
-                "metadata": {
-                    "id": template_id,
-                    "created_at": datetime.now(UTC).isoformat(),
-                    "version": "1.0"
-                },
-                **template_data
-            }
+            full_template = {"metadata": {"id": template_id, "created_at": datetime.now(UTC).isoformat(), "version": "1.0"}, **template_data}
 
             # Save to file
             with open(template_path, "w", encoding="utf-8") as f:
@@ -263,8 +252,7 @@ class WorkflowTemplateManager:
 
         return errors
 
-    def create_template_from_config(self, template_id: str, name: str, description: str,
-                                  steps: list[dict[str, Any]], **kwargs) -> dict[str, Any]:
+    def create_template_from_config(self, template_id: str, name: str, description: str, steps: list[dict[str, Any]], **kwargs) -> dict[str, Any]:
         """Create template data structure from configuration.
 
         Args:
@@ -278,21 +266,15 @@ class WorkflowTemplateManager:
             Complete template data structure
         """
         template_data = {
-            "metadata": {
-                "id": template_id,
-                "name": name,
-                "description": description,
-                "version": "1.0",
-                "created_at": datetime.now(UTC).isoformat()
-            },
+            "metadata": {"id": template_id, "name": name, "description": description, "version": "1.0", "created_at": datetime.now(UTC).isoformat()},
             "workflow": {
                 "steps": steps,
                 "variables": kwargs.get("variables", []),
                 "timeout": kwargs.get("timeout", 1800),
                 "continue_on_error": kwargs.get("continue_on_error", False),
                 "recovery_strategies": kwargs.get("recovery_strategies", ["retry", "skip"]),
-                "checkpoint_interval": kwargs.get("checkpoint_interval", 5)
-            }
+                "checkpoint_interval": kwargs.get("checkpoint_interval", 5),
+            },
         }
 
         return template_data

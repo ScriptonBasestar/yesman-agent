@@ -22,6 +22,7 @@ from .config_schema import YesmanConfigSchema
 
 class ValidationLevel(Enum):
     """Validation severity levels."""
+
     INFO = "info"
     WARNING = "warning"
     ERROR = "error"
@@ -81,12 +82,9 @@ class ConfigValidator:
             config = self.config_loader.load_config()
             self._validate_schema(config, result)
         except Exception as e:
-            result.add_error(ValidationError(
-                message=f"Failed to load configuration: {e}",
-                level=ValidationLevel.CRITICAL,
-                category="config_loading",
-                suggestion="Check configuration file syntax and permissions"
-            ))
+            result.add_error(
+                ValidationError(message=f"Failed to load configuration: {e}", level=ValidationLevel.CRITICAL, category="config_loading", suggestion="Check configuration file syntax and permissions")
+            )
             return result
 
         # Validate file existence and permissions
@@ -105,13 +103,15 @@ class ConfigValidator:
         result = ValidationResult()
 
         if not file_path.exists():
-            result.add_error(ValidationError(
-                message=f"Configuration file does not exist: {file_path}",
-                level=ValidationLevel.ERROR,
-                category="file_existence",
-                file_path=str(file_path),
-                suggestion="Create the configuration file or check the path"
-            ))
+            result.add_error(
+                ValidationError(
+                    message=f"Configuration file does not exist: {file_path}",
+                    level=ValidationLevel.ERROR,
+                    category="file_existence",
+                    file_path=str(file_path),
+                    suggestion="Create the configuration file or check the path",
+                )
+            )
             return result
 
         try:
@@ -119,51 +119,54 @@ class ConfigValidator:
                 config_data = yaml.safe_load(f)
 
             if config_data is None:
-                result.add_error(ValidationError(
-                    message=f"Configuration file is empty: {file_path}",
-                    level=ValidationLevel.WARNING,
-                    category="file_content",
-                    file_path=str(file_path),
-                    suggestion="Add configuration settings to the file"
-                ))
+                result.add_error(
+                    ValidationError(
+                        message=f"Configuration file is empty: {file_path}",
+                        level=ValidationLevel.WARNING,
+                        category="file_content",
+                        file_path=str(file_path),
+                        suggestion="Add configuration settings to the file",
+                    )
+                )
                 return result
 
             # Validate against schema
             YesmanConfigSchema(**config_data)
 
-            result.add_error(ValidationError(
-                message=f"Configuration file is valid: {file_path}",
-                level=ValidationLevel.INFO,
-                category="validation_success",
-                file_path=str(file_path)
-            ))
+            result.add_error(ValidationError(message=f"Configuration file is valid: {file_path}", level=ValidationLevel.INFO, category="validation_success", file_path=str(file_path)))
 
         except yaml.YAMLError as e:
-            result.add_error(ValidationError(
-                message=f"Invalid YAML syntax in {file_path}: {e}",
-                level=ValidationLevel.ERROR,
-                category="yaml_syntax",
-                file_path=str(file_path),
-                suggestion="Check YAML syntax and fix formatting errors"
-            ))
+            result.add_error(
+                ValidationError(
+                    message=f"Invalid YAML syntax in {file_path}: {e}",
+                    level=ValidationLevel.ERROR,
+                    category="yaml_syntax",
+                    file_path=str(file_path),
+                    suggestion="Check YAML syntax and fix formatting errors",
+                )
+            )
         except PydanticValidationError as e:
             for error in e.errors():
                 field_path = " → ".join(str(loc) for loc in error["loc"])
-                result.add_error(ValidationError(
-                    message=f"Invalid configuration in {file_path} at {field_path}: {error['msg']}",
-                    level=ValidationLevel.ERROR,
-                    category="schema_validation",
-                    file_path=str(file_path),
-                    suggestion="Check configuration value types and required fields"
-                ))
+                result.add_error(
+                    ValidationError(
+                        message=f"Invalid configuration in {file_path} at {field_path}: {error['msg']}",
+                        level=ValidationLevel.ERROR,
+                        category="schema_validation",
+                        file_path=str(file_path),
+                        suggestion="Check configuration value types and required fields",
+                    )
+                )
         except Exception as e:
-            result.add_error(ValidationError(
-                message=f"Unexpected error validating {file_path}: {e}",
-                level=ValidationLevel.ERROR,
-                category="validation_error",
-                file_path=str(file_path),
-                suggestion="Check file permissions and content"
-            ))
+            result.add_error(
+                ValidationError(
+                    message=f"Unexpected error validating {file_path}: {e}",
+                    level=ValidationLevel.ERROR,
+                    category="validation_error",
+                    file_path=str(file_path),
+                    suggestion="Check file permissions and content",
+                )
+            )
 
         return result
 
@@ -171,27 +174,22 @@ class ConfigValidator:
         """Validate configuration against Pydantic schema."""
         try:
             YesmanConfigSchema(**config)
-            result.add_error(ValidationError(
-                message="Configuration schema validation passed",
-                level=ValidationLevel.INFO,
-                category="schema_validation"
-            ))
+            result.add_error(ValidationError(message="Configuration schema validation passed", level=ValidationLevel.INFO, category="schema_validation"))
         except PydanticValidationError as e:
             for error in e.errors():
                 field_path = " → ".join(str(loc) for loc in error["loc"])
-                result.add_error(ValidationError(
-                    message=f"Schema validation failed at {field_path}: {error['msg']}",
-                    level=ValidationLevel.ERROR,
-                    category="schema_validation",
-                    suggestion="Check configuration field types and required values"
-                ))
+                result.add_error(
+                    ValidationError(
+                        message=f"Schema validation failed at {field_path}: {error['msg']}",
+                        level=ValidationLevel.ERROR,
+                        category="schema_validation",
+                        suggestion="Check configuration field types and required values",
+                    )
+                )
 
     def _validate_file_permissions(self, result: ValidationResult) -> None:
         """Validate file and directory permissions."""
-        config_dirs = [
-            Path("~/.scripton/yesman").expanduser(),
-            Path("./.scripton/yesman").expanduser() if Path("./.scripton").exists() else None
-        ]
+        config_dirs = [Path("~/.scripton/yesman").expanduser(), Path("./.scripton/yesman").expanduser() if Path("./.scripton").exists() else None]
 
         for config_dir in config_dirs:
             if config_dir is None:
@@ -199,26 +197,26 @@ class ConfigValidator:
 
             if config_dir.exists():
                 if not config_dir.is_dir():
-                    result.add_error(ValidationError(
-                        message=f"Configuration path exists but is not a directory: {config_dir}",
-                        level=ValidationLevel.ERROR,
-                        category="file_permissions",
-                        suggestion=f"Remove the file and create directory: rm {config_dir} && mkdir -p {config_dir}"
-                    ))
+                    result.add_error(
+                        ValidationError(
+                            message=f"Configuration path exists but is not a directory: {config_dir}",
+                            level=ValidationLevel.ERROR,
+                            category="file_permissions",
+                            suggestion=f"Remove the file and create directory: rm {config_dir} && mkdir -p {config_dir}",
+                        )
+                    )
                 elif not os.access(config_dir, os.R_OK | os.W_OK):
-                    result.add_error(ValidationError(
-                        message=f"Insufficient permissions for configuration directory: {config_dir}",
-                        level=ValidationLevel.WARNING,
-                        category="file_permissions",
-                        suggestion=f"Fix permissions: chmod 755 {config_dir}",
-                        auto_fixable=True
-                    ))
+                    result.add_error(
+                        ValidationError(
+                            message=f"Insufficient permissions for configuration directory: {config_dir}",
+                            level=ValidationLevel.WARNING,
+                            category="file_permissions",
+                            suggestion=f"Fix permissions: chmod 755 {config_dir}",
+                            auto_fixable=True,
+                        )
+                    )
                 else:
-                    result.add_error(ValidationError(
-                        message=f"Configuration directory permissions OK: {config_dir}",
-                        level=ValidationLevel.INFO,
-                        category="file_permissions"
-                    ))
+                    result.add_error(ValidationError(message=f"Configuration directory permissions OK: {config_dir}", level=ValidationLevel.INFO, category="file_permissions"))
 
     def _validate_dependencies(self, result: ValidationResult) -> None:
         """Validate external tool dependencies."""
@@ -229,19 +227,10 @@ class ConfigValidator:
 
         for tool, install_hint in dependencies.items():
             if shutil.which(tool):
-                result.add_error(ValidationError(
-                    message=f"Dependency found: {tool}",
-                    level=ValidationLevel.INFO,
-                    category="dependencies"
-                ))
+                result.add_error(ValidationError(message=f"Dependency found: {tool}", level=ValidationLevel.INFO, category="dependencies"))
             else:
                 level = ValidationLevel.CRITICAL if tool == "tmux" else ValidationLevel.WARNING
-                result.add_error(ValidationError(
-                    message=f"Required dependency not found: {tool}",
-                    level=level,
-                    category="dependencies",
-                    suggestion=install_hint
-                ))
+                result.add_error(ValidationError(message=f"Required dependency not found: {tool}", level=level, category="dependencies", suggestion=install_hint))
 
     def _validate_configuration_values(self, result: ValidationResult) -> None:
         """Validate configuration value constraints."""
@@ -256,24 +245,18 @@ class ConfigValidator:
                 if "default_shell" in tmux_config:
                     shell_path = Path(tmux_config["default_shell"])
                     if not shell_path.exists():
-                        result.add_error(ValidationError(
-                            message=f"Default shell not found: {shell_path}",
-                            level=ValidationLevel.WARNING,
-                            category="configuration_values",
-                            suggestion="Use a valid shell path like /bin/bash or /bin/zsh"
-                        ))
+                        result.add_error(
+                            ValidationError(
+                                message=f"Default shell not found: {shell_path}",
+                                level=ValidationLevel.WARNING,
+                                category="configuration_values",
+                                suggestion="Use a valid shell path like /bin/bash or /bin/zsh",
+                            )
+                        )
                     else:
-                        result.add_error(ValidationError(
-                            message=f"Default shell is valid: {shell_path}",
-                            level=ValidationLevel.INFO,
-                            category="configuration_values"
-                        ))
+                        result.add_error(ValidationError(message=f"Default shell is valid: {shell_path}", level=ValidationLevel.INFO, category="configuration_values"))
         except Exception as e:
-            result.add_error(ValidationError(
-                message=f"Error validating configuration values: {e}",
-                level=ValidationLevel.WARNING,
-                category="configuration_values"
-            ))
+            result.add_error(ValidationError(message=f"Error validating configuration values: {e}", level=ValidationLevel.WARNING, category="configuration_values"))
 
     def display_results(self, result: ValidationResult, verbose: bool = False) -> None:
         """Display validation results with Rich formatting."""
@@ -335,6 +318,7 @@ class ConfigValidator:
                 if "permissions" in error.category and error.file_path:
                     # Fix directory permissions
                     import os
+
                     os.chmod(error.file_path, 0o755)
                     fixed_count += 1
                     self.console.print(f"✅ Fixed permissions for: {error.file_path}", style="green")

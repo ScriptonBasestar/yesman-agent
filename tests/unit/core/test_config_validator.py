@@ -18,6 +18,7 @@ def test_config_validator_import() -> bool | None:
     try:
         # Avoid circular imports by importing directly
         import sys
+
         sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
         # Mock dependencies to avoid import issues
@@ -36,11 +37,7 @@ def test_config_validator_import() -> bool | None:
         assert len(result.errors) == 0
 
         # Test ValidationError
-        error = ValidationError(
-            message="test error",
-            level=ValidationLevel.ERROR,
-            category="test"
-        )
+        error = ValidationError(message="test error", level=ValidationLevel.ERROR, category="test")
         assert error.message == "test error"
         assert error.level == ValidationLevel.ERROR
 
@@ -59,15 +56,7 @@ def test_yaml_validation() -> bool | None:
     """Test YAML file validation logic."""
     # Test valid YAML
     with tempfile.NamedTemporaryFile(encoding="utf-8", mode="w", suffix=".yaml", delete=False) as f:
-        yaml.safe_dump({
-            "tmux": {
-                "default_shell": "/bin/bash",
-                "status_position": "bottom"
-            },
-            "logging": {
-                "level": "INFO"
-            }
-        }, f)
+        yaml.safe_dump({"tmux": {"default_shell": "/bin/bash", "status_position": "bottom"}, "logging": {"level": "INFO"}}, f)
         valid_yaml_file = Path(f.name)
 
     # Test invalid YAML

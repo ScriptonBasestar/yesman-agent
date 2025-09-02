@@ -83,13 +83,7 @@ class TestTeardownCommand:
         with patch.object(TeardownCommand, "__init__", lambda _: None):
             command = TeardownCommand()
             command.tmux_manager = MagicMock()
-            command.tmux_manager.load_projects.return_value = {
-                "sessions": {
-                    "test-session": {
-                        "override": {"session_name": "actual-test-session"}
-                    }
-                }
-            }
+            command.tmux_manager.load_projects.return_value = {"sessions": {"test-session": {"override": {"session_name": "actual-test-session"}}}}
             command.print_success = MagicMock()
             command.print_warning = MagicMock()
 
@@ -110,11 +104,7 @@ class TestTeardownCommand:
         with patch.object(TeardownCommand, "__init__", lambda _: None):
             command = TeardownCommand()
             command.tmux_manager = MagicMock()
-            command.tmux_manager.load_projects.return_value = {
-                "sessions": {
-                    "existing-session": {}
-                }
-            }
+            command.tmux_manager.load_projects.return_value = {"sessions": {"existing-session": {}}}
             command.print_error = MagicMock()
 
             result = command.execute(session_name="non-existent-session")
@@ -136,13 +126,7 @@ class TestTeardownCommand:
         with patch.object(TeardownCommand, "__init__", lambda _: None):
             command = TeardownCommand()
             command.tmux_manager = MagicMock()
-            command.tmux_manager.load_projects.return_value = {
-                "sessions": {
-                    "test-session": {
-                        "override": {"session_name": "not-running-session"}
-                    }
-                }
-            }
+            command.tmux_manager.load_projects.return_value = {"sessions": {"test-session": {"override": {"session_name": "not-running-session"}}}}
             command.print_success = MagicMock()
             command.print_warning = MagicMock()
 

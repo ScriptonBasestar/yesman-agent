@@ -19,14 +19,7 @@ class ConfigCommand(BaseCommand):
         super().__init__()
         self.config_validator = ConfigValidator()
 
-    def execute(
-        self,
-        action: str,
-        file: str | None = None,
-        verbose: bool = False,
-        fix: bool = False,
-        **kwargs
-    ) -> None:
+    def execute(self, action: str, file: str | None = None, verbose: bool = False, fix: bool = False, **kwargs) -> None:
         """Execute configuration command.
 
         Args:

@@ -11,6 +11,7 @@ from click.testing import CliRunner
 # Import async commands - may fail due to missing dependencies
 try:
     from commands.browse_async import AsyncBrowseCommand, browse
+
     BROWSE_ASYNC_AVAILABLE = True
 except ImportError:
     BROWSE_ASYNC_AVAILABLE = False
@@ -19,6 +20,7 @@ except ImportError:
 
 try:
     from commands.status_async import AsyncStatusCommand
+
     STATUS_ASYNC_AVAILABLE = True
 except ImportError:
     STATUS_ASYNC_AVAILABLE = False
@@ -84,9 +86,7 @@ class TestAsyncCommands:
     def test_browse_sync_mode_fallback(self) -> None:
         """Test browse command fallback behavior when sync mode is requested."""
         # Test the fallback logic directly without mocking
-        with patch("click.echo") as mock_echo, \
-             patch("commands.browse_async.AsyncBrowseCommand") as mock_command_class:
-
+        with patch("click.echo") as mock_echo, patch("commands.browse_async.AsyncBrowseCommand") as mock_command_class:
             mock_command = MagicMock()
             mock_command_class.return_value = mock_command
 

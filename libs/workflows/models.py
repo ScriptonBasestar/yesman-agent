@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 
 class WorkflowStatus(Enum):
     """Workflow execution status."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -22,6 +23,7 @@ class WorkflowStatus(Enum):
 
 class StepType(Enum):
     """Workflow step types."""
+
     ANALYSIS = "analysis"
     IMPLEMENTATION = "implementation"
     TESTING = "testing"
@@ -32,6 +34,7 @@ class StepType(Enum):
 @dataclass
 class WorkflowStep:
     """Individual workflow step configuration."""
+
     id: str
     type: StepType
     prompt: str
@@ -44,6 +47,7 @@ class WorkflowStep:
 @dataclass
 class ExecutionCheckpoint:
     """Checkpoint data for workflow execution."""
+
     step_index: int
     results: dict[str, Any]
     timestamp: datetime
@@ -53,6 +57,7 @@ class ExecutionCheckpoint:
 @dataclass
 class ExecutionResult:
     """Result from workflow execution."""
+
     workflow_id: str
     status: WorkflowStatus
     steps_completed: int
@@ -86,10 +91,7 @@ class WorkflowConfig(BaseModel):
 
     # Error handling
     continue_on_error: bool = Field(default=False, description="Continue execution on step failure")
-    recovery_strategies: list[str] = Field(
-        default_factory=lambda: ["retry", "skip", "prompt"],
-        description="Error recovery strategies"
-    )
+    recovery_strategies: list[str] = Field(default_factory=lambda: ["retry", "skip", "prompt"], description="Error recovery strategies")
 
     def to_workflow_steps(self) -> list[WorkflowStep]:
         """Convert steps configuration to WorkflowStep objects."""
@@ -103,7 +105,7 @@ class WorkflowConfig(BaseModel):
                 context=step_data.get("context", {}),
                 timeout=step_data.get("timeout"),
                 retry_count=step_data.get("retry_count", 3),
-                dependencies=step_data.get("dependencies", [])
+                dependencies=step_data.get("dependencies", []),
             )
             workflow_steps.append(step)
 
@@ -152,22 +154,12 @@ class WorkflowExecution:
 
     def add_error(self, step_id: str, error: str, recovery_action: str | None = None) -> None:
         """Add error to execution log."""
-        error_entry = {
-            "timestamp": datetime.now(UTC).isoformat(),
-            "step_id": step_id,
-            "error": error,
-            "recovery_action": recovery_action
-        }
+        error_entry = {"timestamp": datetime.now(UTC).isoformat(), "step_id": step_id, "error": error, "recovery_action": recovery_action}
         self.error_log.append(error_entry)
 
     def create_checkpoint(self, step_index: int, session_state: dict[str, Any] | None = None) -> None:
         """Create execution checkpoint."""
-        checkpoint = ExecutionCheckpoint(
-            step_index=step_index,
-            results=self.step_results.copy(),
-            timestamp=datetime.now(UTC),
-            session_state=session_state or {}
-        )
+        checkpoint = ExecutionCheckpoint(step_index=step_index, results=self.step_results.copy(), timestamp=datetime.now(UTC), session_state=session_state or {})
         self.checkpoints[step_index] = checkpoint
 
 

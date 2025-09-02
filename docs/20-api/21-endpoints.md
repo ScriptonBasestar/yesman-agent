@@ -659,30 +659,15 @@ ws.send(JSON.stringify({
 
 ### HTTP 상태 코드
 
-| 코드 | 설명             |
-| ---- | ---------------- |
-| 200  | 성공             |
-| 201  | 생성 성공        |
-| 400  | 잘못된 요청      |
-| 401  | 인증 필요        |
-| 403  | 권한 없음        |
-| 404  | 리소스 없음      |
-| 409  | 충돌 (이미 존재) |
-| 422  | 유효성 검사 실패 |
-| 500  | 서버 내부 오류   |
+| 코드 | 설명 | | ---- | ---------------- | | 200 | 성공 | | 201 | 생성 성공 | | 400 | 잘못된 요청 | | 401 | 인증 필요 | | 403 | 권한 없음 | |
+404 | 리소스 없음 | | 409 | 충돌 (이미 존재) | | 422 | 유효성 검사 실패 | | 500 | 서버 내부 오류 |
 
 ### 에러 코드
 
-| 코드                      | 설명                      |
-| ------------------------- | ------------------------- |
-| `SESSION_NOT_FOUND`       | 세션을 찾을 수 없음       |
-| `SESSION_ALREADY_EXISTS`  | 세션이 이미 존재          |
-| `CONTROLLER_NOT_RUNNING`  | 컨트롤러가 실행 중이 아님 |
-| `INVALID_TEMPLATE`        | 잘못된 템플릿             |
-| `THEME_NOT_FOUND`         | 테마를 찾을 수 없음       |
-| `CONFIG_VALIDATION_ERROR` | 설정 유효성 검사 실패     |
-| `TMUX_CONNECTION_ERROR`   | tmux 연결 오류            |
-| `PERMISSION_DENIED`       | 권한 거부                 |
+| 코드 | 설명 | | ------------------------- | ------------------------- | | `SESSION_NOT_FOUND` | 세션을 찾을 수 없음 | |
+`SESSION_ALREADY_EXISTS` | 세션이 이미 존재 | | `CONTROLLER_NOT_RUNNING` | 컨트롤러가 실행 중이 아님 | | `INVALID_TEMPLATE` | 잘못된 템플릿 | |
+`THEME_NOT_FOUND` | 테마를 찾을 수 없음 | | `CONFIG_VALIDATION_ERROR` | 설정 유효성 검사 실패 | | `TMUX_CONNECTION_ERROR` | tmux 연결 오류 |
+| `PERMISSION_DENIED` | 권한 거부 |
 
 ### 에러 응답 예시
 

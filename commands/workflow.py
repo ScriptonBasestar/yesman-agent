@@ -28,20 +28,13 @@ class WorkflowCommand(BaseCommand):
         try:
             return get_workflow_service()
         except Exception as e:
-            raise CommandError(f"Failed to resolve workflow service: {e}")
+            raise CommandError(f"Failed to resolve workflow service: {e}") from e
 
 
 class WorkflowListCommand(WorkflowCommand):
     """List available workflow templates."""
 
-    def execute(
-        self,
-        builtin: bool = True,
-        user: bool = True,
-        tags: list[str] | None = None,
-        format: str = "table",
-        **kwargs: Any
-    ) -> dict[str, Any]:
+    def execute(self, builtin: bool = True, user: bool = True, tags: list[str] | None = None, format: str = "table", **kwargs: Any) -> dict[str, Any]:
         """Execute list command.
 
         Args:
@@ -56,10 +49,7 @@ class WorkflowListCommand(WorkflowCommand):
         workflow_service = self._resolve_workflow_service()
 
         # Get templates
-        templates = workflow_service.list_templates(
-            include_builtin=builtin,
-            tags=tags
-        )
+        templates = workflow_service.list_templates(include_builtin=builtin, tags=tags)
 
         # Filter user templates if needed
         if not user:
@@ -77,17 +67,7 @@ class WorkflowListCommand(WorkflowCommand):
             raise CommandError(f"Unknown format: {format}")
 
         return {
-            "templates": [
-                {
-                    "id": t.template_id,
-                    "name": t.config.name,
-                    "description": t.config.description,
-                    "tags": t.tags,
-                    "builtin": t.is_builtin,
-                    "steps": len(t.config.steps)
-                }
-                for t in templates
-            ]
+            "templates": [{"id": t.template_id, "name": t.config.name, "description": t.config.description, "tags": t.tags, "builtin": t.is_builtin, "steps": len(t.config.steps)} for t in templates]
         }
 
     def _display_templates_table(self, templates) -> None:
@@ -111,7 +91,7 @@ class WorkflowListCommand(WorkflowCommand):
                 template.config.description[:50] + "..." if len(template.config.description) > 50 else template.config.description,
                 str(len(template.config.steps)),
                 ", ".join(template.tags) if template.tags else "-",
-                "Built-in" if template.is_builtin else "User"
+                "Built-in" if template.is_builtin else "User",
             )
 
         self.console.print(table)
@@ -120,32 +100,30 @@ class WorkflowListCommand(WorkflowCommand):
         """Display templates in JSON format."""
         template_data = []
         for template in templates:
-            template_data.append({
-                "id": template.template_id,
-                "name": template.config.name,
-                "description": template.config.description,
-                "version": template.config.version,
-                "author": template.config.author,
-                "tags": template.tags,
-                "is_builtin": template.is_builtin,
-                "steps": len(template.config.steps),
-                "timeout": template.config.timeout,
-                "checkpoint_interval": template.config.checkpoint_interval
-            })
+            template_data.append(
+                {
+                    "id": template.template_id,
+                    "name": template.config.name,
+                    "description": template.config.description,
+                    "version": template.config.version,
+                    "author": template.config.author,
+                    "tags": template.tags,
+                    "is_builtin": template.is_builtin,
+                    "steps": len(template.config.steps),
+                    "timeout": template.config.timeout,
+                    "checkpoint_interval": template.config.checkpoint_interval,
+                }
+            )
 
         self.console.print_json(json.dumps(template_data, indent=2))
 
     def _display_templates_yaml(self, templates) -> None:
         """Display templates in YAML format."""
         import yaml
+
         template_data = []
         for template in templates:
-            template_data.append({
-                "id": template.template_id,
-                "config": template.config.dict(),
-                "tags": template.tags,
-                "is_builtin": template.is_builtin
-            })
+            template_data.append({"id": template.template_id, "config": template.config.dict(), "tags": template.tags, "is_builtin": template.is_builtin})
 
         yaml_output = yaml.dump(template_data, default_flow_style=False)
         self.console.print(yaml_output)
@@ -154,15 +132,7 @@ class WorkflowListCommand(WorkflowCommand):
 class WorkflowRunCommand(WorkflowCommand):
     """Run a workflow template."""
 
-    def execute(
-        self,
-        template_id: str,
-        project_path: str | None = None,
-        variables: dict[str, str] | None = None,
-        detached: bool = False,
-        monitor: bool = False,
-        **kwargs: Any
-    ) -> dict[str, Any]:
+    def execute(self, template_id: str, project_path: str | None = None, variables: dict[str, str] | None = None, detached: bool = False, monitor: bool = False, **kwargs: Any) -> dict[str, Any]:
         """Execute workflow run command.
 
         Args:
@@ -181,10 +151,7 @@ class WorkflowRunCommand(WorkflowCommand):
         template = workflow_service.get_template(template_id)
         if not template:
             available = [t.template_id for t in workflow_service.list_templates()]
-            raise CommandError(
-                f"Template '{template_id}' not found",
-                recovery_hint=f"Available templates: {', '.join(available)}"
-            )
+            raise CommandError(f"Template '{template_id}' not found", recovery_hint=f"Available templates: {', '.join(available)}")
 
         # Resolve project path
         if project_path:
@@ -204,12 +171,7 @@ class WorkflowRunCommand(WorkflowCommand):
         try:
             if detached:
                 # Run in background
-                execution_id = asyncio.run(workflow_service.start_workflow(
-                    template_id=template_id,
-                    project_path=project_dir,
-                    variables=variables or {},
-                    detached=True
-                ))
+                execution_id = asyncio.run(workflow_service.start_workflow(template_id=template_id, project_path=project_dir, variables=variables or {}, detached=True))
 
                 self.print_success(f"Workflow started in background: {execution_id}")
                 self.print_info(f"Use 'yesman workflow status {execution_id}' to check progress")
@@ -218,17 +180,10 @@ class WorkflowRunCommand(WorkflowCommand):
 
             # Run with monitoring
             elif monitor:
-                return self._run_with_monitoring(
-                    workflow_service, template_id, project_dir, variables or {}
-                )
+                return self._run_with_monitoring(workflow_service, template_id, project_dir, variables or {})
             else:
                 # Simple synchronous run
-                execution_id = asyncio.run(workflow_service.start_workflow(
-                    template_id=template_id,
-                    project_path=project_dir,
-                    variables=variables or {},
-                    detached=False
-                ))
+                execution_id = asyncio.run(workflow_service.start_workflow(template_id=template_id, project_path=project_dir, variables=variables or {}, detached=False))
 
                 # Get final status
                 execution = workflow_service.get_execution(execution_id)
@@ -238,15 +193,9 @@ class WorkflowRunCommand(WorkflowCommand):
                 return {"execution_id": execution_id, "status": execution.status.value if execution else "unknown"}
 
         except Exception as e:
-            raise CommandError(f"Workflow execution failed: {e}")
+            raise CommandError(f"Workflow execution failed: {e}") from e
 
-    def _run_with_monitoring(
-        self,
-        workflow_service,
-        template_id: str,
-        project_dir: Path,
-        variables: dict[str, str]
-    ) -> dict[str, Any]:
+    def _run_with_monitoring(self, workflow_service, template_id: str, project_dir: Path, variables: dict[str, str]) -> dict[str, Any]:
         """Run workflow with real-time monitoring."""
 
         async def run_and_monitor():
@@ -255,7 +204,7 @@ class WorkflowRunCommand(WorkflowCommand):
                 template_id=template_id,
                 project_path=project_dir,
                 variables=variables,
-                detached=True  # Start in background for monitoring
+                detached=True,  # Start in background for monitoring
             )
 
             # Monitor progress
@@ -266,9 +215,8 @@ class WorkflowRunCommand(WorkflowCommand):
                 TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
                 TimeElapsedColumn(),
                 console=self.console,
-                transient=True
+                transient=True,
             ) as progress:
-
                 task = progress.add_task("Running workflow...", total=100)
 
                 while True:
@@ -305,12 +253,7 @@ class WorkflowRunCommand(WorkflowCommand):
 
     def _display_execution_result(self, execution: WorkflowExecution) -> None:
         """Display execution results."""
-        status_color = {
-            WorkflowStatus.COMPLETED: "green",
-            WorkflowStatus.FAILED: "red",
-            WorkflowStatus.CANCELLED: "yellow",
-            WorkflowStatus.RUNNING: "blue"
-        }.get(execution.status, "white")
+        status_color = {WorkflowStatus.COMPLETED: "green", WorkflowStatus.FAILED: "red", WorkflowStatus.CANCELLED: "yellow", WorkflowStatus.RUNNING: "blue"}.get(execution.status, "white")
 
         panel_title = f"Workflow Execution: {execution.id[:8]}..."
 
@@ -326,11 +269,7 @@ class WorkflowRunCommand(WorkflowCommand):
         if execution.error_log:
             content.append(f"Errors: {len(execution.error_log)}")
 
-        panel = Panel(
-            "\n".join(content),
-            title=panel_title,
-            border_style=status_color
-        )
+        panel = Panel("\n".join(content), title=panel_title, border_style=status_color)
 
         self.console.print(panel)
 
@@ -345,13 +284,7 @@ class WorkflowRunCommand(WorkflowCommand):
 class WorkflowStatusCommand(WorkflowCommand):
     """Check workflow execution status."""
 
-    def execute(
-        self,
-        execution_id: str | None = None,
-        list_all: bool = False,
-        running_only: bool = False,
-        **kwargs: Any
-    ) -> dict[str, Any]:
+    def execute(self, execution_id: str | None = None, list_all: bool = False, running_only: bool = False, **kwargs: Any) -> dict[str, Any]:
         """Execute status command.
 
         Args:
@@ -372,11 +305,7 @@ class WorkflowStatusCommand(WorkflowCommand):
 
             self._display_execution_detail(execution)
 
-            return {
-                "execution_id": execution_id,
-                "status": execution.status.value,
-                "progress": execution.get_progress()
-            }
+            return {"execution_id": execution_id, "status": execution.status.value, "progress": execution.get_progress()}
 
         else:
             # List executions
@@ -389,27 +318,12 @@ class WorkflowStatusCommand(WorkflowCommand):
 
             self._display_executions_table(executions)
 
-            return {
-                "executions": [
-                    {
-                        "id": e.id,
-                        "status": e.status.value,
-                        "progress": e.get_progress(),
-                        "workflow": e.config.name if e.config else "Unknown"
-                    }
-                    for e in executions
-                ]
-            }
+            return {"executions": [{"id": e.id, "status": e.status.value, "progress": e.get_progress(), "workflow": e.config.name if e.config else "Unknown"} for e in executions]}
 
     def _display_execution_detail(self, execution: WorkflowExecution) -> None:
         """Display detailed execution information."""
         # Similar to _display_execution_result but more detailed
-        status_color = {
-            WorkflowStatus.COMPLETED: "green",
-            WorkflowStatus.FAILED: "red",
-            WorkflowStatus.CANCELLED: "yellow",
-            WorkflowStatus.RUNNING: "blue"
-        }.get(execution.status, "white")
+        status_color = {WorkflowStatus.COMPLETED: "green", WorkflowStatus.FAILED: "red", WorkflowStatus.CANCELLED: "yellow", WorkflowStatus.RUNNING: "blue"}.get(execution.status, "white")
 
         # Main info panel
         content = []
@@ -428,11 +342,7 @@ class WorkflowStatusCommand(WorkflowCommand):
         if execution.get_execution_time():
             content.append(f"Duration: {execution.get_execution_time():.1f}s")
 
-        panel = Panel(
-            "\n".join(content),
-            title="Workflow Execution Details",
-            border_style=status_color
-        )
+        panel = Panel("\n".join(content), title="Workflow Execution Details", border_style=status_color)
 
         self.console.print(panel)
 
@@ -459,13 +369,9 @@ class WorkflowStatusCommand(WorkflowCommand):
         table.add_column("Started", style="dim")
 
         for execution in executions:
-            status_emoji = {
-                WorkflowStatus.COMPLETED: "✅",
-                WorkflowStatus.FAILED: "❌",
-                WorkflowStatus.CANCELLED: "⚠️",
-                WorkflowStatus.RUNNING: "🔄",
-                WorkflowStatus.PENDING: "⏳"
-            }.get(execution.status, "❓")
+            status_emoji = {WorkflowStatus.COMPLETED: "✅", WorkflowStatus.FAILED: "❌", WorkflowStatus.CANCELLED: "⚠️", WorkflowStatus.RUNNING: "🔄", WorkflowStatus.PENDING: "⏳"}.get(
+                execution.status, "❓"
+            )
 
             table.add_row(
                 execution.id[:8] + "...",
@@ -473,7 +379,7 @@ class WorkflowStatusCommand(WorkflowCommand):
                 f"{status_emoji} {execution.status.value}",
                 f"{execution.get_progress():.1f}%",
                 f"{execution.get_execution_time():.1f}s" if execution.get_execution_time() else "-",
-                execution.started_at.strftime("%m-%d %H:%M") if execution.started_at else "-"
+                execution.started_at.strftime("%m-%d %H:%M") if execution.started_at else "-",
             )
 
         self.console.print(table)
@@ -512,10 +418,11 @@ class WorkflowCancelCommand(WorkflowCommand):
                 raise CommandError("Failed to cancel workflow execution")
 
         except Exception as e:
-            raise CommandError(f"Cancellation failed: {e}")
+            raise CommandError(f"Cancellation failed: {e}") from e
 
 
 # CLI Commands
+
 
 @click.group(name="workflow")
 def workflow_group() -> None:
@@ -551,13 +458,7 @@ def run(template_id: str, project_path: str | None, var: tuple, detached: bool, 
         variables[key] = value
 
     command = WorkflowRunCommand()
-    command.run(
-        template_id=template_id,
-        project_path=project_path,
-        variables=variables or None,
-        detached=detached,
-        monitor=monitor
-    )
+    command.run(template_id=template_id, project_path=project_path, variables=variables or None, detached=detached, monitor=monitor)
 
 
 @workflow_group.command()

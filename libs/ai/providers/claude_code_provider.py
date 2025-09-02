@@ -12,8 +12,6 @@ from pathlib import Path
 from typing import Any
 
 from ...claude.headless_adapter import HeadlessAdapter
-from ...claude.workspace import WorkspaceManager
-from ...core.config_schema import YesmanConfigSchema
 from ..provider_interface import AIProvider, AIProviderType, AIResponse, AITask, TaskStatus
 
 
@@ -40,7 +38,7 @@ class ClaudeCodeProvider(AIProvider):
             self.workspace_manager = WorkspaceSecurityManager(
                 base_path=Path(self.config.get("workspace_base", "/tmp/yesman-workspaces")),
                 max_workspace_size_mb=self.config.get("max_workspace_size_mb", 1000),
-                max_workspaces=self.config.get("max_workspaces", 10)
+                max_workspaces=self.config.get("max_workspaces", 10),
             )
 
             # Claude CLI 존재 확인
@@ -58,11 +56,7 @@ class ClaudeCodeProvider(AIProvider):
     async def _check_claude_binary(self, binary_path: str) -> bool:
         """Claude CLI 바이너리 존재 확인."""
         try:
-            process = await asyncio.create_subprocess_exec(
-                binary_path, "--version",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
+            process = await asyncio.create_subprocess_exec(binary_path, "--version", stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
             stdout, stderr = await process.communicate()
             return process.returncode == 0
         except Exception:
@@ -71,19 +65,12 @@ class ClaudeCodeProvider(AIProvider):
     async def health_check(self) -> dict[str, Any]:
         """Claude Code 제공업체 상태 확인."""
         if not self._initialized:
-            return {
-                "status": "not_initialized",
-                "initialized": False
-            }
+            return {"status": "not_initialized", "initialized": False}
 
         try:
             # Claude CLI 버전 확인
             claude_binary = self.config.get("claude_binary_path", "claude")
-            process = await asyncio.create_subprocess_exec(
-                claude_binary, "--version",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
+            process = await asyncio.create_subprocess_exec(claude_binary, "--version", stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
             stdout, stderr = await process.communicate()
 
             if process.returncode == 0:
@@ -92,28 +79,17 @@ class ClaudeCodeProvider(AIProvider):
                     "status": "healthy",
                     "claude_version": version,
                     "active_processes": len(self._active_processes),
-                    "workspace_count": len(self.workspace_manager.get_all_workspaces()) if self.workspace_manager else 0
+                    "workspace_count": len(self.workspace_manager.get_all_workspaces()) if self.workspace_manager else 0,
                 }
             else:
-                return {
-                    "status": "unhealthy",
-                    "error": stderr.decode().strip()
-                }
+                return {"status": "unhealthy", "error": stderr.decode().strip()}
 
         except Exception as e:
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
     async def get_available_models(self) -> list[str]:
         """사용 가능한 Claude 모델 반환."""
-        return [
-            "claude-3-5-sonnet-20241022",
-            "claude-3-5-haiku-20241022",
-            "claude-3-opus-20240229",
-            "claude-3-haiku-20240307"
-        ]
+        return ["claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229", "claude-3-haiku-20240307"]
 
     async def execute_task(self, task: AITask) -> AIResponse:
         """단일 작업 실행."""
@@ -123,18 +99,11 @@ class ClaudeCodeProvider(AIProvider):
             if task.workspace_path:
                 workspace_path = Path(task.workspace_path)
             else:
-                workspace_path = await self.workspace_manager.create_workspace(
-                    f"task-{task.task_id[:8]}"
-                )
+                workspace_path = await self.workspace_manager.create_workspace(f"task-{task.task_id[:8]}")
 
             # Claude CLI 명령 구성
             claude_binary = self.config.get("claude_binary_path", "claude")
-            cmd = [
-                claude_binary,
-                "--output-format", "json",
-                "--model", task.model,
-                "--verbose"
-            ]
+            cmd = [claude_binary, "--output-format", "json", "--model", task.model, "--verbose"]
 
             if task.tools:
                 cmd.extend(["--tools", ",".join(task.tools)])
@@ -153,22 +122,13 @@ class ClaudeCodeProvider(AIProvider):
                 env["ANTHROPIC_API_KEY"] = self.config["ANTHROPIC_API_KEY"]
 
             # 프로세스 실행
-            process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                cwd=workspace_path,
-                env=env
-            )
+            process = await asyncio.create_subprocess_exec(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, cwd=workspace_path, env=env)
 
             self._active_processes[task.task_id] = process
 
             try:
                 # 타임아웃과 함께 대기
-                stdout, stderr = await asyncio.wait_for(
-                    process.communicate(),
-                    timeout=task.timeout
-                )
+                stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=task.timeout)
 
                 if process.returncode == 0:
                     # 성공적인 실행
@@ -189,10 +149,7 @@ class ClaudeCodeProvider(AIProvider):
                         provider=AIProviderType.CLAUDE_CODE,
                         model=task.model,
                         usage=usage_info,
-                        metadata={
-                            "workspace_path": str(workspace_path),
-                            "command": " ".join(cmd)
-                        }
+                        metadata={"workspace_path": str(workspace_path), "command": " ".join(cmd)},
                     )
                 else:
                     # 실행 오류
@@ -203,10 +160,7 @@ class ClaudeCodeProvider(AIProvider):
                         provider=AIProviderType.CLAUDE_CODE,
                         model=task.model,
                         error=error_msg,
-                        metadata={
-                            "workspace_path": str(workspace_path),
-                            "return_code": process.returncode
-                        }
+                        metadata={"workspace_path": str(workspace_path), "return_code": process.returncode},
                     )
 
             except TimeoutError:
@@ -214,22 +168,10 @@ class ClaudeCodeProvider(AIProvider):
                 process.terminate()
                 await process.wait()
 
-                return AIResponse(
-                    content="",
-                    status=TaskStatus.FAILED,
-                    provider=AIProviderType.CLAUDE_CODE,
-                    model=task.model,
-                    error=f"Task timed out after {task.timeout} seconds"
-                )
+                return AIResponse(content="", status=TaskStatus.FAILED, provider=AIProviderType.CLAUDE_CODE, model=task.model, error=f"Task timed out after {task.timeout} seconds")
 
         except Exception as e:
-            return AIResponse(
-                content="",
-                status=TaskStatus.FAILED,
-                provider=AIProviderType.CLAUDE_CODE,
-                model=task.model,
-                error=str(e)
-            )
+            return AIResponse(content="", status=TaskStatus.FAILED, provider=AIProviderType.CLAUDE_CODE, model=task.model, error=str(e))
         finally:
             # 프로세스 정리
             self._active_processes.pop(task.task_id, None)
@@ -242,18 +184,11 @@ class ClaudeCodeProvider(AIProvider):
             if task.workspace_path:
                 workspace_path = Path(task.workspace_path)
             else:
-                workspace_path = await self.workspace_manager.create_workspace(
-                    f"stream-{task.task_id[:8]}"
-                )
+                workspace_path = await self.workspace_manager.create_workspace(f"stream-{task.task_id[:8]}")
 
             # Claude CLI 명령 구성 (스트림 모드)
             claude_binary = self.config.get("claude_binary_path", "claude")
-            cmd = [
-                claude_binary,
-                "--output-format", "stream-json",
-                "--model", task.model,
-                "--verbose"
-            ]
+            cmd = [claude_binary, "--output-format", "stream-json", "--model", task.model, "--verbose"]
 
             if task.tools:
                 cmd.extend(["--tools", ",".join(task.tools)])
@@ -272,13 +207,7 @@ class ClaudeCodeProvider(AIProvider):
                 env["ANTHROPIC_API_KEY"] = self.config["ANTHROPIC_API_KEY"]
 
             # 프로세스 실행
-            process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                cwd=workspace_path,
-                env=env
-            )
+            process = await asyncio.create_subprocess_exec(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, cwd=workspace_path, env=env)
 
             self._active_processes[task.task_id] = process
 
@@ -294,23 +223,13 @@ class ClaudeCodeProvider(AIProvider):
                 if process.returncode != 0:
                     stderr_content = await process.stderr.read()
                     error_msg = stderr_content.decode().strip()
-                    yield json.dumps({
-                        "error": error_msg,
-                        "status": "failed",
-                        "return_code": process.returncode
-                    })
+                    yield json.dumps({"error": error_msg, "status": "failed", "return_code": process.returncode})
 
             except Exception as e:
-                yield json.dumps({
-                    "error": str(e),
-                    "status": "failed"
-                })
+                yield json.dumps({"error": str(e), "status": "failed"})
 
         except Exception as e:
-            yield json.dumps({
-                "error": str(e),
-                "status": "failed"
-            })
+            yield json.dumps({"error": str(e), "status": "failed"})
         finally:
             # 프로세스 정리
             self._active_processes.pop(task.task_id, None)
@@ -367,49 +286,18 @@ class ClaudeCodeProvider(AIProvider):
 
     def get_required_config_keys(self) -> list[str]:
         """필수 설정 키 목록."""
-        return [
-            "claude_binary_path",
-            "workspace_base"
-        ]
+        return ["claude_binary_path", "workspace_base"]
 
     def get_config_schema(self) -> dict[str, Any]:
         """설정 스키마 반환."""
         return {
             "type": "object",
             "properties": {
-                "claude_binary_path": {
-                    "type": "string",
-                    "title": "Claude CLI Path",
-                    "description": "Path to Claude CLI binary",
-                    "default": "/opt/homebrew/bin/claude"
-                },
-                "workspace_base": {
-                    "type": "string",
-                    "title": "Workspace Base Directory",
-                    "description": "Base directory for workspaces",
-                    "default": "/tmp/yesman-workspaces"
-                },
-                "max_workspace_size_mb": {
-                    "type": "integer",
-                    "title": "Max Workspace Size (MB)",
-                    "description": "Maximum size per workspace in MB",
-                    "default": 1000
-                },
-                "max_workspaces": {
-                    "type": "integer",
-                    "title": "Max Workspaces",
-                    "description": "Maximum number of workspaces",
-                    "default": 10
-                },
-                "ANTHROPIC_API_KEY": {
-                    "type": "string",
-                    "title": "Anthropic API Key",
-                    "description": "API key for Claude Code",
-                    "format": "password"
-                }
+                "claude_binary_path": {"type": "string", "title": "Claude CLI Path", "description": "Path to Claude CLI binary", "default": "/opt/homebrew/bin/claude"},
+                "workspace_base": {"type": "string", "title": "Workspace Base Directory", "description": "Base directory for workspaces", "default": "/tmp/yesman-workspaces"},
+                "max_workspace_size_mb": {"type": "integer", "title": "Max Workspace Size (MB)", "description": "Maximum size per workspace in MB", "default": 1000},
+                "max_workspaces": {"type": "integer", "title": "Max Workspaces", "description": "Maximum number of workspaces", "default": 10},
+                "ANTHROPIC_API_KEY": {"type": "string", "title": "Anthropic API Key", "description": "API key for Claude Code", "format": "password"},
             },
-            "required": [
-                "claude_binary_path",
-                "workspace_base"
-            ]
+            "required": ["claude_binary_path", "workspace_base"],
         }

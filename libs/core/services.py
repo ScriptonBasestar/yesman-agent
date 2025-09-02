@@ -91,11 +91,7 @@ def register_workflow_services() -> None:
         config = container.resolve(YesmanConfig)
         tmux_manager = container.resolve(TmuxManager)
         execution_engine = container.resolve(WorkflowExecutionEngine)
-        return WorkflowService(
-            config=config,
-            tmux_manager=tmux_manager,
-            execution_engine=execution_engine
-        )
+        return WorkflowService(config=config, tmux_manager=tmux_manager, execution_engine=execution_engine)
 
     # Register WorkflowExecutionEngine as singleton factory
     container.register_factory(WorkflowExecutionEngine, create_workflow_execution_engine)
@@ -189,10 +185,7 @@ def is_container_initialized() -> bool:
     Returns:
         bool: Description of return value.
     """
-    return (container.is_registered(YesmanConfig) and
-            container.is_registered(TmuxManager) and
-            container.is_registered(SessionManager) and
-            container.is_registered(WorkflowService))
+    return container.is_registered(YesmanConfig) and container.is_registered(TmuxManager) and container.is_registered(SessionManager) and container.is_registered(WorkflowService)
 
 
 def initialize_services() -> None:

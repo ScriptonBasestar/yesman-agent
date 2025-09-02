@@ -28,5 +28,5 @@ __all__ = [
     "OllamaProvider",
     "OpenAIProvider",
     "GeminiProvider",
-    "GeminiCodeProvider"
+    "GeminiCodeProvider",
 ]

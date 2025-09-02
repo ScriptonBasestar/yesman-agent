@@ -42,11 +42,7 @@ class SetupCommand(BaseCommand, SessionCommandMixin, ConfigCommandMixin):
             update("🚀 Setting up tmux sessions...")
 
             # Set up sessions
-            successful_count, failed_count = setup_service.setup_sessions(
-                session_filter=session_name,
-                dry_run=dry_run,
-                force=force
-            )
+            successful_count, failed_count = setup_service.setup_sessions(session_filter=session_name, dry_run=dry_run, force=force)
             update("✅ Session setup completed")
 
         # Prepare result

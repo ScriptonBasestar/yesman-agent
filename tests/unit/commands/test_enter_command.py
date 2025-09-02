@@ -162,13 +162,7 @@ class TestEnterCommand:
             command = EnterCommand()
             command.server = mock_server_instance
             command.tmux_manager = MagicMock()
-            command.tmux_manager.load_projects.return_value = {
-                "sessions": {
-                    "test-session": {
-                        "override": {"session_name": "test-session"}
-                    }
-                }
-            }
+            command.tmux_manager.load_projects.return_value = {"sessions": {"test-session": {"override": {"session_name": "test-session"}}}}
             command.print_warning = MagicMock()
             command.print_info = MagicMock()
 
@@ -192,13 +186,7 @@ class TestEnterCommand:
             command = EnterCommand()
             command.server = mock_server_instance
             command.tmux_manager = MagicMock()
-            command.tmux_manager.load_projects.return_value = {
-                "sessions": {
-                    "test-project": {
-                        "override": {"session_name": "test-session"}
-                    }
-                }
-            }
+            command.tmux_manager.load_projects.return_value = {"sessions": {"test-project": {"override": {"session_name": "test-session"}}}}
 
             result = command._select_session()
 
@@ -211,10 +199,7 @@ class TestEnterCommand:
         """Test _attach_to_session when already inside tmux."""
         EnterCommand._attach_to_session("test-session")
 
-        mock_subprocess.assert_called_once_with(
-            ["tmux", "switch-client", "-t", "test-session"],
-            check=False
-        )
+        mock_subprocess.assert_called_once_with(["tmux", "switch-client", "-t", "test-session"], check=False)
 
     @patch("commands.enter.os.environ", {})
     @patch("commands.enter.subprocess.run")
@@ -222,10 +207,7 @@ class TestEnterCommand:
         """Test _attach_to_session when outside tmux."""
         EnterCommand._attach_to_session("test-session")
 
-        mock_subprocess.assert_called_once_with(
-            ["tmux", "attach-session", "-t", "test-session"],
-            check=False
-        )
+        mock_subprocess.assert_called_once_with(["tmux", "attach-session", "-t", "test-session"], check=False)
 
     @patch("commands.enter.libtmux.Server")
     def test_resolve_session_name_direct_match(self, mock_server: MagicMock) -> None:
@@ -262,13 +244,7 @@ class TestEnterCommand:
             command = EnterCommand()
             command.server = mock_server_instance
             command.tmux_manager = MagicMock()
-            command.tmux_manager.load_projects.return_value = {
-                "sessions": {
-                    "project-name": {
-                        "override": {"session_name": "actual-session-name"}
-                    }
-                }
-            }
+            command.tmux_manager.load_projects.return_value = {"sessions": {"project-name": {"override": {"session_name": "actual-session-name"}}}}
 
             result = command._resolve_session_name("project-name")
 

@@ -93,11 +93,7 @@ class TestValidateCommand:
         with patch.object(ValidateCommand, "__init__", lambda _: None):
             command = ValidateCommand()
             command.tmux_manager = MagicMock()
-            command.tmux_manager.load_projects.return_value = {
-                "sessions": {
-                    "existing-session": {}
-                }
-            }
+            command.tmux_manager.load_projects.return_value = {"sessions": {"existing-session": {}}}
 
             result = command.execute(session_name="non-existent-session")
 
@@ -107,12 +103,7 @@ class TestValidateCommand:
     @patch("commands.validate.Console")
     @patch("commands.validate.pathlib.Path")
     @patch("commands.validate._display_success")
-    def test_execute_all_directories_valid(
-        self,
-        mock_display_success: MagicMock,
-        mock_path: MagicMock,
-        mock_console_class: MagicMock
-    ) -> None:
+    def test_execute_all_directories_valid(self, mock_display_success: MagicMock, mock_path: MagicMock, mock_console_class: MagicMock) -> None:
         """Test execute when all directories are valid."""
         mock_console = MagicMock()
         mock_console_class.return_value = mock_console
@@ -125,17 +116,8 @@ class TestValidateCommand:
         with patch.object(ValidateCommand, "__init__", lambda _: None):
             command = ValidateCommand()
             command.tmux_manager = MagicMock()
-            command.tmux_manager.load_projects.return_value = {
-                "sessions": {
-                    "test-session": {
-                        "template_name": "basic"
-                    }
-                }
-            }
-            command.tmux_manager.get_session_config.return_value = {
-                "start_directory": "/valid/path",
-                "windows": []
-            }
+            command.tmux_manager.load_projects.return_value = {"sessions": {"test-session": {"template_name": "basic"}}}
+            command.tmux_manager.get_session_config.return_value = {"start_directory": "/valid/path", "windows": []}
 
             result = command.execute()
 
@@ -152,12 +134,7 @@ class TestValidateCommand:
     @patch("commands.validate.Console")
     @patch("commands.validate.pathlib.Path")
     @patch("commands.validate._display_table_format")
-    def test_execute_with_missing_directories(
-        self,
-        mock_display_table: MagicMock,
-        mock_path: MagicMock,
-        mock_console_class: MagicMock
-    ) -> None:
+    def test_execute_with_missing_directories(self, mock_display_table: MagicMock, mock_path: MagicMock, mock_console_class: MagicMock) -> None:
         """Test execute when some directories are missing."""
         mock_console = MagicMock()
         mock_console_class.return_value = mock_console
@@ -170,17 +147,8 @@ class TestValidateCommand:
         with patch.object(ValidateCommand, "__init__", lambda _: None):
             command = ValidateCommand()
             command.tmux_manager = MagicMock()
-            command.tmux_manager.load_projects.return_value = {
-                "sessions": {
-                    "test-session": {
-                        "template_name": "basic"
-                    }
-                }
-            }
-            command.tmux_manager.get_session_config.return_value = {
-                "start_directory": "/invalid/path",
-                "windows": []
-            }
+            command.tmux_manager.load_projects.return_value = {"sessions": {"test-session": {"template_name": "basic"}}}
+            command.tmux_manager.get_session_config.return_value = {"start_directory": "/invalid/path", "windows": []}
 
             result = command.execute(format="table")
 
@@ -196,11 +164,7 @@ class TestValidateCommand:
 
     @patch("commands.validate.Console")
     @patch("commands.validate.pathlib.Path")
-    def test_execute_with_windows_and_panes(
-        self,
-        mock_path: MagicMock,
-        mock_console_class: MagicMock
-    ) -> None:
+    def test_execute_with_windows_and_panes(self, mock_path: MagicMock, mock_console_class: MagicMock) -> None:
         """Test execute validates window and pane directories."""
         mock_console = MagicMock()
         mock_console_class.return_value = mock_console
@@ -214,6 +178,7 @@ class TestValidateCommand:
                 call_count += 1
                 # Session root exists, window dir doesn't exist, pane dir doesn't exist
                 return call_count == 1
+
             return side_effect
 
         mock_path_instance = MagicMock()
@@ -224,24 +189,10 @@ class TestValidateCommand:
         with patch.object(ValidateCommand, "__init__", lambda _: None):
             command = ValidateCommand()
             command.tmux_manager = MagicMock()
-            command.tmux_manager.load_projects.return_value = {
-                "sessions": {
-                    "test-session": {}
-                }
-            }
+            command.tmux_manager.load_projects.return_value = {"sessions": {"test-session": {}}}
             command.tmux_manager.get_session_config.return_value = {
                 "start_directory": "/valid/session/path",
-                "windows": [
-                    {
-                        "window_name": "test-window",
-                        "start_directory": "/invalid/window/path",
-                        "panes": [
-                            {
-                                "start_directory": "/invalid/pane/path"
-                            }
-                        ]
-                    }
-                ]
+                "windows": [{"window_name": "test-window", "start_directory": "/invalid/window/path", "panes": [{"start_directory": "/invalid/pane/path"}]}],
             }
 
             result = command.execute()
@@ -265,11 +216,7 @@ class TestValidateCommand:
 
     @patch("commands.validate.Console")
     @patch("commands.validate.pathlib.Path")
-    def test_execute_handles_session_processing_errors(
-        self,
-        mock_path: MagicMock,
-        mock_console_class: MagicMock
-    ) -> None:
+    def test_execute_handles_session_processing_errors(self, mock_path: MagicMock, mock_console_class: MagicMock) -> None:
         """Test execute handles errors when processing individual sessions."""
         mock_console = MagicMock()
         mock_console_class.return_value = mock_console
@@ -277,17 +224,9 @@ class TestValidateCommand:
         with patch.object(ValidateCommand, "__init__", lambda _: None):
             command = ValidateCommand()
             command.tmux_manager = MagicMock()
-            command.tmux_manager.load_projects.return_value = {
-                "sessions": {
-                    "test-session": {},
-                    "error-session": {}
-                }
-            }
+            command.tmux_manager.load_projects.return_value = {"sessions": {"test-session": {}, "error-session": {}}}
             # First call succeeds, second call raises exception
-            command.tmux_manager.get_session_config.side_effect = [
-                {"start_directory": "/valid/path", "windows": []},
-                Exception("Session config error")
-            ]
+            command.tmux_manager.get_session_config.side_effect = [{"start_directory": "/valid/path", "windows": []}, Exception("Session config error")]
 
             # Mock path exists for valid session
             mock_path_instance = MagicMock()

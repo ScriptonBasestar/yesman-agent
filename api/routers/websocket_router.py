@@ -182,6 +182,7 @@ class ConnectionManager:
                 # Get workflow data
                 try:
                     from libs.core.services import get_workflow_service
+
                     workflow_service = get_workflow_service()
 
                     # Get templates and executions
@@ -202,7 +203,7 @@ class ConnectionManager:
                                 "error": exec.error,
                             }
                             for exec in executions
-                        ]
+                        ],
                     }
                 except Exception as e:
                     logger.warning(f"Failed to get workflow data for initial load: {e}")

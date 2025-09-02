@@ -11,11 +11,12 @@ from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.types import Scope
 
+from libs.core.error_handling import YesmanError
+
 from .background_tasks import task_runner
 from .middleware.error_handler import add_request_id_middleware, global_error_handler
 from .routers import agents, ai_providers, config, controllers, dashboard, logs, sessions, websocket_router, workflows
 from .routers.websocket_router import ConnectionManager
-from libs.core.error_handling import YesmanError
 
 # Copyright (c) 2024 Yesman Claude Project
 # Licensed under the MIT License

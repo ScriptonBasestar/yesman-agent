@@ -22,6 +22,7 @@ logger = logging.getLogger("yesman.api.workflows")
 # Request/Response models
 class WorkflowStartRequest(BaseModel):
     """Request model for starting a workflow."""
+
     template_id: str
     project_path: str | None = None
     variables: dict[str, str] | None = None
@@ -30,6 +31,7 @@ class WorkflowStartRequest(BaseModel):
 
 class WorkflowExecutionResponse(BaseModel):
     """Response model for workflow execution."""
+
     execution_id: str
     status: str
     template_id: str
@@ -43,6 +45,7 @@ class WorkflowExecutionResponse(BaseModel):
 
 class WorkflowTemplateResponse(BaseModel):
     """Response model for workflow templates."""
+
     template_id: str
     name: str
     description: str
@@ -81,13 +84,15 @@ class WorkflowAPIService:
                         if isinstance(step, dict) and "variables" in step:
                             variables.extend(step["variables"])
 
-                    result.append(WorkflowTemplateResponse(
-                        template_id=template_id,
-                        name=template_data.get("name", template_id),
-                        description=template_data.get("description", ""),
-                        steps_count=len(config.steps),
-                        variables=list(set(variables))  # Remove duplicates
-                    ))
+                    result.append(
+                        WorkflowTemplateResponse(
+                            template_id=template_id,
+                            name=template_data.get("name", template_id),
+                            description=template_data.get("description", ""),
+                            steps_count=len(config.steps),
+                            variables=list(set(variables)),  # Remove duplicates
+                        )
+                    )
 
             return result
         except Exception as e:
@@ -130,7 +135,7 @@ class WorkflowAPIService:
                 name=template_data.get("name", template_id),
                 description=template_data.get("description", ""),
                 steps_count=len(config.steps),
-                variables=list(set(variables))  # Remove duplicates
+                variables=list(set(variables)),  # Remove duplicates
             )
         except Exception as e:
             self.logger.exception(f"Failed to get workflow template {template_id}")
@@ -155,20 +160,12 @@ class WorkflowAPIService:
             project_path = Path(request.project_path) if request.project_path else Path.cwd()
 
             # Start workflow
-            execution_id = self.workflow_service.start_workflow(
-                template_id=request.template_id,
-                project_path=project_path,
-                variables=request.variables or {},
-                detached=request.detached
-            )
+            execution_id = self.workflow_service.start_workflow(template_id=request.template_id, project_path=project_path, variables=request.variables or {}, detached=request.detached)
 
             # Get execution details
             execution = self.workflow_service.get_execution(execution_id)
             if not execution:
-                raise YesmanError(
-                    f"Failed to retrieve started workflow execution {execution_id}",
-                    category=ErrorCategory.SYSTEM
-                )
+                raise YesmanError(f"Failed to retrieve started workflow execution {execution_id}", category=ErrorCategory.SYSTEM)
 
             return self._convert_execution_to_response(execution)
 
@@ -240,11 +237,7 @@ class WorkflowAPIService:
         try:
             success = self.workflow_service.cancel_workflow(execution_id)
 
-            return {
-                "execution_id": execution_id,
-                "cancelled": success,
-                "message": "Workflow cancellation requested" if success else "Failed to cancel workflow"
-            }
+            return {"execution_id": execution_id, "cancelled": success, "message": "Workflow cancellation requested" if success else "Failed to cancel workflow"}
         except Exception as e:
             self.logger.exception(f"Failed to cancel workflow execution {execution_id}")
             msg = f"Failed to cancel workflow execution '{execution_id}'"
@@ -266,10 +259,7 @@ class WorkflowAPIService:
         try:
             execution = self.workflow_service.get_execution(execution_id)
             if not execution:
-                raise YesmanError(
-                    f"Workflow execution '{execution_id}' not found",
-                    category=ErrorCategory.VALIDATION
-                )
+                raise YesmanError(f"Workflow execution '{execution_id}' not found", category=ErrorCategory.VALIDATION)
 
             return {
                 "execution_id": execution_id,
@@ -282,14 +272,13 @@ class WorkflowAPIService:
                         "index": i,
                         "id": step.get("id", f"step_{i}"),
                         "name": step.get("name", f"Step {i + 1}"),
-                        "status": "completed" if i < (execution.current_step or 0) else
-                                "running" if i == (execution.current_step or 0) else "pending"
+                        "status": "completed" if i < (execution.current_step or 0) else "running" if i == (execution.current_step or 0) else "pending",
                     }
                     for i, step in enumerate(execution.config.steps)
                 ],
                 "error": execution.error,
                 "created_at": execution.created_at.isoformat(),
-                "updated_at": execution.updated_at.isoformat()
+                "updated_at": execution.updated_at.isoformat(),
             }
         except YesmanError:
             raise
@@ -317,7 +306,7 @@ class WorkflowAPIService:
             progress=execution.get_progress(),
             created_at=execution.created_at.isoformat(),
             updated_at=execution.updated_at.isoformat(),
-            error=execution.error
+            error=execution.error,
         )
 
 
@@ -325,12 +314,7 @@ class WorkflowAPIService:
 router = APIRouter(tags=["workflows"])
 
 
-@router.get(
-    "/workflows/templates",
-    response_model=list[WorkflowTemplateResponse],
-    summary="Get all workflow templates",
-    description="Retrieve information about all available workflow templates"
-)
+@router.get("/workflows/templates", response_model=list[WorkflowTemplateResponse], summary="Get all workflow templates", description="Retrieve information about all available workflow templates")
 def get_all_templates() -> list[WorkflowTemplateResponse]:
     """Get all workflow templates.
 
@@ -352,7 +336,7 @@ def get_all_templates() -> list[WorkflowTemplateResponse]:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=e.message,
         )
-    except Exception as e:
+    except Exception:
         logger.exception("Unexpected error in get_all_templates")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -361,10 +345,7 @@ def get_all_templates() -> list[WorkflowTemplateResponse]:
 
 
 @router.get(
-    "/workflows/templates/{template_id}",
-    response_model=WorkflowTemplateResponse,
-    summary="Get specific workflow template",
-    description="Retrieve information about a specific workflow template"
+    "/workflows/templates/{template_id}", response_model=WorkflowTemplateResponse, summary="Get specific workflow template", description="Retrieve information about a specific workflow template"
 )
 def get_template(template_id: str) -> WorkflowTemplateResponse:
     """Get specific workflow template by ID.
@@ -382,10 +363,7 @@ def get_template(template_id: str) -> WorkflowTemplateResponse:
         template = service.get_template_by_id(template_id)
 
         if not template:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Workflow template '{template_id}' not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Workflow template '{template_id}' not found")
 
         return template
 
@@ -397,7 +375,7 @@ def get_template(template_id: str) -> WorkflowTemplateResponse:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=e.message,
         )
-    except Exception as e:
+    except Exception:
         logger.exception("Unexpected error in get_template")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -405,12 +383,7 @@ def get_template(template_id: str) -> WorkflowTemplateResponse:
         )
 
 
-@router.post(
-    "/workflows/executions",
-    response_model=WorkflowExecutionResponse,
-    summary="Start workflow execution",
-    description="Start a new workflow execution"
-)
+@router.post("/workflows/executions", response_model=WorkflowExecutionResponse, summary="Start workflow execution", description="Start a new workflow execution")
 def start_workflow(request: WorkflowStartRequest) -> WorkflowExecutionResponse:
     """Start a new workflow execution.
 
@@ -430,7 +403,7 @@ def start_workflow(request: WorkflowStartRequest) -> WorkflowExecutionResponse:
         logger.exception(f"YesmanError in start_workflow: {e.message}")
         status_code = status.HTTP_400_BAD_REQUEST if e.category == ErrorCategory.VALIDATION else status.HTTP_500_INTERNAL_SERVER_ERROR
         raise HTTPException(status_code=status_code, detail=e.message)
-    except Exception as e:
+    except Exception:
         logger.exception("Unexpected error in start_workflow")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -438,12 +411,7 @@ def start_workflow(request: WorkflowStartRequest) -> WorkflowExecutionResponse:
         )
 
 
-@router.get(
-    "/workflows/executions",
-    response_model=list[WorkflowExecutionResponse],
-    summary="Get all workflow executions",
-    description="Retrieve information about all workflow executions"
-)
+@router.get("/workflows/executions", response_model=list[WorkflowExecutionResponse], summary="Get all workflow executions", description="Retrieve information about all workflow executions")
 def get_all_executions() -> list[WorkflowExecutionResponse]:
     """Get all workflow executions.
 
@@ -465,7 +433,7 @@ def get_all_executions() -> list[WorkflowExecutionResponse]:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=e.message,
         )
-    except Exception as e:
+    except Exception:
         logger.exception("Unexpected error in get_all_executions")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -474,10 +442,7 @@ def get_all_executions() -> list[WorkflowExecutionResponse]:
 
 
 @router.get(
-    "/workflows/executions/{execution_id}",
-    response_model=WorkflowExecutionResponse,
-    summary="Get specific workflow execution",
-    description="Retrieve information about a specific workflow execution"
+    "/workflows/executions/{execution_id}", response_model=WorkflowExecutionResponse, summary="Get specific workflow execution", description="Retrieve information about a specific workflow execution"
 )
 def get_execution(execution_id: str) -> WorkflowExecutionResponse:
     """Get specific workflow execution by ID.
@@ -495,10 +460,7 @@ def get_execution(execution_id: str) -> WorkflowExecutionResponse:
         execution = service.get_execution_by_id(execution_id)
 
         if not execution:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Workflow execution '{execution_id}' not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Workflow execution '{execution_id}' not found")
 
         return execution
 
@@ -510,7 +472,7 @@ def get_execution(execution_id: str) -> WorkflowExecutionResponse:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=e.message,
         )
-    except Exception as e:
+    except Exception:
         logger.exception("Unexpected error in get_execution")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -518,11 +480,7 @@ def get_execution(execution_id: str) -> WorkflowExecutionResponse:
         )
 
 
-@router.post(
-    "/workflows/executions/{execution_id}/cancel",
-    summary="Cancel workflow execution",
-    description="Cancel a running workflow execution"
-)
+@router.post("/workflows/executions/{execution_id}/cancel", summary="Cancel workflow execution", description="Cancel a running workflow execution")
 def cancel_execution(execution_id: str) -> dict[str, Any]:
     """Cancel a workflow execution.
 
@@ -542,7 +500,7 @@ def cancel_execution(execution_id: str) -> dict[str, Any]:
         logger.exception(f"YesmanError in cancel_execution: {e.message}")
         status_code = status.HTTP_404_NOT_FOUND if e.category == ErrorCategory.VALIDATION else status.HTTP_500_INTERNAL_SERVER_ERROR
         raise HTTPException(status_code=status_code, detail=e.message)
-    except Exception as e:
+    except Exception:
         logger.exception("Unexpected error in cancel_execution")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -550,11 +508,7 @@ def cancel_execution(execution_id: str) -> dict[str, Any]:
         )
 
 
-@router.get(
-    "/workflows/executions/{execution_id}/logs",
-    summary="Get execution logs",
-    description="Get detailed logs and progress for a workflow execution"
-)
+@router.get("/workflows/executions/{execution_id}/logs", summary="Get execution logs", description="Get detailed logs and progress for a workflow execution")
 def get_execution_logs(execution_id: str) -> dict[str, Any]:
     """Get execution logs for a workflow.
 
@@ -574,7 +528,7 @@ def get_execution_logs(execution_id: str) -> dict[str, Any]:
         logger.exception(f"YesmanError in get_execution_logs: {e.message}")
         status_code = status.HTTP_404_NOT_FOUND if e.category == ErrorCategory.VALIDATION else status.HTTP_500_INTERNAL_SERVER_ERROR
         raise HTTPException(status_code=status_code, detail=e.message)
-    except Exception as e:
+    except Exception:
         logger.exception("Unexpected error in get_execution_logs")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

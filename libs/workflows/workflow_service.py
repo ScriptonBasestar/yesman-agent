@@ -16,11 +16,7 @@ class WorkflowServiceError(YesmanError):
     """Workflow service specific errors."""
 
     def __init__(self, message: str, **kwargs) -> None:
-        super().__init__(
-            message=message,
-            category=ErrorCategory.SERVICE,
-            **kwargs
-        )
+        super().__init__(message=message, category=ErrorCategory.SERVICE, **kwargs)
 
 
 class WorkflowService:
@@ -43,12 +39,9 @@ class WorkflowService:
         """Get workflow configuration for a template."""
         return self.template_manager.get_template_config(template_id)
 
-    def save_template(self, template_id: str, name: str, description: str,
-                     steps: list[dict[str, Any]], **kwargs) -> Path:
+    def save_template(self, template_id: str, name: str, description: str, steps: list[dict[str, Any]], **kwargs) -> Path:
         """Save a new workflow template."""
-        template_data = self.template_manager.create_template_from_config(
-            template_id, name, description, steps, **kwargs
-        )
+        template_data = self.template_manager.create_template_from_config(template_id, name, description, steps, **kwargs)
         return self.template_manager.save_template(template_id, template_data)
 
     def delete_template(self, template_id: str, user_template: bool = True) -> bool:
@@ -66,14 +59,7 @@ class WorkflowService:
             raise WorkflowServiceError(f"Template not found: {template_id}")
 
         # Create execution instance
-        execution = WorkflowExecution(
-            id=str(uuid.uuid4()),
-            template_id=template_id,
-            config=config,
-            context=context or {},
-            status=WorkflowStatus.PENDING,
-            created_at=datetime.now(UTC)
-        )
+        execution = WorkflowExecution(id=str(uuid.uuid4()), template_id=template_id, config=config, context=context or {}, status=WorkflowStatus.PENDING, created_at=datetime.now(UTC))
 
         # Store execution
         self.executions[execution.id] = execution
@@ -121,7 +107,7 @@ class WorkflowService:
 
             return success
 
-        except Exception as e:
+        except Exception:
             self.logger.exception(f"Failed to cancel execution {execution_id}")
             return False
 
@@ -142,7 +128,7 @@ class WorkflowService:
             "completed_at": execution.completed_at.isoformat() if execution.completed_at else None,
             "results": execution.results,
             "errors": execution.errors,
-            "checkpoints": execution.checkpoints
+            "checkpoints": execution.checkpoints,
         }
 
     def cleanup_completed_executions(self, max_age_hours: int = 24) -> int:

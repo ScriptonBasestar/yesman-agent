@@ -8,10 +8,4 @@ from .gemini_provider import GeminiCodeProvider, GeminiProvider
 from .ollama_provider import OllamaProvider
 from .openai_provider import OpenAIProvider
 
-__all__ = [
-    "ClaudeCodeProvider",
-    "OllamaProvider",
-    "OpenAIProvider",
-    "GeminiProvider",
-    "GeminiCodeProvider"
-]
+__all__ = ["ClaudeCodeProvider", "OllamaProvider", "OpenAIProvider", "GeminiProvider", "GeminiCodeProvider"]

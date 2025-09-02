@@ -2,7 +2,8 @@
 
 # Architecture Decision Records (ADRs)
 
-This directory contains Architecture Decision Records (ADRs) that document significant architectural decisions made in the Yesman-Claude project.
+This directory contains Architecture Decision Records (ADRs) that document significant architectural decisions made in
+the Yesman-Claude project.
 
 ## What is an ADR?
 

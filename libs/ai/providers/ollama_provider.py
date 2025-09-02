@@ -52,32 +52,18 @@ class OllamaProvider(AIProvider):
     async def health_check(self) -> dict[str, Any]:
         """Ollama 서버 상태 확인."""
         if not self.session:
-            return {
-                "status": "not_initialized",
-                "initialized": False
-            }
+            return {"status": "not_initialized", "initialized": False}
 
         try:
             async with self.session.get(f"{self.base_url}/api/version") as response:
                 if response.status == 200:
                     version_data = await response.json()
-                    return {
-                        "status": "healthy",
-                        "ollama_version": version_data.get("version", "unknown"),
-                        "available_models": len(self._available_models),
-                        "base_url": self.base_url
-                    }
+                    return {"status": "healthy", "ollama_version": version_data.get("version", "unknown"), "available_models": len(self._available_models), "base_url": self.base_url}
                 else:
-                    return {
-                        "status": "unhealthy",
-                        "error": f"HTTP {response.status}"
-                    }
+                    return {"status": "unhealthy", "error": f"HTTP {response.status}"}
 
         except Exception as e:
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
     async def _fetch_available_models(self) -> list[str]:
         """Ollama에서 사용 가능한 모델 목록 가져오기."""
@@ -104,35 +90,17 @@ class OllamaProvider(AIProvider):
     async def execute_task(self, task: AITask) -> AIResponse:
         """단일 작업 실행."""
         if not self.session:
-            return AIResponse(
-                content="",
-                status=TaskStatus.FAILED,
-                provider=AIProviderType.OLLAMA,
-                model=task.model,
-                error="Ollama provider not initialized"
-            )
+            return AIResponse(content="", status=TaskStatus.FAILED, provider=AIProviderType.OLLAMA, model=task.model, error="Ollama provider not initialized")
 
         try:
             # 요청 데이터 구성
-            request_data = {
-                "model": task.model,
-                "prompt": task.prompt,
-                "stream": False,
-                "options": {
-                    "temperature": task.temperature
-                }
-            }
+            request_data = {"model": task.model, "prompt": task.prompt, "stream": False, "options": {"temperature": task.temperature}}
 
             if task.max_tokens:
                 request_data["options"]["num_predict"] = task.max_tokens
 
             # Ollama API 호출
-            async with self.session.post(
-                f"{self.base_url}/api/generate",
-                json=request_data,
-                timeout=aiohttp.ClientTimeout(total=task.timeout)
-            ) as response:
-
+            async with self.session.post(f"{self.base_url}/api/generate", json=request_data, timeout=aiohttp.ClientTimeout(total=task.timeout)) as response:
                 if response.status == 200:
                     data = await response.json()
 
@@ -145,76 +113,37 @@ class OllamaProvider(AIProvider):
                             "total_duration": data.get("total_duration", 0),
                             "load_duration": data.get("load_duration", 0),
                             "prompt_eval_count": data.get("prompt_eval_count", 0),
-                            "eval_count": data.get("eval_count", 0)
+                            "eval_count": data.get("eval_count", 0),
                         },
-                        metadata={
-                            "done": data.get("done", False),
-                            "context": data.get("context", [])
-                        }
+                        metadata={"done": data.get("done", False), "context": data.get("context", [])},
                     )
                 else:
                     error_text = await response.text()
-                    return AIResponse(
-                        content="",
-                        status=TaskStatus.FAILED,
-                        provider=AIProviderType.OLLAMA,
-                        model=task.model,
-                        error=f"HTTP {response.status}: {error_text}"
-                    )
+                    return AIResponse(content="", status=TaskStatus.FAILED, provider=AIProviderType.OLLAMA, model=task.model, error=f"HTTP {response.status}: {error_text}")
 
         except TimeoutError:
-            return AIResponse(
-                content="",
-                status=TaskStatus.FAILED,
-                provider=AIProviderType.OLLAMA,
-                model=task.model,
-                error=f"Task timed out after {task.timeout} seconds"
-            )
+            return AIResponse(content="", status=TaskStatus.FAILED, provider=AIProviderType.OLLAMA, model=task.model, error=f"Task timed out after {task.timeout} seconds")
         except Exception as e:
-            return AIResponse(
-                content="",
-                status=TaskStatus.FAILED,
-                provider=AIProviderType.OLLAMA,
-                model=task.model,
-                error=str(e)
-            )
+            return AIResponse(content="", status=TaskStatus.FAILED, provider=AIProviderType.OLLAMA, model=task.model, error=str(e))
 
     async def stream_task(self, task: AITask) -> AsyncGenerator[str, None]:
         """스트리밍 작업 실행."""
         if not self.session:
-            yield json.dumps({
-                "error": "Ollama provider not initialized",
-                "status": "failed"
-            })
+            yield json.dumps({"error": "Ollama provider not initialized", "status": "failed"})
             return
 
         try:
             # 요청 데이터 구성 (스트림 모드)
-            request_data = {
-                "model": task.model,
-                "prompt": task.prompt,
-                "stream": True,
-                "options": {
-                    "temperature": task.temperature
-                }
-            }
+            request_data = {"model": task.model, "prompt": task.prompt, "stream": True, "options": {"temperature": task.temperature}}
 
             if task.max_tokens:
                 request_data["options"]["num_predict"] = task.max_tokens
 
             # 스트리밍 요청
-            async with self.session.post(
-                f"{self.base_url}/api/generate",
-                json=request_data,
-                timeout=aiohttp.ClientTimeout(total=task.timeout)
-            ) as response:
-
+            async with self.session.post(f"{self.base_url}/api/generate", json=request_data, timeout=aiohttp.ClientTimeout(total=task.timeout)) as response:
                 if response.status != 200:
                     error_text = await response.text()
-                    yield json.dumps({
-                        "error": f"HTTP {response.status}: {error_text}",
-                        "status": "failed"
-                    })
+                    yield json.dumps({"error": f"HTTP {response.status}: {error_text}", "status": "failed"})
                     return
 
                 # 스트림 응답 처리
@@ -225,18 +154,11 @@ class OllamaProvider(AIProvider):
                             data = json.loads(line_str)
 
                             # Ollama 스트림 형식을 통합 형식으로 변환
-                            chunk_data = {
-                                "content": data.get("response", ""),
-                                "done": data.get("done", False),
-                                "status": "running"
-                            }
+                            chunk_data = {"content": data.get("response", ""), "done": data.get("done", False), "status": "running"}
 
                             if data.get("done"):
                                 chunk_data["status"] = "completed"
-                                chunk_data["usage"] = {
-                                    "total_duration": data.get("total_duration", 0),
-                                    "eval_count": data.get("eval_count", 0)
-                                }
+                                chunk_data["usage"] = {"total_duration": data.get("total_duration", 0), "eval_count": data.get("eval_count", 0)}
 
                             yield json.dumps(chunk_data)
 
@@ -246,22 +168,13 @@ class OllamaProvider(AIProvider):
                     except json.JSONDecodeError:
                         continue
                     except Exception as e:
-                        yield json.dumps({
-                            "error": str(e),
-                            "status": "failed"
-                        })
+                        yield json.dumps({"error": str(e), "status": "failed"})
                         return
 
         except TimeoutError:
-            yield json.dumps({
-                "error": f"Task timed out after {task.timeout} seconds",
-                "status": "failed"
-            })
+            yield json.dumps({"error": f"Task timed out after {task.timeout} seconds", "status": "failed"})
         except Exception as e:
-            yield json.dumps({
-                "error": str(e),
-                "status": "failed"
-            })
+            yield json.dumps({"error": str(e), "status": "failed"})
 
     async def cancel_task(self, task_id: str) -> bool:
         """작업 취소 (Ollama는 기본적으로 취소 기능이 제한적)."""
@@ -285,25 +198,9 @@ class OllamaProvider(AIProvider):
         return {
             "type": "object",
             "properties": {
-                "base_url": {
-                    "type": "string",
-                    "title": "Ollama Server URL",
-                    "description": "Base URL for Ollama server",
-                    "default": "http://localhost:11434"
-                },
-                "timeout": {
-                    "type": "integer",
-                    "title": "Request Timeout (seconds)",
-                    "description": "Timeout for API requests",
-                    "default": 300,
-                    "minimum": 10
-                },
-                "default_model": {
-                    "type": "string",
-                    "title": "Default Model",
-                    "description": "Default model to use if not specified",
-                    "default": "llama3.1"
-                }
+                "base_url": {"type": "string", "title": "Ollama Server URL", "description": "Base URL for Ollama server", "default": "http://localhost:11434"},
+                "timeout": {"type": "integer", "title": "Request Timeout (seconds)", "description": "Timeout for API requests", "default": 300, "minimum": 10},
+                "default_model": {"type": "string", "title": "Default Model", "description": "Default model to use if not specified", "default": "llama3.1"},
             },
-            "required": ["base_url"]
+            "required": ["base_url"],
         }

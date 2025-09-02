@@ -21,12 +21,7 @@ class GeminiProvider(AIProvider):
         self.api_key = config.get("api_key")
         self.base_url = config.get("base_url", "https://generativelanguage.googleapis.com/v1beta")
         self.session: aiohttp.ClientSession | None = None
-        self._available_models = [
-            "gemini-1.5-pro",
-            "gemini-1.5-flash",
-            "gemini-1.0-pro",
-            "gemini-pro-vision"
-        ]
+        self._available_models = ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.0-pro", "gemini-pro-vision"]
 
     def _get_provider_type(self) -> AIProviderType:
         return AIProviderType.GEMINI
@@ -60,10 +55,7 @@ class GeminiProvider(AIProvider):
     async def health_check(self) -> dict[str, Any]:
         """Gemini API 상태 확인."""
         if not self.session:
-            return {
-                "status": "not_initialized",
-                "initialized": False
-            }
+            return {"status": "not_initialized", "initialized": False}
 
         try:
             # 모델 목록 요청으로 API 상태 확인
@@ -73,27 +65,14 @@ class GeminiProvider(AIProvider):
                     data = await response.json()
                     models = data.get("models", [])
 
-                    return {
-                        "status": "healthy",
-                        "available_models": len(models),
-                        "base_url": self.base_url
-                    }
+                    return {"status": "healthy", "available_models": len(models), "base_url": self.base_url}
                 elif response.status == 403:
-                    return {
-                        "status": "unauthorized",
-                        "error": "Invalid API key or quota exceeded"
-                    }
+                    return {"status": "unauthorized", "error": "Invalid API key or quota exceeded"}
                 else:
-                    return {
-                        "status": "unhealthy",
-                        "error": f"HTTP {response.status}"
-                    }
+                    return {"status": "unhealthy", "error": f"HTTP {response.status}"}
 
         except Exception as e:
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
     async def get_available_models(self) -> list[str]:
         """사용 가능한 모델 목록 반환."""
@@ -121,41 +100,23 @@ class GeminiProvider(AIProvider):
         if task.context:
             for msg in task.context:
                 role = "user" if msg.role == "user" else "model"
-                contents.append({
-                    "role": role,
-                    "parts": [{"text": msg.content}]
-                })
+                contents.append({"role": role, "parts": [{"text": msg.content}]})
 
         # 현재 프롬프트 추가
-        contents.append({
-            "role": "user",
-            "parts": [{"text": task.prompt}]
-        })
+        contents.append({"role": "user", "parts": [{"text": task.prompt}]})
 
         return contents
 
     async def execute_task(self, task: AITask) -> AIResponse:
         """단일 작업 실행."""
         if not self.session:
-            return AIResponse(
-                content="",
-                status=TaskStatus.FAILED,
-                provider=AIProviderType.GEMINI,
-                model=task.model,
-                error="Gemini provider not initialized"
-            )
+            return AIResponse(content="", status=TaskStatus.FAILED, provider=AIProviderType.GEMINI, model=task.model, error="Gemini provider not initialized")
 
         try:
             contents = self._prepare_contents(task)
 
             # 요청 데이터 구성
-            request_data = {
-                "contents": contents,
-                "generationConfig": {
-                    "temperature": task.temperature,
-                    "candidateCount": 1
-                }
-            }
+            request_data = {"contents": contents, "generationConfig": {"temperature": task.temperature, "candidateCount": 1}}
 
             if task.max_tokens:
                 request_data["generationConfig"]["maxOutputTokens"] = task.max_tokens
@@ -164,12 +125,7 @@ class GeminiProvider(AIProvider):
             model_name = f"models/{task.model}"
             url = f"{self.base_url}/{model_name}:generateContent?key={self.api_key}"
 
-            async with self.session.post(
-                url,
-                json=request_data,
-                timeout=aiohttp.ClientTimeout(total=task.timeout)
-            ) as response:
-
+            async with self.session.post(url, json=request_data, timeout=aiohttp.ClientTimeout(total=task.timeout)) as response:
                 if response.status == 200:
                     data = await response.json()
 
@@ -183,72 +139,36 @@ class GeminiProvider(AIProvider):
                             provider=AIProviderType.GEMINI,
                             model=task.model,
                             usage=data.get("usageMetadata", {}),
-                            metadata={
-                                "finishReason": candidate.get("finishReason"),
-                                "safetyRatings": candidate.get("safetyRatings", [])
-                            }
+                            metadata={"finishReason": candidate.get("finishReason"), "safetyRatings": candidate.get("safetyRatings", [])},
                         )
                     else:
                         error_msg = "No candidates in response"
                         if "promptFeedback" in data:
                             error_msg = f"Prompt blocked: {data['promptFeedback'].get('blockReason', 'Unknown')}"
 
-                        return AIResponse(
-                            content="",
-                            status=TaskStatus.FAILED,
-                            provider=AIProviderType.GEMINI,
-                            model=task.model,
-                            error=error_msg
-                        )
+                        return AIResponse(content="", status=TaskStatus.FAILED, provider=AIProviderType.GEMINI, model=task.model, error=error_msg)
                 else:
                     error_data = await response.json()
                     error_msg = error_data.get("error", {}).get("message", f"HTTP {response.status}")
 
-                    return AIResponse(
-                        content="",
-                        status=TaskStatus.FAILED,
-                        provider=AIProviderType.GEMINI,
-                        model=task.model,
-                        error=error_msg
-                    )
+                    return AIResponse(content="", status=TaskStatus.FAILED, provider=AIProviderType.GEMINI, model=task.model, error=error_msg)
 
         except TimeoutError:
-            return AIResponse(
-                content="",
-                status=TaskStatus.FAILED,
-                provider=AIProviderType.GEMINI,
-                model=task.model,
-                error=f"Task timed out after {task.timeout} seconds"
-            )
+            return AIResponse(content="", status=TaskStatus.FAILED, provider=AIProviderType.GEMINI, model=task.model, error=f"Task timed out after {task.timeout} seconds")
         except Exception as e:
-            return AIResponse(
-                content="",
-                status=TaskStatus.FAILED,
-                provider=AIProviderType.GEMINI,
-                model=task.model,
-                error=str(e)
-            )
+            return AIResponse(content="", status=TaskStatus.FAILED, provider=AIProviderType.GEMINI, model=task.model, error=str(e))
 
     async def stream_task(self, task: AITask) -> AsyncGenerator[str, None]:
         """스트리밍 작업 실행."""
         if not self.session:
-            yield json.dumps({
-                "error": "Gemini provider not initialized",
-                "status": "failed"
-            })
+            yield json.dumps({"error": "Gemini provider not initialized", "status": "failed"})
             return
 
         try:
             contents = self._prepare_contents(task)
 
             # 요청 데이터 구성 (스트림 모드)
-            request_data = {
-                "contents": contents,
-                "generationConfig": {
-                    "temperature": task.temperature,
-                    "candidateCount": 1
-                }
-            }
+            request_data = {"contents": contents, "generationConfig": {"temperature": task.temperature, "candidateCount": 1}}
 
             if task.max_tokens:
                 request_data["generationConfig"]["maxOutputTokens"] = task.max_tokens
@@ -257,19 +177,11 @@ class GeminiProvider(AIProvider):
             model_name = f"models/{task.model}"
             url = f"{self.base_url}/{model_name}:streamGenerateContent?alt=sse&key={self.api_key}"
 
-            async with self.session.post(
-                url,
-                json=request_data,
-                timeout=aiohttp.ClientTimeout(total=task.timeout)
-            ) as response:
-
+            async with self.session.post(url, json=request_data, timeout=aiohttp.ClientTimeout(total=task.timeout)) as response:
                 if response.status != 200:
                     error_data = await response.json()
                     error_msg = error_data.get("error", {}).get("message", f"HTTP {response.status}")
-                    yield json.dumps({
-                        "error": error_msg,
-                        "status": "failed"
-                    })
+                    yield json.dumps({"error": error_msg, "status": "failed"})
                     return
 
                 # 스트림 응답 처리 (Server-Sent Events)
@@ -290,11 +202,7 @@ class GeminiProvider(AIProvider):
                                     if parts:
                                         content = parts[0].get("text", "")
 
-                                        chunk_data = {
-                                            "content": content,
-                                            "done": False,
-                                            "status": "running"
-                                        }
+                                        chunk_data = {"content": content, "done": False, "status": "running"}
 
                                         # 완료 확인
                                         finish_reason = candidate.get("finishReason")
@@ -314,22 +222,13 @@ class GeminiProvider(AIProvider):
                         except json.JSONDecodeError:
                             continue
                         except Exception as e:
-                            yield json.dumps({
-                                "error": str(e),
-                                "status": "failed"
-                            })
+                            yield json.dumps({"error": str(e), "status": "failed"})
                             return
 
         except TimeoutError:
-            yield json.dumps({
-                "error": f"Task timed out after {task.timeout} seconds",
-                "status": "failed"
-            })
+            yield json.dumps({"error": f"Task timed out after {task.timeout} seconds", "status": "failed"})
         except Exception as e:
-            yield json.dumps({
-                "error": str(e),
-                "status": "failed"
-            })
+            yield json.dumps({"error": str(e), "status": "failed"})
 
     async def cancel_task(self, task_id: str) -> bool:
         """작업 취소 (Gemini API는 명시적 취소 기능 없음)."""
@@ -351,59 +250,28 @@ class GeminiProvider(AIProvider):
         return {
             "type": "object",
             "properties": {
-                "api_key": {
-                    "type": "string",
-                    "title": "Gemini API Key",
-                    "description": "Your Google AI Studio API key",
-                    "format": "password"
-                },
-                "base_url": {
-                    "type": "string",
-                    "title": "API Base URL",
-                    "description": "Gemini API base URL",
-                    "default": "https://generativelanguage.googleapis.com/v1beta"
-                },
+                "api_key": {"type": "string", "title": "Gemini API Key", "description": "Your Google AI Studio API key", "format": "password"},
+                "base_url": {"type": "string", "title": "API Base URL", "description": "Gemini API base URL", "default": "https://generativelanguage.googleapis.com/v1beta"},
                 "default_model": {
                     "type": "string",
                     "title": "Default Model",
                     "description": "Default model to use",
                     "default": "gemini-1.5-pro",
-                    "enum": [
-                        "gemini-1.5-pro",
-                        "gemini-1.5-flash",
-                        "gemini-1.0-pro",
-                        "gemini-pro-vision"
-                    ]
+                    "enum": ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.0-pro", "gemini-pro-vision"],
                 },
                 "safety_settings": {
                     "type": "object",
                     "title": "Safety Settings",
                     "description": "Content safety settings",
                     "properties": {
-                        "harassment": {
-                            "type": "string",
-                            "enum": ["BLOCK_NONE", "BLOCK_ONLY_HIGH", "BLOCK_MEDIUM_AND_ABOVE", "BLOCK_LOW_AND_ABOVE"],
-                            "default": "BLOCK_MEDIUM_AND_ABOVE"
-                        },
-                        "hate_speech": {
-                            "type": "string",
-                            "enum": ["BLOCK_NONE", "BLOCK_ONLY_HIGH", "BLOCK_MEDIUM_AND_ABOVE", "BLOCK_LOW_AND_ABOVE"],
-                            "default": "BLOCK_MEDIUM_AND_ABOVE"
-                        },
-                        "sexually_explicit": {
-                            "type": "string",
-                            "enum": ["BLOCK_NONE", "BLOCK_ONLY_HIGH", "BLOCK_MEDIUM_AND_ABOVE", "BLOCK_LOW_AND_ABOVE"],
-                            "default": "BLOCK_MEDIUM_AND_ABOVE"
-                        },
-                        "dangerous_content": {
-                            "type": "string",
-                            "enum": ["BLOCK_NONE", "BLOCK_ONLY_HIGH", "BLOCK_MEDIUM_AND_ABOVE", "BLOCK_LOW_AND_ABOVE"],
-                            "default": "BLOCK_MEDIUM_AND_ABOVE"
-                        }
-                    }
-                }
+                        "harassment": {"type": "string", "enum": ["BLOCK_NONE", "BLOCK_ONLY_HIGH", "BLOCK_MEDIUM_AND_ABOVE", "BLOCK_LOW_AND_ABOVE"], "default": "BLOCK_MEDIUM_AND_ABOVE"},
+                        "hate_speech": {"type": "string", "enum": ["BLOCK_NONE", "BLOCK_ONLY_HIGH", "BLOCK_MEDIUM_AND_ABOVE", "BLOCK_LOW_AND_ABOVE"], "default": "BLOCK_MEDIUM_AND_ABOVE"},
+                        "sexually_explicit": {"type": "string", "enum": ["BLOCK_NONE", "BLOCK_ONLY_HIGH", "BLOCK_MEDIUM_AND_ABOVE", "BLOCK_LOW_AND_ABOVE"], "default": "BLOCK_MEDIUM_AND_ABOVE"},
+                        "dangerous_content": {"type": "string", "enum": ["BLOCK_NONE", "BLOCK_ONLY_HIGH", "BLOCK_MEDIUM_AND_ABOVE", "BLOCK_LOW_AND_ABOVE"], "default": "BLOCK_MEDIUM_AND_ABOVE"},
+                    },
+                },
             },
-            "required": ["api_key"]
+            "required": ["api_key"],
         }
 
 
@@ -413,12 +281,7 @@ class GeminiCodeProvider(GeminiProvider):
     def __init__(self, config: dict[str, Any]) -> None:
         super().__init__(config)
         # 코딩 전용 모델들
-        self._available_models = [
-            "gemini-1.5-pro",
-            "gemini-1.5-flash",
-            "code-bison",
-            "codechat-bison"
-        ]
+        self._available_models = ["gemini-1.5-pro", "gemini-1.5-flash", "code-bison", "codechat-bison"]
 
     def _get_provider_type(self) -> AIProviderType:
         return AIProviderType.GEMINI_CODE
@@ -432,14 +295,11 @@ class GeminiCodeProvider(GeminiProvider):
             system_prompt = f"""
 You are an expert code assistant.
 Working directory: {task.workspace_path}
-Available tools: {', '.join(task.tools or [])}
+Available tools: {", ".join(task.tools or [])}
 
 Please provide clear, well-documented code solutions.
 """
-            contents.insert(0, {
-                "role": "user",
-                "parts": [{"text": system_prompt}]
-            })
+            contents.insert(0, {"role": "user", "parts": [{"text": system_prompt}]})
 
         return contents
 
@@ -448,19 +308,9 @@ Please provide clear, well-documented code solutions.
         schema = super().get_config_schema()
 
         # 코딩 관련 설정 추가
-        schema["properties"]["default_model"]["enum"] = [
-            "gemini-1.5-pro",
-            "gemini-1.5-flash",
-            "code-bison",
-            "codechat-bison"
-        ]
+        schema["properties"]["default_model"]["enum"] = ["gemini-1.5-pro", "gemini-1.5-flash", "code-bison", "codechat-bison"]
         schema["properties"]["default_model"]["default"] = "gemini-1.5-pro"
 
-        schema["properties"]["code_execution"] = {
-            "type": "boolean",
-            "title": "Enable Code Execution",
-            "description": "Allow Gemini to execute code",
-            "default": False
-        }
+        schema["properties"]["code_execution"] = {"type": "boolean", "title": "Enable Code Execution", "description": "Allow Gemini to execute code", "default": False}
 
         return schema

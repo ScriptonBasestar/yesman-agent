@@ -17,22 +17,13 @@ class ExecutionEngineError(YesmanError):
     """Execution engine specific error."""
 
     def __init__(self, message: str, **kwargs) -> None:
-        super().__init__(
-            message=message,
-            severity=ErrorSeverity.HIGH,
-            **kwargs
-        )
+        super().__init__(message=message, severity=ErrorSeverity.HIGH, **kwargs)
 
 
 class WorkflowExecutionEngine:
     """Engine for executing LangChain workflows with advanced features."""
 
-    def __init__(
-        self,
-        config: YesmanConfig,
-        tmux_manager: TmuxManager,
-        max_concurrent: int = 5
-    ) -> None:
+    def __init__(self, config: YesmanConfig, tmux_manager: TmuxManager, max_concurrent: int = 5) -> None:
         """Initialize execution engine.
 
         Args:
@@ -61,6 +52,7 @@ class WorkflowExecutionEngine:
 
     def _start_cleanup_task(self) -> None:
         """Start background cleanup task."""
+
         async def cleanup_routine():
             while True:
                 try:
@@ -68,7 +60,7 @@ class WorkflowExecutionEngine:
                     await self._cleanup_finished_tasks()
                 except asyncio.CancelledError:
                     break
-                except Exception as e:
+                except Exception:
                     self.logger.exception("Cleanup task error")
 
         self.cleanup_task = asyncio.create_task(cleanup_routine())
@@ -98,11 +90,7 @@ class WorkflowExecutionEngine:
             self.execution_tasks.pop(execution_id, None)
             self.logger.debug("Cleaned up finished task: %s", execution_id)
 
-    async def execute_workflow(
-        self,
-        execution: WorkflowExecution,
-        variables: dict[str, str] | None = None
-    ) -> ExecutionResult:
+    async def execute_workflow(self, execution: WorkflowExecution, variables: dict[str, str] | None = None) -> ExecutionResult:
         """Execute workflow with full error handling and checkpointing.
 
         Args:
@@ -161,7 +149,7 @@ class WorkflowExecutionEngine:
                 error_message=str(e),
                 started_at=execution.started_at,
                 completed_at=datetime.now(UTC),
-                execution_time=execution.get_execution_time()
+                execution_time=execution.get_execution_time(),
             )
         finally:
             # Cleanup
@@ -182,12 +170,7 @@ class WorkflowExecutionEngine:
         except Exception as e:
             raise ExecutionEngineError(f"Failed to create Claude agent: {e}")
 
-    async def _execute_steps(
-        self,
-        execution: WorkflowExecution,
-        claude_agent: ClaudeAgent,
-        variables: dict[str, str]
-    ) -> ExecutionResult:
+    async def _execute_steps(self, execution: WorkflowExecution, claude_agent: ClaudeAgent, variables: dict[str, str]) -> ExecutionResult:
         """Execute workflow steps with dependency resolution."""
         workflow_steps = execution.config.to_workflow_steps()
 
@@ -246,7 +229,7 @@ class WorkflowExecutionEngine:
             results=execution.step_results,
             started_at=execution.started_at,
             completed_at=execution.completed_at,
-            execution_time=execution.get_execution_time()
+            execution_time=execution.get_execution_time(),
         )
 
     def _build_dependency_graph(self, steps: list[WorkflowStep]) -> dict[str, list[str]]:
@@ -260,13 +243,7 @@ class WorkflowExecutionEngine:
         """Check if step dependencies are satisfied."""
         return all(dep in completed_steps for dep in step.dependencies)
 
-    async def _execute_step(
-        self,
-        step: WorkflowStep,
-        claude_agent: ClaudeAgent,
-        variables: dict[str, str],
-        execution: WorkflowExecution
-    ) -> str:
+    async def _execute_step(self, step: WorkflowStep, claude_agent: ClaudeAgent, variables: dict[str, str], execution: WorkflowExecution) -> str:
         """Execute individual workflow step."""
         # Apply variable substitution to prompt
         prompt = self._apply_variables(step.prompt, variables)
@@ -277,7 +254,7 @@ class WorkflowExecutionEngine:
             StepType.IMPLEMENTATION: "Implement following best practices and conventions. Ensure code quality and maintainability.",
             StepType.TESTING: "Create thorough tests with good coverage. Include edge cases and error scenarios.",
             StepType.DEPLOYMENT: "Prepare for production deployment with safety checks and rollback plans.",
-            StepType.GENERAL: "Execute the requested task with attention to detail and best practices."
+            StepType.GENERAL: "Execute the requested task with attention to detail and best practices.",
         }
 
         custom_prompt = custom_prompts.get(step.type, custom_prompts[StepType.GENERAL])
@@ -291,10 +268,7 @@ class WorkflowExecutionEngine:
             # Execute through Claude CLI with timeout
             timeout = step.timeout or 300  # Default 5 minutes
 
-            result = await asyncio.wait_for(
-                self._run_claude_step(claude_agent, prompt, custom_prompt),
-                timeout=timeout
-            )
+            result = await asyncio.wait_for(self._run_claude_step(claude_agent, prompt, custom_prompt), timeout=timeout)
 
             return result
 
@@ -303,12 +277,7 @@ class WorkflowExecutionEngine:
         except Exception as e:
             raise ExecutionEngineError(f"Step {step.id} execution failed: {e}")
 
-    async def _run_claude_step(
-        self,
-        claude_agent: ClaudeAgent,
-        prompt: str,
-        custom_prompt: str
-    ) -> str:
+    async def _run_claude_step(self, claude_agent: ClaudeAgent, prompt: str, custom_prompt: str) -> str:
         """Run Claude step in executor to avoid blocking."""
         loop = asyncio.get_event_loop()
 
@@ -318,7 +287,7 @@ class WorkflowExecutionEngine:
             claude_agent.claude_tool._run,
             prompt,
             True,  # continue_session
-            custom_prompt
+            custom_prompt,
         )
 
         return result
@@ -330,13 +299,7 @@ class WorkflowExecutionEngine:
             text = text.replace(f"${{{key}}}", value)
         return text
 
-    async def _attempt_step_recovery(
-        self,
-        step: WorkflowStep,
-        error: Exception,
-        claude_agent: ClaudeAgent,
-        execution: WorkflowExecution
-    ) -> str | None:
+    async def _attempt_step_recovery(self, step: WorkflowStep, error: Exception, claude_agent: ClaudeAgent, execution: WorkflowExecution) -> str | None:
         """Attempt to recover from step failure."""
         recovery_strategies = execution.config.recovery_strategies
 
@@ -345,11 +308,7 @@ class WorkflowExecutionEngine:
                 if strategy == "retry":
                     # Retry with simplified prompt
                     simplified_prompt = f"Simple version: {step.prompt}"
-                    result = await self._run_claude_step(
-                        claude_agent,
-                        simplified_prompt,
-                        "Keep it simple and focused"
-                    )
+                    result = await self._run_claude_step(claude_agent, simplified_prompt, "Keep it simple and focused")
                     return result
 
                 elif strategy == "skip":
@@ -359,11 +318,7 @@ class WorkflowExecutionEngine:
 
                 elif strategy == "prompt":
                     # Try with context reset
-                    result = await self._run_claude_step(
-                        claude_agent,
-                        step.prompt,
-                        "Fresh attempt - ignore previous context if problematic"
-                    )
+                    result = await self._run_claude_step(claude_agent, step.prompt, "Fresh attempt - ignore previous context if problematic")
                     return result
 
             except Exception as recovery_error:
@@ -372,11 +327,7 @@ class WorkflowExecutionEngine:
 
         return None
 
-    async def start_execution_async(
-        self,
-        execution: WorkflowExecution,
-        variables: dict[str, str] | None = None
-    ) -> str:
+    async def start_execution_async(self, execution: WorkflowExecution, variables: dict[str, str] | None = None) -> str:
         """Start workflow execution in background.
 
         Args:
@@ -389,9 +340,7 @@ class WorkflowExecutionEngine:
         execution_id = execution.id
 
         # Create background task
-        task = asyncio.create_task(
-            self.execute_workflow(execution, variables)
-        )
+        task = asyncio.create_task(self.execute_workflow(execution, variables))
 
         self.execution_tasks[execution_id] = task
         self.logger.info("Started background execution: %s", execution_id)
@@ -422,7 +371,7 @@ class WorkflowExecutionEngine:
             self.logger.info("Cancelled execution: %s", execution_id)
             return True
 
-        except Exception as e:
+        except Exception:
             self.logger.exception("Failed to cancel execution %s", execution_id)
             return False
 

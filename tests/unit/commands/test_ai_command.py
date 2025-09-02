@@ -157,7 +157,7 @@ class TestAICommands:
             "total_patterns": 50,
             "recent_activity": 10,
             "adaptive_config": {"auto_response_enabled": True, "learning_enabled": True, "min_confidence_threshold": 0.8},
-            "runtime_info": {"response_queue_size": 5, "cache_size": 20}
+            "runtime_info": {"response_queue_size": 5, "cache_size": 20},
         }
         mock_adaptive_instance.get_learning_statistics.return_value = mock_stats
 
@@ -237,7 +237,7 @@ class TestAICommands:
         mock_adaptive.return_value = mock_adaptive_instance
 
         mock_path_instance = MagicMock()
-        mock_path_instance.__str__ = lambda x: "test_export.json"
+        mock_path_instance.__str__ = lambda _: "test_export.json"
         mock_path.return_value = mock_path_instance
 
         with patch.object(AIExportCommand, "__init__", lambda _: None):
@@ -287,10 +287,6 @@ class TestAICommands:
 
             result = command.execute(prompt_text="test prompt", context="test context", project="test-project")
 
-            expected = {
-                "should_respond": True,
-                "predicted_response": "Predicted response",
-                "confidence": 0.85
-            }
+            expected = {"should_respond": True, "predicted_response": "Predicted response", "confidence": 0.85}
             assert result == expected
             command.console.print.assert_called()
