@@ -154,8 +154,6 @@ class WorkspaceConfigManager:
             "path": str(workspace_path),
             "relative_path": workspace_def.path,
             "description": workspace_def.description,
-            "security_policy": workspace_def.security_policy,
-            "max_size_mb": workspace_def.max_size_mb,
             "allowed_paths": [str(p) for p in self.get_allowed_paths_for_workspace(workspace_name)],
             "exists": workspace_path.exists(),
             "is_directory": workspace_path.is_dir() if workspace_path.exists() else None,
@@ -193,7 +191,7 @@ class WorkspaceConfigManager:
         errors = []
         
         # Check if base directory exists
-        base_path = Path(self.config.base_directory)
+        base_path = Path(self.config.base_dir)
         if not base_path.exists():
             errors.append(f"Base directory does not exist: {base_path}")
         elif not base_path.is_dir():
@@ -226,7 +224,7 @@ class WorkspaceConfigManager:
         Returns:
             Base directory path
         """
-        return Path(self.config.base_directory)
+        return Path(self.config.base_dir)
 
     def update_workspace_definition(self, workspace_name: str, workspace_def: WorkspaceDefinition) -> bool:
         """Update a workspace definition.

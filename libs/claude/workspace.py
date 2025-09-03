@@ -314,45 +314,6 @@ class DefaultWorkspaceManager(WorkspaceManager):
             self.logger.exception(f"Failed to get sandbox stats for {agent_id}")
             return {"error": str(e)}
 
-    def enforce_quota(self, agent_id: str, max_size_mb: int = 100) -> bool:
-        """Enforce storage quota for an agent's sandbox.
-
-        Args:
-            agent_id: Agent identifier
-            max_size_mb: Maximum allowed size in MB
-
-        Returns:
-            True if within quota, False if exceeded
-        """
-        stats = self.get_sandbox_stats(agent_id)
-        if not stats or "total_size_mb" not in stats:
-            return True
-
-        if stats["total_size_mb"] > max_size_mb:
-            self.logger.warning(f"Agent {agent_id} sandbox exceeds quota: {stats['total_size_mb']}MB > {max_size_mb}MB")
-
-            # Try to clean up temp files first
-            sandbox_path = self.get_sandbox_path(agent_id)
-            if sandbox_path:
-                temp_dir = sandbox_path / "temp"
-                if temp_dir.exists():
-                    try:
-                        self._secure_rmtree(temp_dir)
-                        temp_dir.mkdir()
-                        temp_dir.chmod(0o700)
-                        self.logger.info(f"Cleaned temp directory for agent {agent_id}")
-
-                        # Recheck quota after cleanup
-                        new_stats = self.get_sandbox_stats(agent_id)
-                        if new_stats.get("total_size_mb", 0) <= max_size_mb:
-                            return True
-
-                    except Exception:
-                        self.logger.exception(f"Failed to clean temp directory for {agent_id}")
-
-            return False
-
-        return True
 
 
 class DefaultSecurityPolicy(SecurityPolicy):
