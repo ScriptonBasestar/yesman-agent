@@ -6,67 +6,41 @@ description: "Fullstack development with workspace management"
 
 # Workspace configuration - defines secure sandboxes for AI tools
 workspace_config:
-  # Base directory for relative workspace paths
   base_dir: "~/projects/my-fullstack-app"
   
-  # Individual workspace definitions
-  definitions:
-    frontend:
-      path: "./frontend"  # Relative to base_dir
-      allowed_paths:
-        - "."          # Current workspace directory
-        - "./src"      # Source code
-        - "./public"   # Public assets
-      description: "Frontend React/Vue workspace"
-      
-    backend:
-      path: "./backend"   # Relative to base_dir
-      allowed_paths:
-        - "."
-        - "./src"
-        - "./tests"
-      description: "Backend API workspace"
-      
-    shared:
-      path: "./shared"    # Relative to base_dir
-      allowed_paths:
-        - "."
-        - "./types"
-        - "./utils"
-      description: "Shared utilities workspace"
+# Individual workspace definitions
+workspace_definitions:
+  frontend:
+    rel_dir: "./frontend"  # Relative to base_dir
+    allowed_paths:
+      - "."          # Current workspace directory
+      - "./src"      # Source code
+      - "./public"   # Public assets
+    description: "Frontend React/Vue workspace"
+    
+  backend:
+    rel_dir: "./backend"   # Relative to base_dir
+    allowed_paths:
+      - "."
+      - "./src"
+      - "./tests"
+    description: "Backend API workspace"
+    
+  shared:
+    rel_dir: "./shared"    # Relative to base_dir
+    allowed_paths:
+      - "."
+      - "./types"
+      - "./utils"
+    description: "Shared utilities workspace"
 
-# Sessions that map to workspaces
-sessions:
-  fullstack-dev:
-    session_name: "fullstack-dev"
-    start_directory: "~/projects/my-fullstack-app"
-    description: "Main fullstack development session"
-    
-    environment:
-      NODE_ENV: "development"
-      API_URL: "http://localhost:8000"
-      DATABASE_URL: "postgresql://localhost:5432/myapp_dev"
-    
-    # Each window automatically maps to corresponding workspace
-    windows:
-      - window_name: "frontend"
-        start_directory: "./frontend"  # Auto-maps to frontend workspace
-        layout: "main-vertical"
-        panes:
-          - bash
-          - npm run dev
-      
-      - window_name: "backend"
-        start_directory: "./backend"   # Auto-maps to backend workspace
-        layout: "main-vertical"
-        panes:
-          - bash
-          - python manage.py runserver
-      
-      - window_name: "tools"
-        start_directory: "./shared"    # Auto-maps to shared workspace
-        panes:
-          - bash
+# Session settings (simplified)
+
+# Environment variables
+environment:
+  NODE_ENV: "development"
+  API_URL: "http://localhost:8000"
+  DATABASE_URL: "postgresql://localhost:5432/myapp_dev"
 
 logging:
   level: "INFO"

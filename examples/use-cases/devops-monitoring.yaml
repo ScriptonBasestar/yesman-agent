@@ -7,140 +7,79 @@ description: "DevOps tooling and infrastructure monitoring"
 # Workspace for DevOps and infrastructure
 workspace_config:
   base_dir: "~/projects/infrastructure"
-  
-  definitions:
-    terraform:
-      path: "./terraform"
-      allowed_paths:
-        - "."
-        - "./modules"
-        - "./environments"
-      description: "Terraform infrastructure as code"
-      
-    ansible:
-      path: "./ansible"
-      allowed_paths:
-        - "."
-        - "./playbooks"
-        - "./roles"
-        - "./inventory"
-      description: "Ansible configuration management"
-      
-    kubernetes:
-      path: "./k8s"
-      allowed_paths:
-        - "."
-        - "./manifests"
-        - "./helm"
-      description: "Kubernetes manifests and Helm charts"
-      
-    monitoring:
-      path: "./monitoring"
-      allowed_paths:
-        - "."
-        - "./grafana"
-        - "./prometheus"
-        - "./logs"
-      description: "Monitoring and observability configs"
 
-sessions:
-  devops-main:
-    session_name: "devops"
-    start_directory: "~/projects/infrastructure"
-    description: "Main DevOps operations session"
+workspace_definitions:
+  terraform:
+    rel_dir: "./terraform"
+    allowed_paths:
+      - "."
+      - "./modules"
+      - "./environments"
+    description: "Terraform infrastructure as code"
     
-    # DevOps environment setup
-    before_script: |
-      echo "🚀 Setting up DevOps environment..."
-      
-      # Check required tools
-      command -v terraform >/dev/null || echo "⚠️  Terraform not found"
-      command -v ansible >/dev/null || echo "⚠️  Ansible not found"  
-      command -v kubectl >/dev/null || echo "⚠️  kubectl not found"
-      command -v docker >/dev/null || echo "⚠️  Docker not found"
-      
-      # Load environment variables
-      [ -f ".env" ] && source .env
-      
-      # Start local monitoring stack
-      docker-compose -f docker-compose.monitoring.yml up -d || true
-      
-      echo "✅ DevOps environment ready!"
+  ansible:
+    rel_dir: "./ansible"
+    allowed_paths:
+      - "."
+      - "./playbooks"
+      - "./roles"
+      - "./inventory"
+    description: "Ansible configuration management"
     
-    environment:
-      AWS_PROFILE: "devops"
-      KUBECONFIG: "~/.kube/config"
-      ANSIBLE_HOST_KEY_CHECKING: "False"
-      TF_VAR_environment: "staging"
+  kubernetes:
+    rel_dir: "./k8s"
+    allowed_paths:
+      - "."
+      - "./manifests"
+      - "./helm"
+    description: "Kubernetes manifests and Helm charts"
     
-    windows:
-      # Infrastructure as Code
-      - window_name: "infrastructure"
-        layout: "main-vertical"
-        start_directory: "./terraform"
-        panes:
-          - bash                      # Terraform operations
-          - terraform plan --out=plan.tfplan  # Continuous planning
-      
-      # Configuration Management
-      - window_name: "config"
-        layout: "even-horizontal"
-        start_directory: "./ansible"
-        panes:
-          - bash                      # Ansible operations
-          - ansible-inventory --list  # Inventory management
-      
-      # Kubernetes Operations
-      - window_name: "kubernetes"
-        layout: "main-vertical"
-        start_directory: "./k8s"
-        panes:
-          - kubectl get pods -A --watch  # Pod monitoring
-          - bash                         # kubectl operations
-      
-      # Monitoring and Logs
-      - window_name: "monitoring"
-        layout: "tiled"
-        panes:
-          - htop                                    # System resources
-          - docker stats                           # Container stats
-          - kubectl top nodes                      # K8s resource usage
-          - tail -f /var/log/syslog | grep -i error  # System errors
-      
-      # Cloud Operations
-      - window_name: "cloud"
-        layout: "even-horizontal"
-        panes:
-          - aws cloudwatch get-metric-statistics --help  # AWS monitoring
-          - bash  # General cloud operations
+  monitoring:
+    rel_dir: "./monitoring"
+    allowed_paths:
+      - "."
+      - "./grafana"
+      - "./prometheus"
+      - "./logs"
+    description: "Monitoring and observability configs"
+
+# DevOps environment setup  
+before_script: |
+  echo "🚀 Setting up DevOps environment..."
+  
+  # Install tools if needed
+  which terraform || echo "⚠️ Please install Terraform"
+  which ansible || echo "⚠️ Please install Ansible"  
+  which kubectl || echo "⚠️ Please install kubectl"
+  which helm || echo "⚠️ Please install Helm"
+  
+  # Initialize Terraform if needed
+  if [ -d "terraform" ]; then
+    cd terraform && terraform init && cd ..
+  fi
+  
+  echo "✅ DevOps environment ready!"
+
+environment:
+  TERRAFORM_LOG: "INFO"
+  ANSIBLE_HOST_KEY_CHECKING: "False"
+  KUBECONFIG: "~/.kube/config"
+  HELM_CACHE_HOME: "~/.cache/helm"
 
 logging:
-  level: "INFO"
+  level: "INFO" 
   file: "~/.scripton/yesman/logs/devops.log"
   format: "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 
-# Server for dashboard access
-server:
-  host: "0.0.0.0"
-  port: 10503
-
-# Custom DevOps-specific settings
+# Custom DevOps settings
 custom:
   project:
     type: "devops"
     auto_backup: true
-    backup_paths: ["./terraform/*.tfstate", "./ansible/inventory"]
+    backup_paths: ["./terraform", "./k8s", "./monitoring"]
     
   integrations:
-    aws: true
+    terraform: true
+    ansible: true
     kubernetes: true
-    prometheus: true
-    grafana: true
-    
-  alerts:
-    slack_webhook: "${SLACK_DEVOPS_WEBHOOK}"
-    email: "devops@company.com"
-    
-  performance:
-    max_concurrent_tasks: 5
-    timeout: 3600  # 1 hour for long operations
+    monitoring: true

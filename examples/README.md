@@ -12,9 +12,9 @@ Follow these numbered examples in order to learn Yesman configuration:
 - **Best for**: Quick start, single-project development
 
 ### 2. **[02-multi-window-session.yaml](./02-multi-window-session.yaml)** 
-- **Learn**: Multiple windows with different layouts and environment variables
-- **Features**: Multiple windows, layout options, environment configuration
-- **Best for**: Web development, need multiple terminal contexts
+- **Learn**: Environment variables and session configuration
+- **Features**: Environment setup, session configuration 
+- **Best for**: Web development, environment management
 
 ### 3. **[03-workspace-integration.yaml](./03-workspace-integration.yaml)**
 - **Learn**: Workspace configuration for secure AI tool sandboxing
@@ -22,8 +22,8 @@ Follow these numbered examples in order to learn Yesman configuration:
 - **Best for**: AI-assisted development, team collaboration
 
 ### 4. **[04-multiple-sessions.yaml](./04-multiple-sessions.yaml)**  
-- **Learn**: Managing multiple projects with different session configurations
-- **Features**: Multiple sessions, different environments per session
+- **Learn**: Managing multiple projects with workspace definitions
+- **Features**: Multiple workspaces, project organization
 - **Best for**: Multi-project development, separating concerns
 
 ### 5. **[05-flat-workspaces.yaml](./05-flat-workspaces.yaml)**
@@ -51,55 +51,42 @@ DevOps and infrastructure monitoring with Terraform, Ansible, Kubernetes, and mo
 
 ## 🏗️ Configuration Structure
 
-All examples follow this simplified structure:
+All examples follow this simplified, workspace-focused structure:
 
 ```yaml
 # Basic metadata
 session_name: "project-name"
 description: "Project description"
 
-# Global settings
-mode: "local"              # local | merge | isolated
-root_dir: "~/.scripton/yesman"
+# Workspace configuration (core feature - for AI tools)
+workspace_config:          # Base directory config
+  base_dir: "~/projects/my-app"
 
-# Workspace configuration (optional - for AI tools)
-workspace_config:          # Structured approach
-  base_directory: "~/projects/my-app"
-  definitions:
-    frontend:
-      path: "./frontend"
-      allowed_paths: ["."]
+workspace_definitions:      # Individual workspace definitions
+  frontend:
+    rel_dir: "./frontend"
+    allowed_paths: ["."]
+    description: "Frontend workspace"
 
 # OR flat workspace syntax (alternative)
-workspaces:                 # Flat approach
+workspaces:                 # Flat approach  
   frontend:
-    path: "~/projects/my-app/frontend"
+    rel_dir: "~/projects/my-app/frontend"
     allowed_paths: ["."]
+    description: "Frontend workspace"
 
-# Session definitions
-sessions:
-  main:
-    session_name: "main"
-    start_directory: "~/projects/my-app"
-    
-    # Optional setup/cleanup scripts
-    before_script: |
-      echo "Starting environment..."
-    after_script: |
-      echo "Cleaning up..."
-    
-    # Environment variables
-    environment:
-      NODE_ENV: "development"
-    
-    # Window and pane layout
-    windows:
-      - window_name: "editor"
-        layout: "main-vertical"  # even-horizontal | main-horizontal | tiled
-        start_directory: "./src"
-        panes:
-          - bash
-          - npm run dev
+# Optional setup/cleanup scripts
+before_script: |
+  echo "Starting environment..."
+  npm install
+  
+after_script: |
+  echo "Cleaning up..."
+
+# Environment variables
+environment:
+  NODE_ENV: "development"
+  API_URL: "http://localhost:8000"
 
 # Logging configuration
 logging:
@@ -109,41 +96,32 @@ logging:
 
 ## 🔧 Configuration Options
 
-### Session Modes
-- **`local`**: Use local configuration only
-- **`merge`**: Merge with global/template configurations  
-- **`isolated`**: Fully isolated environment
-
-### Window Layouts  
-- **`even-horizontal`**: Split panes horizontally with equal size
-- **`even-vertical`**: Split panes vertically with equal size
-- **`main-horizontal`**: Main pane on top, others split below
-- **`main-vertical`**: Main pane on left, others split right
-- **`tiled`**: Automatic tiling layout
-
-### Workspace Security Policies
-- **`default`**: Standard security restrictions
-- **`strict`**: Enhanced security for sensitive projects
-- **`restricted`**: Maximum security, limited access
+### Workspace Security
+- **`allowed_paths`**: Control which directories AI tools can access
+- **`base_dir`**: Base directory for relative workspace paths  
+- **Path restrictions**: Essential for secure AI tool usage
 
 ### Workspace Types
 
-#### Structured Workspaces (`workspace_config`)
+#### Structured Workspaces (Recommended)
 ```yaml
 workspace_config:
-  base_directory: "~/projects/app"
-  definitions:
-    frontend:
-      path: "./frontend"          # Relative to base_directory
-      allowed_paths: ["."]
+  base_dir: "~/projects/app"
+
+workspace_definitions:
+  frontend:
+    rel_dir: "./frontend"          # Relative to base_dir
+    allowed_paths: ["."]
+    description: "Frontend workspace"
 ```
 
-#### Flat Workspaces (`workspaces`)  
+#### Flat Workspaces (Alternative)
 ```yaml
 workspaces:
   frontend:
-    path: "~/projects/app/frontend"  # Absolute path
+    rel_dir: "~/projects/app/frontend"  # Absolute path
     allowed_paths: ["."]
+    description: "Frontend workspace"
 ```
 
 ## 🚀 Getting Started
@@ -176,24 +154,30 @@ after_script: |
 ```
 
 ### Multiple Projects
-Organize different projects in separate sessions:
+Organize different projects with separate workspace definitions:
 ```yaml
-sessions:
+workspace_config:
+  base_dir: "~/projects"
+
+workspace_definitions:
   frontend:
-    session_name: "frontend"
-    start_directory: "~/projects/frontend"
+    rel_dir: "./frontend"
+    allowed_paths: ["."]
+    description: "Frontend project"
   backend:
-    session_name: "backend" 
-    start_directory: "~/projects/backend"
+    rel_dir: "./backend" 
+    allowed_paths: ["."]
+    description: "Backend project"
 ```
 
 ## ⚠️ Migration from Legacy Examples
 
 If you're using older Yesman configurations, note these changes:
 
-- **`templates:` removed** → Use direct session configuration
+- **`templates:` removed** → Use direct configuration
+- **`sessions:` simplified** → Use top-level session settings  
 - **`claude:` renamed** → Use `workspace_config:` or `workspaces:`
-- **Template system simplified** → Use numbered examples as templates
+- **Complex session nesting removed** → Flatter, workspace-focused structure
 
 Legacy files are marked as DEPRECATED and should be replaced with numbered examples.
 

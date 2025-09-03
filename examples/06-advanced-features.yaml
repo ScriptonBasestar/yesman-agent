@@ -4,94 +4,63 @@
 session_name: "advanced-development"
 description: "Advanced configuration with scripts and complex layouts"
 
-# Advanced session with scripts
-sessions:
-  advanced-dev:
-    session_name: "advanced"
-    start_directory: "~/projects/advanced-app"
-    description: "Advanced development session with automation"
-    
-    # Pre-session setup script
-    before_script: |
-      echo "🚀 Starting advanced development environment..."
-      
-      # Check if dependencies are installed
-      if [ -f "package.json" ]; then
-        echo "📦 Installing dependencies..."
-        npm install
-      fi
-      
-      # Start background services if docker-compose exists
-      if [ -f "docker-compose.yml" ]; then
-        echo "🐳 Starting services..."
-        docker-compose up -d database redis
-      fi
-      
-      # Create necessary directories
-      mkdir -p logs temp
-      
-      echo "✅ Environment ready!"
-    
-    # Post-session cleanup script
-    after_script: |
-      echo "🧹 Cleaning up..."
-      docker-compose down || true
-      rm -rf temp/
-      echo "✅ Cleanup complete!"
-    
-    # Environment variables
-    environment:
-      NODE_ENV: "development"
-      DEBUG: "app:*"
-      API_PORT: "8000"
-      DB_HOST: "localhost"
-      REDIS_URL: "redis://localhost:6379"
-    
-    windows:
-      # Main development window with complex layout
-      - window_name: "development"
-        layout: "main-vertical"
-        start_directory: "."
-        panes:
-          - bash                    # Main shell
-          - npm run dev            # Development server
-          - npm run dev:worker     # Background worker
-      
-      # Database and cache management
-      - window_name: "data"
-        layout: "even-horizontal"
-        panes:
-          - psql -h localhost -U postgres myapp_dev
-          - redis-cli -h localhost
-      
-      # Monitoring and logs
-      - window_name: "monitoring"
-        layout: "tiled"
-        panes:
-          - htop                           # System resources
-          - tail -f logs/app.log          # Application logs
-          - docker stats                   # Container stats
-          - bash                          # Free terminal
+# Session settings for advanced development
+
+# Pre-session setup script  
+before_script: |
+  echo "🚀 Starting advanced development environment..."
+  
+  # Check if dependencies are installed
+  if [ -f "package.json" ]; then
+    echo "📦 Installing dependencies..."
+    npm install
+  fi
+  
+  # Start background services if docker-compose exists
+  if [ -f "docker-compose.yml" ]; then
+    echo "🐳 Starting services..."
+    docker-compose up -d database redis
+  fi
+  
+  # Create necessary directories
+  mkdir -p logs temp
+  
+  echo "✅ Environment ready!"
+
+# Post-session cleanup script
+after_script: |
+  echo "🧹 Cleaning up..."
+  docker-compose down || true
+  rm -rf temp/
+  echo "✅ Cleanup complete!"
+
+# Environment variables
+environment:
+  NODE_ENV: "development"
+  DEBUG: "app:*"
+  API_PORT: "8000"
+  DB_HOST: "localhost"
+  REDIS_URL: "redis://localhost:6379"
 
 # Workspace configuration for advanced development
 workspace_config:
   base_dir: "~/projects/advanced-app"
-  
-  definitions:
-    app:
-      path: "./src"
-      allowed_paths:
-        - "."
-        - "./components"
-        - "./services"
-        - "./utils"
-        - "./tests"
-      description: "Main application code"
-      
-    config:
-      path: "./config"
-      allowed_paths: ["."]
-      description: "Configuration files"
+
+workspace_definitions:
+  app:
+    rel_dir: "./src"
+    allowed_paths:
+      - "."
+      - "./components"
+      - "./services"
+      - "./utils"
+      - "./tests"
+    description: "Main application code"
+    
+  config:
+    rel_dir: "./config"
+    allowed_paths: ["."]
+    description: "Configuration files"
 
 # Advanced logging configuration
 logging:

@@ -7,104 +7,66 @@ description: "Data science and ML development environment"
 # Workspace for data science project structure
 workspace_config:
   base_dir: "~/projects/ml-project"
-  
-  definitions:
-    notebooks:
-      path: "./notebooks"
-      allowed_paths:
-        - "."
-        - "../data"
-        - "../models"
-        - "../src"
-      description: "Jupyter notebooks workspace"
-      
-    data:
-      path: "./data"
-      allowed_paths: ["."]
-      description: "Dataset storage workspace"
-      
-    models:
-      path: "./models"
-      allowed_paths: ["."]
-      description: "ML models workspace"
-      
-    src:
-      path: "./src"
-      allowed_paths:
-        - "."
-        - "./preprocessing"
-        - "./training" 
-        - "./evaluation"
-        - "./deployment"
-      description: "Source code workspace"
 
-sessions:
-  ml-development:
-    session_name: "ml-dev"
-    start_directory: "~/projects/ml-project"
-    description: "Machine learning development session"
+workspace_definitions:
+  notebooks:
+    rel_dir: "./notebooks"
+    allowed_paths:
+      - "."
+      - "../data"
+      - "../models"
+      - "../src"
+    description: "Jupyter notebooks workspace"
     
-    # ML environment setup
-    before_script: |
-      echo "🧠 Setting up ML environment..."
-      
-      # Create conda/virtual environment
-      if [ -f "environment.yml" ]; then
-        conda env update -f environment.yml || conda env create -f environment.yml
-        conda activate ml-project
-      elif [ -f "requirements.txt" ]; then
-        pip install -r requirements.txt
-      fi
-      
-      # Start services
-      docker-compose up -d mlflow-server postgres || true
-      
-      # Create directories
-      mkdir -p data/{raw,processed,external} models logs
-      
-      echo "✅ ML environment ready!"
+  data:
+    rel_dir: "./data"
+    allowed_paths: ["."]
+    description: "Dataset storage workspace"
     
-    environment:
-      PYTHONPATH: "./src"
-      MLFLOW_TRACKING_URI: "http://localhost:5000"
-      CUDA_VISIBLE_DEVICES: "0"  # GPU configuration
-      WANDB_PROJECT: "ml-project"
-      DATA_PATH: "./data"
-      MODEL_PATH: "./models"
+  models:
+    rel_dir: "./models"
+    allowed_paths: ["."]
+    description: "ML models workspace"
     
-    windows:
-      # Jupyter notebook server
-      - window_name: "jupyter"
-        layout: "main-vertical"
-        start_directory: "./notebooks"
-        panes:
-          - bash                                    # Notebook navigation
-          - jupyter lab --no-browser --port=8888   # Jupyter server
-      
-      # Data processing and EDA
-      - window_name: "data"
-        layout: "even-horizontal"
-        start_directory: "./src"
-        panes:
-          - python -c "import pandas as pd; print('Data tools ready')"  # Data shell
-          - bash  # Data processing scripts
-      
-      # Model training and experiments
-      - window_name: "training"
-        layout: "main-vertical"
-        start_directory: "./src/training"
-        panes:
-          - bash                           # Training scripts
-          - python -m tensorboard.main --logdir=../logs  # TensorBoard
-      
-      # MLflow and monitoring
-      - window_name: "monitoring"
-        layout: "tiled"
-        panes:
-          - htop                    # System resources
-          - nvidia-smi -l 1         # GPU monitoring
-          - mlflow ui --port=5001   # MLflow UI
-          - bash                    # General monitoring
+  src:
+    rel_dir: "./src"
+    allowed_paths:
+      - "."
+      - "./preprocessing"
+      - "./training" 
+      - "./evaluation"
+      - "./deployment"
+    description: "Source code workspace"
+
+# ML session settings
+
+# ML environment setup
+before_script: |
+  echo "🧠 Setting up ML environment..."
+  
+  # Create conda/virtual environment
+  if [ -f "environment.yml" ]; then
+    conda env update -f environment.yml || conda env create -f environment.yml
+    conda activate ml-project
+  elif [ -f "requirements.txt" ]; then
+    pip install -r requirements.txt
+  fi
+  
+  # Start services
+  docker-compose up -d mlflow-server postgres || true
+  
+  # Create directories
+  mkdir -p data/{raw,processed,external} models logs
+  
+  echo "✅ ML environment ready!"
+
+environment:
+  PYTHONPATH: "./src"
+  MLFLOW_TRACKING_URI: "http://localhost:5000"
+  CUDA_VISIBLE_DEVICES: "0"  # GPU configuration
+  WANDB_PROJECT: "ml-project"
+  DATA_PATH: "./data"
+  MODEL_PATH: "./models"
 
 logging:
   level: "DEBUG"

@@ -13,11 +13,11 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 class WorkspaceDefinition(BaseModel):
     """Individual workspace configuration."""
     
-    path: str  # Relative or absolute path
+    rel_dir: str  # Relative or absolute directory path
     allowed_paths: list[str] = Field(default_factory=lambda: ["."])
     description: str | None = None
 
-    @field_validator("path", "allowed_paths", mode="after")
+    @field_validator("rel_dir", "allowed_paths", mode="after")
     @classmethod
     def expand_paths(cls, v) -> str | list[str]:
         """Expand user home directory in paths."""
@@ -34,57 +34,13 @@ class WorkspaceConfig(BaseModel):
     # Base directory for relative paths
     base_dir: str = "~/projects"
     
-    # Individual workspace definitions
-    definitions: dict[str, WorkspaceDefinition] = Field(default_factory=dict)
-    
     @field_validator("base_dir", mode="after")
     @classmethod
     def expand_base_dir(cls, v: str) -> str:
         """Expand user home directory in base directory path."""
         return str(Path(v).expanduser())
-    
-    def get_absolute_path(self, workspace_name: str) -> Path | None:
-        """Get absolute path for a workspace, resolving relative paths from base_dir."""
-        if workspace_name not in self.definitions:
-            return None
-        
-        workspace_def = self.definitions[workspace_name]
-        workspace_path = Path(workspace_def.path)
-        
-        # If path is already absolute, return as-is
-        if workspace_path.is_absolute():
-            return workspace_path
-        
-        # Otherwise, resolve relative to base_dir
-        base_path = Path(self.base_dir)
-        return base_path / workspace_path
 
 
-class WindowConfig(BaseModel):
-    """Individual window configuration."""
-    
-    window_name: str
-    layout: str = "even-horizontal"
-    start_directory: str | None = None
-    panes: list[str | dict] = Field(default_factory=list)
-
-
-class SessionConfig(BaseModel):
-    """Individual session configuration."""
-    
-    session_name: str
-    start_directory: str
-    description: str | None = None
-    
-    # Window configurations
-    windows: list[WindowConfig] = Field(default_factory=list)
-    
-    # Environment variables
-    environment: dict[str, str] = Field(default_factory=dict)
-    
-    # Scripts
-    before_script: str | None = None
-    after_script: str | None = None
 
 
 class YesmanConfigSchema(BaseModel):
@@ -100,11 +56,13 @@ class YesmanConfigSchema(BaseModel):
 
     # Workspace configuration
     workspace_config: WorkspaceConfig | None = None
+    workspace_definitions: dict[str, WorkspaceDefinition] | None = None  # Separated from config
     workspaces: dict[str, WorkspaceDefinition] | None = None  # Alternative flat structure
 
-    # Session configuration
-    session_config: dict[str, SessionConfig] | None = None
-    sessions: dict[str, SessionConfig] | None = None  # Alternative flat structure
+    # Simple session settings (for tmux if needed)
+    environment: dict[str, str] = Field(default_factory=dict)
+    before_script: str | None = None
+    after_script: str | None = None
 
     # Logging settings
     logging: dict[str, Any] = Field(default_factory=lambda: {
@@ -122,6 +80,25 @@ class YesmanConfigSchema(BaseModel):
     custom: dict[str, Any] = Field(default_factory=dict)
 
 
+    def get_absolute_workspace_path(self, workspace_name: str) -> Path | None:
+        """Get absolute path for a workspace, resolving relative paths from base_dir."""
+        if not self.workspace_definitions or workspace_name not in self.workspace_definitions:
+            return None
+        
+        workspace_def = self.workspace_definitions[workspace_name]
+        workspace_path = Path(workspace_def.rel_dir)
+        
+        # If path is already absolute, return as-is
+        if workspace_path.is_absolute():
+            return workspace_path
+        
+        # Otherwise, resolve relative to base_dir
+        if self.workspace_config:
+            base_path = Path(self.workspace_config.base_dir)
+            return base_path / workspace_path
+        
+        return workspace_path
+    
     def model_post_init(self, __context: object) -> None:
         """Post-initialization validation and setup."""
         # Expand paths in logging config

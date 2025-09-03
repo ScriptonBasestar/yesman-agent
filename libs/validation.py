@@ -263,13 +263,6 @@ def validate_session_config(config: dict) -> tuple[bool, list[str]]:
             if len(panes) > ContentLimits.MAX_PANES_PER_WINDOW:
                 errors.append(f"Window '{window_name}': Too many panes (max: {ContentLimits.MAX_PANES_PER_WINDOW})")
 
-    # Validate start directory
-    start_dir = config.get("start_directory", "")
-    if start_dir:
-        valid, error = validate_directory_path(start_dir, must_exist=True)
-        if not valid:
-            errors.append(f"Start directory: {error}")
-
     return len(errors) == 0, errors
 
 

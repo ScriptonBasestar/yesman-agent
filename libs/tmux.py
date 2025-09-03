@@ -13,12 +13,11 @@ This module provides utilities for generating tmux session configurations
 """
 
 
-def generate(session_name: str, start_directory: str) -> object:
+def generate(session_name: str) -> object:
     """Generate a tmux session configuration from a template.
 
     Args:
         session_name: Name for the tmux session
-        start_directory: Starting directory for the session
 
     Returns:
         dict: Generated tmux session configuration
@@ -30,7 +29,6 @@ def generate(session_name: str, start_directory: str) -> object:
     # 템플릿 렌더링
     rendered = Template(raw).render(
         session_name=session_name,
-        start_directory=start_directory,
     )
 
     # YAML → dict
@@ -38,5 +36,5 @@ def generate(session_name: str, start_directory: str) -> object:
 
 
 if __name__ == "__main__":
-    config = generate(session_name="my-uv-project", start_directory="~/workspace/uv")
+    config = generate(session_name="my-uv-project")
     tmuxp.cli.load_workspace(config)

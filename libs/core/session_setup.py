@@ -51,9 +51,6 @@ class SessionValidator:
             self.validation_errors.append(error or "Invalid session name")
             return False
 
-        # Validate start directory
-        if not self._validate_start_directory(session_name, config_dict):
-            return False
 
         # Validate windows
         if not self._validate_windows(session_name, config_dict):
@@ -61,38 +58,6 @@ class SessionValidator:
 
         return len(self.validation_errors) == 0
 
-    def _validate_start_directory(self, session_name: str, config_dict: dict[str, Any]) -> bool:
-        """Validate and potentially create start directory."""
-        start_dir = config_dict.get("start_directory")
-        if not start_dir:
-            return True
-
-        expanded_dir = pathlib.Path(start_dir).expanduser()
-
-        # Use centralized directory validation
-        is_valid, _error = validate_directory_path(str(expanded_dir))
-
-        if not is_valid:
-            # Directory doesn't exist, offer to create it
-            click.echo(f"❌ Error: start_directory '{start_dir}' does not exist for session '{session_name}'")
-            click.echo(f"   Resolved path: {expanded_dir}")
-
-            if click.confirm(f"Would you like to create the missing directory '{expanded_dir}'?"):
-                try:
-                    os.makedirs(expanded_dir, exist_ok=True)
-                    click.echo(f"✅ Created directory: {expanded_dir}")
-                    config_dict["start_directory"] = expanded_dir
-                    return True
-                except Exception as e:
-                    self.validation_errors.append(f"Failed to create directory '{expanded_dir}': {e}")
-                    return False
-            else:
-                self.validation_errors.append(f"Missing start_directory: {expanded_dir}")
-                return False
-
-        # Update with expanded path
-        config_dict["start_directory"] = expanded_dir
-        return True
 
     def _validate_windows(self, session_name: str, config_dict: dict[str, Any]) -> bool:
         """Validate window configurations."""
@@ -122,15 +87,6 @@ class SessionValidator:
             self.validation_errors.append(error or f"Invalid window name: {window_name_str}")
             return False
 
-        # Validate window start directory
-        window_start_dir = window.get("start_directory")
-        if window_start_dir and not self._validate_window_start_directory(
-            session_name,
-            window_name_str,
-            window_start_dir,
-            config_dict,
-        ):
-            return False
 
         # Validate panes
         panes = window.get("panes", [])
@@ -142,43 +98,6 @@ class SessionValidator:
 
         return True
 
-    def _validate_window_start_directory(
-        self,
-        session_name: str,
-        window_name: str,
-        window_start_dir: str,
-        config_dict: dict[str, Any],
-    ) -> bool:
-        """Validate window start directory."""
-        # If relative path, make it relative to session start_directory
-        if not pathlib.Path(window_start_dir).is_absolute():
-            base_dir = config_dict.get("start_directory", os.getcwd())
-            window_start_dir = os.path.join(base_dir, window_start_dir)
-
-        expanded_window_dir = pathlib.Path(window_start_dir).expanduser()
-
-        # Use centralized directory validation
-        is_valid, _error = validate_directory_path(str(expanded_window_dir))
-
-        if not is_valid:
-            click.echo(f"❌ Error: Window '{window_name}' start_directory does not exist")
-            click.echo(f"   Resolved path: {expanded_window_dir}")
-
-            if click.confirm(f"Would you like to create the missing directory '{expanded_window_dir}'?"):
-                try:
-                    os.makedirs(expanded_window_dir, exist_ok=True)
-                    click.echo(f"✅ Created directory: {expanded_window_dir}")
-                    return True
-                except Exception as e:
-                    self.validation_errors.append(
-                        f"Failed to create window directory '{expanded_window_dir}': {e}",
-                    )
-                    return False
-            else:
-                self.validation_errors.append(f"Missing window directory: {expanded_window_dir}")
-                return False
-
-        return True
 
     def get_validation_errors(self) -> list[str]:
         """Get list of validation errors."""
@@ -213,7 +132,6 @@ class SessionConfigBuilder:
 
         # Apply default values
         config_dict["session_name"] = override_conf.get("session_name", session_name)
-        config_dict["start_directory"] = override_conf.get("start_directory", os.getcwd())
 
         # Apply all overrides
         for key, value in override_conf.items():
@@ -425,7 +343,6 @@ class SessionSetupService:
                 config_dict = self.config_builder.build_session_config(session_name, session_conf)
 
                 # Show session details
-                click.echo(f"  📁 Working directory: {config_dict.get('start_directory', 'current')}")
                 windows = config_dict.get("windows", [])
                 click.echo(f"  🪟 Windows: {len(windows)}")
 

@@ -4,19 +4,21 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from ..core.config_schema import WorkspaceConfig, WorkspaceDefinition
+from ..core.config_schema import WorkspaceConfig, WorkspaceDefinition, YesmanConfigSchema
 
 
 class WorkspaceConfigManager:
     """Manages workspace configurations with base directory support."""
 
-    def __init__(self, workspace_config: WorkspaceConfig) -> None:
+    def __init__(self, config_schema: YesmanConfigSchema) -> None:
         """Initialize workspace configuration manager.
         
         Args:
-            workspace_config: Workspace configuration from schema
+            config_schema: Full Yesman configuration schema
         """
-        self.config = workspace_config
+        self.config_schema = config_schema
+        self.workspace_config = config_schema.workspace_config
+        self.workspace_definitions = config_schema.workspace_definitions or {}
         self.logger = logging.getLogger(f"{__name__}.WorkspaceConfigManager")
 
     def get_workspace_path(self, workspace_name: str) -> Path | None:
@@ -28,7 +30,7 @@ class WorkspaceConfigManager:
         Returns:
             Absolute path to the workspace or None if not found
         """
-        return self.config.get_absolute_path(workspace_name)
+        return self.config_schema.get_absolute_workspace_path(workspace_name)
 
     def get_workspace_definition(self, workspace_name: str) -> WorkspaceDefinition | None:
         """Get workspace definition by name.
@@ -39,7 +41,7 @@ class WorkspaceConfigManager:
         Returns:
             WorkspaceDefinition or None if not found
         """
-        return self.config.definitions.get(workspace_name)
+        return self.workspace_definitions.get(workspace_name)
 
     def resolve_workspace_from_path(self, current_path: Path) -> str | None:
         """Resolve workspace name from current working path.
@@ -54,7 +56,7 @@ class WorkspaceConfigManager:
             current_path = Path(current_path).resolve()
             
             # Check each workspace to see if current_path is within it
-            for workspace_name, workspace_def in self.config.definitions.items():
+            for workspace_name, workspace_def in self.workspace_definitions.items():
                 workspace_path = self.get_workspace_path(workspace_name)
                 if workspace_path and current_path.is_relative_to(workspace_path):
                     self.logger.debug(f"Resolved path {current_path} to workspace '{workspace_name}'")
@@ -132,7 +134,7 @@ class WorkspaceConfigManager:
         Returns:
             List of workspace names
         """
-        return list(self.config.definitions.keys())
+        return list(self.workspace_definitions.keys())
 
     def get_workspace_info(self, workspace_name: str) -> Dict[str, Any] | None:
         """Get comprehensive information about a workspace.
@@ -152,7 +154,7 @@ class WorkspaceConfigManager:
         return {
             "name": workspace_name,
             "path": str(workspace_path),
-            "relative_path": workspace_def.path,
+            "relative_path": workspace_def.rel_dir,
             "description": workspace_def.description,
             "allowed_paths": [str(p) for p in self.get_allowed_paths_for_workspace(workspace_name)],
             "exists": workspace_path.exists(),
@@ -191,14 +193,14 @@ class WorkspaceConfigManager:
         errors = []
         
         # Check if base directory exists
-        base_path = Path(self.config.base_dir)
+        base_path = Path(self.workspace_config.base_dir) if self.workspace_config else Path("~/projects")
         if not base_path.exists():
             errors.append(f"Base directory does not exist: {base_path}")
         elif not base_path.is_dir():
             errors.append(f"Base directory is not a directory: {base_path}")
             
         # Validate each workspace
-        for workspace_name, workspace_def in self.config.definitions.items():
+        for workspace_name, workspace_def in self.workspace_definitions.items():
             workspace_path = self.get_workspace_path(workspace_name)
             
             if not workspace_path:
@@ -206,7 +208,7 @@ class WorkspaceConfigManager:
                 continue
                 
             # Check for path conflicts
-            for other_name, other_def in self.config.definitions.items():
+            for other_name, other_def in self.workspace_definitions.items():
                 if other_name == workspace_name:
                     continue
                     
@@ -224,7 +226,7 @@ class WorkspaceConfigManager:
         Returns:
             Base directory path
         """
-        return Path(self.config.base_dir)
+        return Path(self.workspace_config.base_dir) if self.workspace_config else Path("~/projects")
 
     def update_workspace_definition(self, workspace_name: str, workspace_def: WorkspaceDefinition) -> bool:
         """Update a workspace definition.
@@ -237,7 +239,7 @@ class WorkspaceConfigManager:
             True if update was successful
         """
         try:
-            self.config.definitions[workspace_name] = workspace_def
+            self.workspace_definitions[workspace_name] = workspace_def
             self.logger.info(f"Updated workspace definition for '{workspace_name}'")
             return True
         except Exception as e:
@@ -254,8 +256,8 @@ class WorkspaceConfigManager:
             True if removal was successful
         """
         try:
-            if workspace_name in self.config.definitions:
-                del self.config.definitions[workspace_name]
+            if workspace_name in self.workspace_definitions:
+                del self.workspace_definitions[workspace_name]
                 self.logger.info(f"Removed workspace definition for '{workspace_name}'")
                 return True
             else:

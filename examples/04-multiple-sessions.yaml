@@ -1,68 +1,45 @@
-# Multiple Sessions Configuration
-# Shows how to define multiple sessions in one config file
+# Multiple Workspaces Configuration
+# Shows how to manage multiple projects with workspace configuration
 
 session_name: "multi-project"
-description: "Managing multiple projects with different sessions"
+description: "Managing multiple projects with workspace definitions"
 
-# Multiple sessions for different purposes
-sessions:
-  # Frontend development session
-  frontend-dev:
-    session_name: "frontend"
-    start_directory: "~/projects/frontend-app"
-    description: "Frontend development session"
-    
-    environment:
-      NODE_ENV: "development"
-      REACT_APP_API_URL: "http://localhost:8000"
-    
-    windows:
-      - window_name: "code"
-        panes:
-          - bash
-          - npm run dev
-      
-      - window_name: "test"
-        panes:
-          - npm run test:watch
+# Multiple workspaces for different projects
+workspace_config:
+  base_dir: "~/projects"
 
-  # Backend API session  
-  backend-dev:
-    session_name: "backend"
-    start_directory: "~/projects/backend-api"
-    description: "Backend API development session"
-    
-    environment:
-      ENVIRONMENT: "development"
-      DATABASE_URL: "postgresql://localhost:5432/myapi_dev"
-      DEBUG: "true"
-    
-    windows:
-      - window_name: "server"
-        layout: "main-vertical"
-        panes:
-          - bash
-          - python manage.py runserver
-      
-      - window_name: "database"
-        panes:
-          - psql -h localhost -U postgres myapi_dev
+workspace_definitions:
+  frontend-app:
+    rel_dir: "./frontend-app"
+    allowed_paths:
+      - "."
+      - "./src" 
+      - "./public"
+      - "./node_modules"
+    description: "Frontend React/Vue development workspace"
+  
+  backend-api:
+    rel_dir: "./backend-api"
+    allowed_paths:
+      - "."
+      - "./src"
+      - "./tests"
+      - "./migrations"
+    description: "Backend API development workspace"
+  
+  infrastructure:
+    rel_dir: "./infrastructure"  
+    allowed_paths:
+      - "."
+      - "./terraform"
+      - "./ansible"
+      - "./monitoring"
+    description: "DevOps and infrastructure workspace"
 
-  # DevOps monitoring session
-  monitoring:
-    session_name: "monitor"
-    start_directory: "~/projects/infrastructure"
-    description: "System monitoring and DevOps"
-    
-    windows:
-      - window_name: "system"
-        layout: "tiled"
-        panes:
-          - htop
-          - docker ps
-          - bash
-          - tail -f /var/log/nginx/access.log
-
+# Global environment settings
+environment:
+  PROJECTS_ROOT: "~/projects"
+  
 # Shared logging configuration
 logging:
   level: "INFO"

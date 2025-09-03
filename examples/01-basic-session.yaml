@@ -4,19 +4,6 @@
 session_name: "my-project"
 description: "Basic development session"
 
-# Simple session with one window
-sessions:
-  development:
-    session_name: "dev"
-    start_directory: "~/projects/my-project"
-    description: "Main development session"
-    
-    windows:
-      - window_name: "editor"
-        panes:
-          - bash
-          - bash
-
 # Minimal logging
 logging:
   level: "INFO"

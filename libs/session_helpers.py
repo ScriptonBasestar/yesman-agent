@@ -216,7 +216,6 @@ def get_session_info(session_name: str, server: libtmux.Server | None = None) ->
 def create_session_windows(
     session_name: str,
     windows_config: list[dict[str, object]],
-    start_directory: str | None = None,
     server: libtmux.Server | None = None,
 ) -> libtmux.Session:
     """Create windows for a session from configuration.
@@ -224,7 +223,6 @@ def create_session_windows(
     Args:
         session_name: Name of the session
         windows_config: List of window configurations
-        start_directory: Optional starting directory
         server: Optional tmux server instance
 
     Returns:
@@ -249,7 +247,6 @@ def create_session_windows(
         try:
             session = server.new_session(
                 session_name=session_name,
-                start_directory=start_directory,
                 kill_session=False,
             )
         except LibTmuxException as e:

@@ -34,7 +34,6 @@ class WindowConfig(TypedDict, total=False):
 
     window_name: str
     layout: str | None
-    start_directory: str | None
     panes: list["PaneConfig"]
 
 
@@ -42,7 +41,6 @@ class PaneConfig(TypedDict, total=False):
     """Pane configuration structure."""
 
     shell_command: list[str]
-    start_directory: str | None
     focus: bool | None
 
 
@@ -50,7 +48,6 @@ class SessionConfig(TypedDict, total=False):
     """Complete session configuration structure."""
 
     session_name: str
-    start_directory: str | None
     windows: list[WindowConfig]
     before_script: str | None
     after_script: str | None

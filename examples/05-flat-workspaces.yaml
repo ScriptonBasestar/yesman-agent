@@ -7,48 +7,30 @@ description: "Monorepo development with flat workspace definitions"
 # Alternative flat workspace structure (simpler syntax)
 workspaces:
   web:
-    path: "~/projects/monorepo/packages/web"
+    rel_dir: "~/projects/monorepo/packages/web"
     allowed_paths: ["."]
     description: "Web application package"
     
   api:
-    path: "~/projects/monorepo/packages/api"
+    rel_dir: "~/projects/monorepo/packages/api"
     allowed_paths: ["."]  
     description: "API service package"
     
   shared:
-    path: "~/projects/monorepo/packages/shared"
+    rel_dir: "~/projects/monorepo/packages/shared"
     allowed_paths: ["."]
     description: "Shared utilities package"
     
   docs:
-    path: "~/projects/monorepo/docs"
+    rel_dir: "~/projects/monorepo/docs"
     allowed_paths: ["."]
     description: "Project documentation"
 
-# Sessions using the flat workspaces
-sessions:
-  monorepo-dev:
-    session_name: "monorepo"
-    start_directory: "~/projects/monorepo"
-    description: "Monorepo development session"
-    
-    environment:
-      WORKSPACE: "monorepo"
-      NODE_ENV: "development"
-    
-    windows:
-      - window_name: "packages"
-        layout: "tiled"
-        panes:
-          - bash  # Root level
-          - bash  # Navigate to packages as needed
-      
-      - window_name: "services"
-        layout: "main-vertical" 
-        panes:
-          - bash
-          - npm run dev:all  # Run all services
+# Session settings for monorepo development
+
+environment:
+  WORKSPACE: "monorepo"
+  NODE_ENV: "development"
 
 logging:
   level: "DEBUG"
