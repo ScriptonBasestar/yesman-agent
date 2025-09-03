@@ -112,7 +112,6 @@ def get_config_paths() -> object:
         return {
             "root_dir": str(config_manager.root_dir),
             "sessions_dir": str(tm.sessions_path),
-            "templates_dir": str(tm.templates_path),
             "global_config": str(config_manager.global_path),
             "local_config": str(config_manager.local_path),
         }

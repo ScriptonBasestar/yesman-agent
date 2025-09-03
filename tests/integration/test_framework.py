@@ -82,7 +82,6 @@ class IntegrationTestBase:
             },
             "session": {
                 "sessions_dir": "sessions",
-                "templates_dir": "templates",
                 "default_window_name": "main",
                 "default_layout": "even-horizontal",
             },
