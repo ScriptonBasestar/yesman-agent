@@ -1,9 +1,0 @@
-# Simple Python project
-session_name: "my-python-app"
-template_name: "default"
-start_directory: "~/projects/my-python-app"
-
-windows:
-  - window_name: "main"
-    panes:
-      - claude --dangerously-skip-permissions

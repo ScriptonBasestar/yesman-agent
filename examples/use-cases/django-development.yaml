@@ -1,0 +1,106 @@
+# Django Development Configuration
+# Production-ready setup for Django web applications
+
+session_name: "django-webapp"
+description: "Django development with database and testing"
+
+mode: "local"
+root_dir: "~/.scripton/yesman"
+
+# Workspace configuration for Django project structure
+workspace_config:
+  base_directory: "~/projects/django-app"
+  
+  definitions:
+    backend:
+      path: "."
+      allowed_paths:
+        - "."
+        - "./apps"
+        - "./config"
+        - "./tests"
+        - "./static"
+        - "./media"
+        - "./templates"
+      max_size_mb: 500
+      description: "Django backend workspace"
+      
+    frontend:
+      path: "./frontend"
+      allowed_paths:
+        - "."
+        - "./src"
+        - "./static"
+        - "./templates"
+      max_size_mb: 200  
+      description: "Frontend assets workspace"
+  
+  security_policy: "default"
+  cleanup_policy: "on_session_end"
+
+sessions:
+  django-dev:
+    session_name: "django-dev"
+    start_directory: "~/projects/django-app"
+    description: "Main Django development session"
+    
+    # Django environment setup
+    before_script: |
+      echo "🐍 Setting up Django environment..."
+      
+      # Activate virtual environment
+      if [ -f "venv/bin/activate" ]; then
+        source venv/bin/activate
+      elif [ -f ".venv/bin/activate" ]; then
+        source .venv/bin/activate
+      fi
+      
+      # Install dependencies
+      pip install -r requirements.txt || pip install -r requirements/dev.txt || true
+      
+      # Run migrations
+      python manage.py migrate || true
+      
+      # Start services if available
+      docker-compose -f docker-compose.dev.yml up -d postgres redis || true
+      
+      echo "✅ Django environment ready!"
+    
+    environment:
+      DJANGO_ENV: "development"
+      DEBUG: "True"
+      DATABASE_URL: "postgresql://localhost:5432/django_dev"
+      REDIS_URL: "redis://localhost:6379/0"
+      CELERY_BROKER_URL: "redis://localhost:6379/0"
+    
+    windows:
+      # Main development server
+      - window_name: "server"
+        layout: "main-vertical"
+        panes:
+          - bash                           # Django shell access
+          - python manage.py runserver     # Django development server
+      
+      # Background tasks and worker
+      - window_name: "worker"
+        layout: "even-horizontal"
+        panes:
+          - celery -A config worker --loglevel=info  # Celery worker
+          - celery -A config beat --loglevel=info    # Celery scheduler
+      
+      # Database and monitoring
+      - window_name: "database"
+        layout: "even-horizontal"
+        panes:
+          - psql $DATABASE_URL              # Database shell
+          - python manage.py shell_plus     # Django shell with models
+      
+      # Testing and quality
+      - window_name: "testing"
+        panes:
+          - pytest --cov=apps --cov-report=html  # Run tests with coverage
+
+logging:
+  level: "INFO"
+  file: "~/.scripton/yesman/logs/django-dev.log"
+  format: "%(asctime)s [%(levelname)s] %(name)s: %(message)s"

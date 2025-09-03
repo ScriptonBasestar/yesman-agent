@@ -1,8 +1,0 @@
-# notest, debug, info, warning, error, critical
-log_level: warning
-log_path: ~/.scripton/yesman/logs/
-
-choice:
-  yn: yes
-  '123': 1
-  '12': 1

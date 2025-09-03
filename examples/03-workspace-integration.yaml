@@ -1,0 +1,84 @@
+# Workspace Integration Example
+# Shows how to use workspace configuration with sessions
+
+session_name: "fullstack-project"
+description: "Fullstack development with workspace management"
+
+mode: "local"
+root_dir: "~/.scripton/yesman"
+
+# Workspace configuration - defines secure sandboxes for AI tools
+workspace_config:
+  base_directory: "~/projects/my-fullstack-app"
+  
+  definitions:
+    frontend:
+      path: "./frontend"
+      allowed_paths:
+        - "."
+        - "./src"
+        - "./public"
+        - "./components"
+      max_size_mb: 200
+      description: "Frontend React/Vue workspace"
+      
+    backend:
+      path: "./backend"
+      allowed_paths:
+        - "."
+        - "./src"
+        - "./tests"
+        - "./migrations"
+      max_size_mb: 300
+      description: "Backend API workspace"
+      
+    shared:
+      path: "./shared"
+      allowed_paths:
+        - "."
+        - "./types"
+        - "./utils"
+      max_size_mb: 50
+      description: "Shared utilities workspace"
+  
+  # Global workspace settings
+  security_policy: "default"
+  cleanup_policy: "on_session_end"
+  auto_cleanup_days: 7
+
+# Sessions that map to workspaces
+sessions:
+  fullstack-dev:
+    session_name: "fullstack-dev"
+    start_directory: "~/projects/my-fullstack-app"
+    description: "Main fullstack development session"
+    
+    environment:
+      NODE_ENV: "development"
+      API_URL: "http://localhost:8000"
+      DATABASE_URL: "postgresql://localhost:5432/myapp_dev"
+    
+    # Each window works in different workspace
+    windows:
+      - window_name: "frontend"
+        start_directory: "./frontend"  # Maps to frontend workspace
+        layout: "main-vertical"
+        panes:
+          - bash
+          - npm run dev
+      
+      - window_name: "backend"
+        start_directory: "./backend"   # Maps to backend workspace
+        layout: "main-vertical"
+        panes:
+          - bash
+          - python manage.py runserver
+      
+      - window_name: "database"
+        start_directory: "./backend"   # Database operations
+        panes:
+          - bash
+
+logging:
+  level: "INFO"
+  file: "~/.scripton/yesman/logs/fullstack.log"

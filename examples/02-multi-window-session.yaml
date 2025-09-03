@@ -1,0 +1,47 @@
+# Multi-Window Session Configuration
+# Shows multiple windows with different layouts
+
+session_name: "web-development"
+description: "Web development with multiple windows"
+
+mode: "local"
+root_dir: "~/.scripton/yesman"
+
+sessions:
+  web-dev:
+    session_name: "web-dev"
+    start_directory: "~/projects/my-website"
+    description: "Web development session"
+    
+    # Environment variables for this session
+    environment:
+      NODE_ENV: "development"
+      PORT: "3000"
+    
+    windows:
+      # Code editing window
+      - window_name: "editor"
+        layout: "main-vertical"
+        panes:
+          - bash  # Main shell
+          - bash  # Secondary shell
+      
+      # Development server
+      - window_name: "server"
+        panes:
+          - npm run dev
+      
+      # Monitoring and tools
+      - window_name: "tools"
+        layout: "even-horizontal"
+        panes:
+          - htop     # System monitor
+          - bash     # General commands
+
+logging:
+  level: "INFO"
+  file: "~/.scripton/yesman/logs/web-dev.log"
+
+server:
+  host: "localhost"
+  port: 10501

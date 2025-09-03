@@ -1,0 +1,77 @@
+# Multiple Sessions Configuration
+# Shows how to define multiple sessions in one config file
+
+session_name: "multi-project"
+description: "Managing multiple projects with different sessions"
+
+mode: "local"
+root_dir: "~/.scripton/yesman"
+
+# Multiple sessions for different purposes
+sessions:
+  # Frontend development session
+  frontend-dev:
+    session_name: "frontend"
+    start_directory: "~/projects/frontend-app"
+    description: "Frontend development session"
+    
+    environment:
+      NODE_ENV: "development"
+      REACT_APP_API_URL: "http://localhost:8000"
+    
+    windows:
+      - window_name: "code"
+        panes:
+          - bash
+          - npm run dev
+      
+      - window_name: "test"
+        panes:
+          - npm run test:watch
+
+  # Backend API session  
+  backend-dev:
+    session_name: "backend"
+    start_directory: "~/projects/backend-api"
+    description: "Backend API development session"
+    
+    environment:
+      ENVIRONMENT: "development"
+      DATABASE_URL: "postgresql://localhost:5432/myapi_dev"
+      DEBUG: "true"
+    
+    windows:
+      - window_name: "server"
+        layout: "main-vertical"
+        panes:
+          - bash
+          - python manage.py runserver
+      
+      - window_name: "database"
+        panes:
+          - psql -h localhost -U postgres myapi_dev
+
+  # DevOps monitoring session
+  monitoring:
+    session_name: "monitor"
+    start_directory: "~/projects/infrastructure"
+    description: "System monitoring and DevOps"
+    
+    windows:
+      - window_name: "system"
+        layout: "tiled"
+        panes:
+          - htop
+          - docker ps
+          - bash
+          - tail -f /var/log/nginx/access.log
+
+# Shared logging configuration
+logging:
+  level: "INFO"
+  file: "~/.scripton/yesman/logs/multi-project.log"
+
+# Server configuration
+server:
+  host: "localhost"
+  port: 10501

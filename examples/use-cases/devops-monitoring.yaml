@@ -1,0 +1,156 @@
+# DevOps & Infrastructure Monitoring
+# Complete setup for DevOps workflows and infrastructure monitoring
+
+session_name: "devops-infrastructure"
+description: "DevOps tooling and infrastructure monitoring"
+
+mode: "local"
+root_dir: "~/.scripton/yesman"
+
+# Workspace for DevOps and infrastructure
+workspace_config:
+  base_directory: "~/projects/infrastructure"
+  
+  definitions:
+    terraform:
+      path: "./terraform"
+      allowed_paths:
+        - "."
+        - "./modules"
+        - "./environments"
+      max_size_mb: 100
+      description: "Terraform infrastructure as code"
+      
+    ansible:
+      path: "./ansible"
+      allowed_paths:
+        - "."
+        - "./playbooks"
+        - "./roles"
+        - "./inventory"
+      max_size_mb: 150
+      description: "Ansible configuration management"
+      
+    kubernetes:
+      path: "./k8s"
+      allowed_paths:
+        - "."
+        - "./manifests"
+        - "./helm"
+      max_size_mb: 100
+      description: "Kubernetes manifests and Helm charts"
+      
+    monitoring:
+      path: "./monitoring"
+      allowed_paths:
+        - "."
+        - "./grafana"
+        - "./prometheus"
+        - "./logs"
+      max_size_mb: 200
+      description: "Monitoring and observability configs"
+  
+  security_policy: "strict"
+  cleanup_policy: "manual"
+
+sessions:
+  devops-main:
+    session_name: "devops"
+    start_directory: "~/projects/infrastructure"
+    description: "Main DevOps operations session"
+    
+    # DevOps environment setup
+    before_script: |
+      echo "🚀 Setting up DevOps environment..."
+      
+      # Check required tools
+      command -v terraform >/dev/null || echo "⚠️  Terraform not found"
+      command -v ansible >/dev/null || echo "⚠️  Ansible not found"  
+      command -v kubectl >/dev/null || echo "⚠️  kubectl not found"
+      command -v docker >/dev/null || echo "⚠️  Docker not found"
+      
+      # Load environment variables
+      [ -f ".env" ] && source .env
+      
+      # Start local monitoring stack
+      docker-compose -f docker-compose.monitoring.yml up -d || true
+      
+      echo "✅ DevOps environment ready!"
+    
+    environment:
+      AWS_PROFILE: "devops"
+      KUBECONFIG: "~/.kube/config"
+      ANSIBLE_HOST_KEY_CHECKING: "False"
+      TF_VAR_environment: "staging"
+    
+    windows:
+      # Infrastructure as Code
+      - window_name: "infrastructure"
+        layout: "main-vertical"
+        start_directory: "./terraform"
+        panes:
+          - bash                      # Terraform operations
+          - terraform plan --out=plan.tfplan  # Continuous planning
+      
+      # Configuration Management
+      - window_name: "config"
+        layout: "even-horizontal"
+        start_directory: "./ansible"
+        panes:
+          - bash                      # Ansible operations
+          - ansible-inventory --list  # Inventory management
+      
+      # Kubernetes Operations
+      - window_name: "kubernetes"
+        layout: "main-vertical"
+        start_directory: "./k8s"
+        panes:
+          - kubectl get pods -A --watch  # Pod monitoring
+          - bash                         # kubectl operations
+      
+      # Monitoring and Logs
+      - window_name: "monitoring"
+        layout: "tiled"
+        panes:
+          - htop                                    # System resources
+          - docker stats                           # Container stats
+          - kubectl top nodes                      # K8s resource usage
+          - tail -f /var/log/syslog | grep -i error  # System errors
+      
+      # Cloud Operations
+      - window_name: "cloud"
+        layout: "even-horizontal"
+        panes:
+          - aws cloudwatch get-metric-statistics --help  # AWS monitoring
+          - bash  # General cloud operations
+
+logging:
+  level: "INFO"
+  file: "~/.scripton/yesman/logs/devops.log"
+  format: "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+
+# Server for dashboard access
+server:
+  host: "0.0.0.0"
+  port: 10503
+
+# Custom DevOps-specific settings
+custom:
+  project:
+    type: "devops"
+    auto_backup: true
+    backup_paths: ["./terraform/*.tfstate", "./ansible/inventory"]
+    
+  integrations:
+    aws: true
+    kubernetes: true
+    prometheus: true
+    grafana: true
+    
+  alerts:
+    slack_webhook: "${SLACK_DEVOPS_WEBHOOK}"
+    email: "devops@company.com"
+    
+  performance:
+    max_concurrent_tasks: 5
+    timeout: 3600  # 1 hour for long operations

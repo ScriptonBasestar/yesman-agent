@@ -1,0 +1,136 @@
+# Advanced Features Configuration
+# Demonstrates advanced features like scripts, complex layouts, and custom settings
+
+session_name: "advanced-development"
+description: "Advanced configuration with scripts and complex layouts"
+
+mode: "local"
+root_dir: "~/.scripton/yesman"
+
+# Advanced session with scripts
+sessions:
+  advanced-dev:
+    session_name: "advanced"
+    start_directory: "~/projects/advanced-app"
+    description: "Advanced development session with automation"
+    
+    # Pre-session setup script
+    before_script: |
+      echo "🚀 Starting advanced development environment..."
+      
+      # Check if dependencies are installed
+      if [ -f "package.json" ]; then
+        echo "📦 Installing dependencies..."
+        npm install
+      fi
+      
+      # Start background services if docker-compose exists
+      if [ -f "docker-compose.yml" ]; then
+        echo "🐳 Starting services..."
+        docker-compose up -d database redis
+      fi
+      
+      # Create necessary directories
+      mkdir -p logs temp
+      
+      echo "✅ Environment ready!"
+    
+    # Post-session cleanup script
+    after_script: |
+      echo "🧹 Cleaning up..."
+      docker-compose down || true
+      rm -rf temp/
+      echo "✅ Cleanup complete!"
+    
+    # Environment variables
+    environment:
+      NODE_ENV: "development"
+      DEBUG: "app:*"
+      API_PORT: "8000"
+      DB_HOST: "localhost"
+      REDIS_URL: "redis://localhost:6379"
+    
+    windows:
+      # Main development window with complex layout
+      - window_name: "development"
+        layout: "main-vertical"
+        start_directory: "."
+        panes:
+          - bash                    # Main shell
+          - npm run dev            # Development server
+          - npm run dev:worker     # Background worker
+      
+      # Database and cache management
+      - window_name: "data"
+        layout: "even-horizontal"
+        panes:
+          - psql -h localhost -U postgres myapp_dev
+          - redis-cli -h localhost
+      
+      # Monitoring and logs
+      - window_name: "monitoring"
+        layout: "tiled"
+        panes:
+          - htop                           # System resources
+          - tail -f logs/app.log          # Application logs
+          - docker stats                   # Container stats
+          - bash                          # Free terminal
+
+# Workspace with strict security
+workspace_config:
+  base_directory: "~/projects/advanced-app"
+  
+  definitions:
+    app:
+      path: "./src"
+      allowed_paths:
+        - "."
+        - "./components"
+        - "./services"
+        - "./utils"
+        - "./tests"
+      security_policy: "strict"
+      max_size_mb: 500
+      description: "Main application code"
+      
+    config:
+      path: "./config"
+      allowed_paths: ["."]
+      security_policy: "restricted"
+      max_size_mb: 10
+      description: "Configuration files"
+  
+  security_policy: "strict"
+  cleanup_policy: "daily"
+  auto_cleanup_days: 3
+
+# Advanced logging configuration
+logging:
+  level: "DEBUG"
+  file: "~/.scripton/yesman/logs/advanced.log"
+  format: "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+
+# Custom server configuration
+server:
+  host: "0.0.0.0"  # Allow external connections
+  port: 10502      # Custom port
+
+# Custom application-specific settings
+custom:
+  # Project-specific settings
+  project:
+    type: "advanced"
+    auto_backup: true
+    backup_interval: 3600  # 1 hour
+    
+  # Integration settings
+  integrations:
+    github: true
+    slack: false
+    discord: true
+    
+  # Performance settings
+  performance:
+    cache_enabled: true
+    max_sessions: 10
+    session_timeout: 7200  # 2 hours

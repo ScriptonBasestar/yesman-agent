@@ -1,129 +1,207 @@
-# Yesman-Claude Configuration Examples
+# Yesman Configuration Examples
 
-This directory contains comprehensive configuration examples for various use cases, scenarios, and edge cases.
+This directory contains examples showing how to configure Yesman for different development scenarios. The examples progress from simple to complex configurations.
 
-## Directory Structure
+## 📚 Learning Path - Start Here
 
-```
-examples/
-├── README.md                    # This file
-├── basic/                       # Basic configuration examples
-├── advanced/                    # Advanced configuration with complex layouts
-├── multi-project/              # Multi-project workspace examples
-├── team-collaboration/         # Team collaboration setups
-├── edge-cases/                 # Edge cases and error handling examples
-├── templates/                  # Reusable template examples
-├── sessions-directory/         # Using sessions/*.yaml files
-├── sessions-only/              # Complete migration to sessions-only structure
-├── configuration-hierarchy/    # Configuration inheritance examples
-├── global-yesman/              # Global configuration with templates
-├── local-yesman/               # Project-local configurations
-└── mixed-configuration/        # Mixing projects.yaml and sessions/*.yaml
-```
+Follow these numbered examples in order to learn Yesman configuration:
 
-## Configuration Files
+### 1. **[01-basic-session.yaml](./01-basic-session.yaml)** - Start Here!
+- **Learn**: Basic session setup with minimal configuration  
+- **Features**: Single session, simple window layout, basic logging
+- **Best for**: Quick start, single-project development
 
-### Core Configuration Files
+### 2. **[02-multi-window-session.yaml](./02-multi-window-session.yaml)** 
+- **Learn**: Multiple windows with different layouts and environment variables
+- **Features**: Multiple windows, layout options, environment configuration
+- **Best for**: Web development, need multiple terminal contexts
 
-1. **yesman.yaml** - Main configuration file
-2. **projects.yaml** - Project definitions and session configurations
-3. **templates/*.yaml** - Reusable session templates
+### 3. **[03-workspace-integration.yaml](./03-workspace-integration.yaml)**
+- **Learn**: Workspace configuration for secure AI tool sandboxing
+- **Features**: `workspace_config`, security policies, path restrictions
+- **Best for**: AI-assisted development, team collaboration
 
-### Configuration Hierarchy
+### 4. **[04-multiple-sessions.yaml](./04-multiple-sessions.yaml)**  
+- **Learn**: Managing multiple projects with different session configurations
+- **Features**: Multiple sessions, different environments per session
+- **Best for**: Multi-project development, separating concerns
 
-```
-~/.scripton/yesman/yesman.yaml     # Global user configuration
-~/project/.yesman/yesman.yaml      # Project-specific configuration
-./yesman.yaml                      # Local directory configuration
-```
+### 5. **[05-flat-workspaces.yaml](./05-flat-workspaces.yaml)**
+- **Learn**: Alternative flat workspace syntax (simpler than workspace_config)
+- **Features**: `workspaces:` instead of `workspace_config:`, monorepo support
+- **Best for**: Monorepos, simpler workspace definitions
 
-## Quick Start
+### 6. **[06-advanced-features.yaml](./06-advanced-features.yaml)** - Complete Guide
+- **Learn**: Advanced features including scripts, custom settings, complex automation
+- **Features**: `before_script`, `after_script`, advanced layouts, custom configuration
+- **Best for**: Production environments, complex automation needs
 
-1. Copy the example that matches your use case
-2. Modify the paths and settings to match your environment
-3. Run `yesman up` to create sessions
+## 🎯 Production Use Cases
 
-## Examples Overview
+After learning the basics, explore these production-ready configurations:
 
-### Core Examples
-- **basic/** - Simple single-project setups for getting started
-- **advanced/** - Complex layouts with multiple panes, windows, and advanced features
-- **templates/** - Reusable session templates for common workflows
+### **[use-cases/django-development.yaml](./use-cases/django-development.yaml)**
+Complete Django web application development setup with database, worker processes, and testing.
 
-### Organization Patterns
-- **multi-project/** - Managing multiple projects simultaneously
-- **team-collaboration/** - Shared team configurations and conventions
-- **sessions-directory/** - Using individual session files in sessions/*.yaml
-- **sessions-only/** - Complete migration from projects.yaml to sessions/*.yaml
+### **[use-cases/data-science.yaml](./use-cases/data-science.yaml)** 
+Data science and machine learning environment with Jupyter, MLflow, TensorBoard, and GPU support.
 
-### Configuration Management
-- **configuration-hierarchy/** - Understanding configuration inheritance and overrides
-- **global-yesman/** - Global user configuration with template library
-- **local-yesman/** - Project-specific local configurations
-- **mixed-configuration/** - Combining projects.yaml with sessions/*.yaml
+### **[use-cases/devops-monitoring.yaml](./use-cases/devops-monitoring.yaml)**
+DevOps and infrastructure monitoring with Terraform, Ansible, Kubernetes, and monitoring tools.
 
-### Special Cases
-- **edge-cases/** - Handling errors, missing dependencies, and special scenarios
+## 🏗️ Configuration Structure
 
-## Common Patterns
+All examples follow this simplified structure:
 
-### 1. Development Workflow
 ```yaml
-# Common development setup with editor, server, and logs
-windows:
-  - window_name: "dev"
-    panes:
-      - claude --dangerously-skip-permissions
-      - command: "npm run dev"
-      - command: "tail -f logs/app.log"
+# Basic metadata
+session_name: "project-name"
+description: "Project description"
+
+# Global settings
+mode: "local"              # local | merge | isolated
+root_dir: "~/.scripton/yesman"
+
+# Workspace configuration (optional - for AI tools)
+workspace_config:          # Structured approach
+  base_directory: "~/projects/my-app"
+  definitions:
+    frontend:
+      path: "./frontend"
+      allowed_paths: ["."]
+
+# OR flat workspace syntax (alternative)
+workspaces:                 # Flat approach
+  frontend:
+    path: "~/projects/my-app/frontend"
+    allowed_paths: ["."]
+
+# Session definitions
+sessions:
+  main:
+    session_name: "main"
+    start_directory: "~/projects/my-app"
+    
+    # Optional setup/cleanup scripts
+    before_script: |
+      echo "Starting environment..."
+    after_script: |
+      echo "Cleaning up..."
+    
+    # Environment variables
+    environment:
+      NODE_ENV: "development"
+    
+    # Window and pane layout
+    windows:
+      - window_name: "editor"
+        layout: "main-vertical"  # even-horizontal | main-horizontal | tiled
+        start_directory: "./src"
+        panes:
+          - bash
+          - npm run dev
+
+# Logging configuration
+logging:
+  level: "INFO"
+  file: "~/.scripton/yesman/logs/project.log"
 ```
 
-### 2. Multi-Service Architecture
+## 🔧 Configuration Options
+
+### Session Modes
+- **`local`**: Use local configuration only
+- **`merge`**: Merge with global/template configurations  
+- **`isolated`**: Fully isolated environment
+
+### Window Layouts  
+- **`even-horizontal`**: Split panes horizontally with equal size
+- **`even-vertical`**: Split panes vertically with equal size
+- **`main-horizontal`**: Main pane on top, others split below
+- **`main-vertical`**: Main pane on left, others split right
+- **`tiled`**: Automatic tiling layout
+
+### Workspace Security Policies
+- **`default`**: Standard security restrictions
+- **`strict`**: Enhanced security for sensitive projects
+- **`restricted`**: Maximum security, limited access
+
+### Workspace Types
+
+#### Structured Workspaces (`workspace_config`)
 ```yaml
-# Microservices with frontend, backend, and database
+workspace_config:
+  base_directory: "~/projects/app"
+  definitions:
+    frontend:
+      path: "./frontend"          # Relative to base_directory
+      allowed_paths: ["."]
+```
+
+#### Flat Workspaces (`workspaces`)  
+```yaml
+workspaces:
+  frontend:
+    path: "~/projects/app/frontend"  # Absolute path
+    allowed_paths: ["."]
+```
+
+## 🚀 Getting Started
+
+1. **Start with basics**: Copy `01-basic-session.yaml` and modify for your project
+2. **Add complexity gradually**: Follow the numbered progression 
+3. **Use production examples**: Adapt use-cases for your specific needs
+4. **Test your configuration**: Run `./yesman.py validate` to check syntax
+
+## 📝 Configuration Tips
+
+### Environment Variables
+Set environment variables per session:
+```yaml
+environment:
+  NODE_ENV: "development"
+  API_URL: "http://localhost:8000"
+  DEBUG: "true"
+```
+
+### Custom Scripts
+Automate environment setup:
+```yaml
+before_script: |
+  npm install
+  docker-compose up -d database
+  
+after_script: |
+  docker-compose down
+```
+
+### Multiple Projects
+Organize different projects in separate sessions:
+```yaml
 sessions:
   frontend:
-    template_name: "react-app"
+    session_name: "frontend"
+    start_directory: "~/projects/frontend"
   backend:
-    template_name: "fastapi"
-  database:
-    template_name: "postgres-dev"
+    session_name: "backend" 
+    start_directory: "~/projects/backend"
 ```
 
-### 3. Data Science Workflow
-```yaml
-# Jupyter, data processing, and monitoring
-windows:
-  - window_name: "jupyter"
-    panes:
-      - command: "jupyter lab"
-  - window_name: "processing"
-    panes:
-      - claude
-      - command: "python data_pipeline.py --watch"
-```
+## ⚠️ Migration from Legacy Examples
 
-## Best Practices
+If you're using older Yesman configurations, note these changes:
 
-1. **Use Templates** - Create reusable templates for common patterns
-2. **Environment Variables** - Use environment-specific variables
-3. **Modular Sessions** - Split complex setups into multiple sessions
-4. **Version Control** - Keep configurations in version control
-5. **Documentation** - Document custom commands and workflows
+- **`templates:` removed** → Use direct session configuration
+- **`claude:` renamed** → Use `workspace_config:` or `workspaces:`
+- **Template system simplified** → Use numbered examples as templates
 
-## Quick Reference
+Legacy files are marked as DEPRECATED and should be replaced with numbered examples.
 
-### Session Configuration Keys
-- `session_name` - Unique session identifier
-- `template_name` - Reference to a template
-- `start_directory` - Working directory for the session
-- `environment` - Environment variables
-- `before_script` - Setup commands run once
-- `windows` - Window and pane configurations
+## 🆘 Getting Help
 
-### Window Layout Options
-- `even-horizontal` - Equal horizontal splits
-- `even-vertical` - Equal vertical splits
-- `main-horizontal` - Large top pane, smaller bottom
-- `main-vertical` - Large left pane, smaller right
-- `tiled` - Equal sized grid layout
+- **Validate config**: `./yesman.py validate`
+- **List sessions**: `./yesman.py ls` 
+- **Test session**: `./yesman.py setup session-name --dry-run`
+- **View status**: `./yesman.py status`
+
+For more detailed information, run `./yesman.py --help` or see the main project documentation.

@@ -1,0 +1,138 @@
+# Data Science & ML Configuration
+# Complete setup for data science and machine learning projects
+
+session_name: "data-science-project"
+description: "Data science and ML development environment"
+
+mode: "local"
+root_dir: "~/.scripton/yesman"
+
+# Workspace for data science project structure
+workspace_config:
+  base_directory: "~/projects/ml-project"
+  
+  definitions:
+    notebooks:
+      path: "./notebooks"
+      allowed_paths:
+        - "."
+        - "../data"
+        - "../models"
+        - "../src"
+      max_size_mb: 500
+      description: "Jupyter notebooks workspace"
+      
+    data:
+      path: "./data"
+      allowed_paths: ["."]
+      max_size_mb: 2000  # Large datasets
+      description: "Dataset storage workspace"
+      
+    models:
+      path: "./models"
+      allowed_paths: ["."]
+      max_size_mb: 1000
+      description: "ML models workspace"
+      
+    src:
+      path: "./src"
+      allowed_paths:
+        - "."
+        - "./preprocessing"
+        - "./training" 
+        - "./evaluation"
+        - "./deployment"
+      max_size_mb: 200
+      description: "Source code workspace"
+  
+  security_policy: "default"
+  cleanup_policy: "manual"  # Keep data safe
+
+sessions:
+  ml-development:
+    session_name: "ml-dev"
+    start_directory: "~/projects/ml-project"
+    description: "Machine learning development session"
+    
+    # ML environment setup
+    before_script: |
+      echo "🧠 Setting up ML environment..."
+      
+      # Create conda/virtual environment
+      if [ -f "environment.yml" ]; then
+        conda env update -f environment.yml || conda env create -f environment.yml
+        conda activate ml-project
+      elif [ -f "requirements.txt" ]; then
+        pip install -r requirements.txt
+      fi
+      
+      # Start services
+      docker-compose up -d mlflow-server postgres || true
+      
+      # Create directories
+      mkdir -p data/{raw,processed,external} models logs
+      
+      echo "✅ ML environment ready!"
+    
+    environment:
+      PYTHONPATH: "./src"
+      MLFLOW_TRACKING_URI: "http://localhost:5000"
+      CUDA_VISIBLE_DEVICES: "0"  # GPU configuration
+      WANDB_PROJECT: "ml-project"
+      DATA_PATH: "./data"
+      MODEL_PATH: "./models"
+    
+    windows:
+      # Jupyter notebook server
+      - window_name: "jupyter"
+        layout: "main-vertical"
+        start_directory: "./notebooks"
+        panes:
+          - bash                                    # Notebook navigation
+          - jupyter lab --no-browser --port=8888   # Jupyter server
+      
+      # Data processing and EDA
+      - window_name: "data"
+        layout: "even-horizontal"
+        start_directory: "./src"
+        panes:
+          - python -c "import pandas as pd; print('Data tools ready')"  # Data shell
+          - bash  # Data processing scripts
+      
+      # Model training and experiments
+      - window_name: "training"
+        layout: "main-vertical"
+        start_directory: "./src/training"
+        panes:
+          - bash                           # Training scripts
+          - python -m tensorboard.main --logdir=../logs  # TensorBoard
+      
+      # MLflow and monitoring
+      - window_name: "monitoring"
+        layout: "tiled"
+        panes:
+          - htop                    # System resources
+          - nvidia-smi -l 1         # GPU monitoring
+          - mlflow ui --port=5001   # MLflow UI
+          - bash                    # General monitoring
+
+logging:
+  level: "DEBUG"
+  file: "~/.scripton/yesman/logs/ml-dev.log"
+  format: "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+
+# Custom settings for ML workflow
+custom:
+  project:
+    type: "data-science"
+    auto_backup: true
+    backup_paths: ["./data/processed", "./models", "./notebooks"]
+    
+  integrations:
+    wandb: true
+    mlflow: true
+    tensorboard: true
+    
+  performance:
+    gpu_enabled: true
+    memory_limit: "16GB"
