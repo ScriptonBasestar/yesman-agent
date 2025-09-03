@@ -24,12 +24,6 @@
       description: 'Tmux sessions'
     },
     {
-      path: '/controllers',
-      icon: '⚠️',
-      label: 'Controllers',
-      description: 'Deprecated (removed)'
-    },
-    {
       path: '/agents',
       icon: '🧠',
       label: 'Agents',

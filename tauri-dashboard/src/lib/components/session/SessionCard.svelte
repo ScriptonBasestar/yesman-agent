@@ -25,32 +25,9 @@
     }
   };
 
-  const controllerStyles = {
-    running: {
-      badge: 'badge-success',
-      icon: '🤖',
-      text: 'Running'
-    },
-    stopped: {
-      badge: 'badge-error',
-      icon: '⏹️',
-      text: 'Stopped'
-    },
-    error: {
-      badge: 'badge-error',
-      icon: '❌',
-      text: 'Error'
-    },
-    unknown: {
-      badge: 'badge-warning',
-      icon: '❓',
-      text: 'Unknown'
-    }
-  };
 
   // 세션 상태 계산
   $: sessionStyle = statusStyles[session.status as keyof typeof statusStyles] || statusStyles.unknown;
-  $: controllerStyle = controllerStyles[session.controller_status as keyof typeof controllerStyles] || controllerStyles.unknown;
 
   // 세션이 실행 중인지 확인
   $: isSessionRunning = session.status === 'running';
@@ -59,9 +36,6 @@
   $: hasClaudeRunning = session.windows && session.windows.some(w =>
     w.panes && w.panes.some(p => p.is_claude || p.command === 'claude')
   );
-
-  // 컨트롤러를 시작할 수 있는지 확인 (세션 실행 중 + Claude Code 실행 중 + 컨트롤러 미실행)
-  $: canStartController = isSessionRunning && hasClaudeRunning && session.controller_status !== 'running';
 
   // 시간 포맷팅
   function formatUptime(uptime: string | null): string {
@@ -85,17 +59,6 @@
   }
 
   // 이벤트 핸들러
-  function handleStartController() {
-    dispatch('startController', { session: session.session_name });
-  }
-
-  function handleStopController() {
-    dispatch('stopController', { session: session.session_name });
-  }
-
-  function handleRestartController() {
-    dispatch('restartController', { session: session.session_name });
-  }
 
   function handleViewLogs() {
     dispatch('viewLogs', { session: session.session_name });
@@ -109,13 +72,6 @@
     dispatch('viewDetails', { session: session.session_name });
   }
 
-  function handleToggleStatus() {
-    if (session.controller_status === 'running') {
-      handleStopController();
-    } else {
-      handleStartController();
-    }
-  }
 
   function handleStartSession() {
     console.log('SessionCard: handleStartSession called for', session.session_name);
@@ -165,8 +121,6 @@
           <ul class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
             <li><button on:click={handleAttachSession}>🔗 Attach to Session</button></li>
             <li><button on:click={handleViewLogs}>📋 View Logs</button></li>
-            <li><hr></li>
-            <li><button on:click={handleRestartController}>🔄 Restart Controller</button></li>
           </ul>
         </div>
       </div>
@@ -195,42 +149,8 @@
       </div>
     </div>
 
-    <!-- 컨트롤러 상태 -->
-    <div class="controller-section">
-      <div class="flex items-center justify-between mb-3">
-        <h4 class="text-sm font-semibold text-base-content/80">Claude Controller</h4>
-        <div class="badge {controllerStyle.badge} badge-sm">
-          {controllerStyle.icon} {controllerStyle.text}
-        </div>
-      </div>
-
-      <div class="controller-info bg-base-200 p-3 rounded-lg mb-3">
-        <div class="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span class="text-base-content/60">Process ID:</span>
-            <span class="font-mono ml-2">{session.controller_pid || 'N/A'}</span>
-          </div>
-          <div>
-            <span class="text-base-content/60">Start Time:</span>
-            <span class="ml-2">{session.controller_start_time || 'N/A'}</span>
-          </div>
-        </div>
-
-        {#if session.controller_error}
-          <div class="mt-2 p-2 bg-error/10 border border-error/20 rounded text-sm">
-            <span class="text-error font-medium">Error:</span>
-            <span class="ml-2">{session.controller_error}</span>
-          </div>
-        {/if}
-
-        {#if session.last_response}
-          <div class="mt-2 p-2 bg-success/10 border border-success/20 rounded text-sm">
-            <span class="text-success font-medium">Last Response:</span>
-            <span class="ml-2">{session.last_response}</span>
-          </div>
-        {/if}
-      </div>
-
+    <!-- 세션 액션 -->
+    <div class="session-actions">
       <!-- 세션 상태 경고 -->
       {#if !isSessionRunning}
         <div class="session-warning bg-warning/10 border border-warning/20 p-3 rounded-lg mb-3">
@@ -240,7 +160,7 @@
               <div>
                 <div class="text-sm font-medium text-warning">Session Not Running</div>
                 <div class="text-xs text-base-content/60">
-                  Start the tmux session first before managing the controller
+                  Start the tmux session to begin working
                 </div>
               </div>
             </div>
@@ -253,54 +173,22 @@
             </button>
           </div>
         </div>
-      {:else if !hasClaudeRunning}
-        <div class="claude-warning bg-warning/10 border border-warning/20 p-3 rounded-lg mb-3">
-          <div class="flex items-center gap-2">
-            <span class="text-warning">🤖</span>
-            <div>
-              <div class="text-sm font-medium text-warning">Claude Code Not Running</div>
-              <div class="text-xs text-base-content/60">
-                Run <code class="bg-base-300 px-1 rounded">claude</code> command in one of the tmux panes to enable controller
-              </div>
-            </div>
-          </div>
-        </div>
       {/if}
 
-      <!-- 컨트롤러 액션 버튼 -->
-      <div class="controller-actions flex gap-2">
-        {#if session.controller_status === 'running'}
+      <!-- 세션 액션 버튼 -->
+      <div class="actions flex gap-2">
+        {#if !isSessionRunning}
           <button
-            class="btn btn-error btn-sm flex-1"
-            on:click={handleStopController}
+            class="btn btn-success btn-sm flex-1"
+            on:click={handleStartSession}
+            title="Start tmux session"
           >
-            ⏹️ Stop Controller
+            ▶️ Start Session
           </button>
         {:else}
           <button
-            class="btn btn-success btn-sm flex-1"
-            class:btn-disabled={!canStartController}
-            on:click={handleStartController}
-            disabled={!canStartController}
-            title={!isSessionRunning ? 'Session must be running to start controller' : 'Start Claude controller'}
-          >
-            ▶️ Start Controller
-          </button>
-        {/if}
-
-        <button
-          class="btn btn-outline btn-sm"
-          on:click={handleRestartController}
-          disabled={!isSessionRunning || session.controller_status === 'unknown'}
-          title={!isSessionRunning ? 'Session must be running to restart controller' : 'Restart Claude controller'}
-        >
-          🔄 Restart
-        </button>
-
-        <button
-          class="btn btn-error btn-outline btn-sm"
-          on:click={handleStopSession}
-          disabled={!isSessionRunning}
+            class="btn btn-error btn-outline btn-sm"
+            on:click={handleStopSession}
           title={isSessionRunning ? 'Stop tmux session' : 'Session is not running'}
         >
           ⏹️ Stop
@@ -312,6 +200,7 @@
         >
           📋 Logs
         </button>
+        {/if}
       </div>
     </div>
 
@@ -409,9 +298,6 @@
     @apply block;
   }
 
-  .controller-section {
-    @apply border-t border-base-content/10 pt-4;
-  }
 
   .window-item {
     @apply hover:bg-base-200 transition-colors;

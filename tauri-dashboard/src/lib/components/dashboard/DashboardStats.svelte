@@ -28,10 +28,6 @@
   $: inactiveSessions = $sessions.filter(s => s.status === 'stopped').length;
   $: unknownSessions = $sessions.filter(s => s.status === 'unknown').length;
 
-  $: runningControllers = $sessions.filter(s => s.controller_status === 'running').length;
-  $: stoppedControllers = $sessions.filter(s => s.controller_status === 'not running').length;
-  $: errorControllers = $sessions.filter(s => s.controller_error !== null && s.controller_error !== undefined).length;
-  $: unknownControllers = $sessions.filter(s => s.controller_status === 'unknown').length;
 
   $: totalWindows = $sessions.reduce((sum, s) => sum + (s.windows?.length || 0), 0);
   $: totalPanes = $sessions.reduce((sum, s) => sum + (s.total_panes || 0), 0);
@@ -45,7 +41,7 @@
       return { status: 'No Data', percentage: 0, color: 'text-base-content/50' };
     }
 
-    const healthScore = (activeSessions + runningControllers * 0.5) / (totalSessions + totalSessions * 0.5);
+    const healthScore = activeSessions / totalSessions;
     const percentage = Math.round(healthScore * 100);
 
     if (percentage >= 90) return { status: 'Excellent', percentage, color: 'text-success' };
@@ -84,7 +80,7 @@
 
 <div class="dashboard-stats">
   <!-- 메인 통계 카드들 -->
-  <div class="stats-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
+  <div class="stats-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
     <!-- API 서버 상태 -->
     <div class="stat-card bg-gradient-to-br from-base-300 to-base-200 border border-base-content/20 rounded-xl p-6">
       <div class="stat-header flex items-center justify-between mb-4">
@@ -159,37 +155,6 @@
       </div>
     </div>
 
-    <!-- 컨트롤러 통계 -->
-    <div class="stat-card bg-gradient-to-br from-secondary/10 to-secondary/5 border border-secondary/20 rounded-xl p-6">
-      <div class="stat-header flex items-center justify-between mb-4">
-        <div class="stat-icon text-secondary">
-          <span class="text-3xl">🤖</span>
-        </div>
-        <div class="stat-trend text-xs text-secondary">
-          {runningControllers} running
-        </div>
-      </div>
-
-      <div class="stat-content">
-        <div class="stat-title text-lg font-bold text-base-content">
-          {runningControllers + stoppedControllers + errorControllers + unknownControllers}
-        </div>
-        <div class="stat-subtitle text-sm text-base-content/70">
-          Claude Controllers
-        </div>
-
-        <div class="stat-breakdown mt-3 grid grid-cols-2 gap-2 text-xs">
-          <div class="text-center">
-            <div class="font-semibold text-success">{runningControllers}</div>
-            <div class="text-base-content/60">Running</div>
-          </div>
-          <div class="text-center">
-            <div class="font-semibold text-error">{stoppedControllers + errorControllers}</div>
-            <div class="text-base-content/60">Stopped</div>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- 시스템 건강도 -->
     <div class="stat-card bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20 rounded-xl p-6">
@@ -291,7 +256,7 @@
           ></div>
         </div>
         <div class="text-xs text-base-content/60 mt-1">
-          {runningControllers} processes active
+          {activeSessions} sessions active
         </div>
       </div>
 

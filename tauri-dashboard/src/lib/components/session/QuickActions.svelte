@@ -24,22 +24,6 @@
       hotkey: 'S'
     },
     {
-      id: 'start_all',
-      icon: '▶️',
-      label: 'Start All Controllers',
-      description: 'Start all Claude controllers',
-      variant: 'btn-success',
-      hotkey: 'Ctrl+S'
-    },
-    {
-      id: 'stop_all',
-      icon: '⏹️',
-      label: 'Stop All Controllers',
-      description: 'Stop all Claude controllers',
-      variant: 'btn-error',
-      hotkey: 'Ctrl+T'
-    },
-    {
       id: 'teardown',
       icon: '🛑',
       label: 'Teardown All Sessions',
@@ -53,9 +37,6 @@
   // 세션 통계 계산
   $: totalSessions = $sessions.length;
   $: activeSessions = $sessions.filter(s => s.status === 'running').length;
-  $: runningControllers = $sessions.filter(s => s.controller_status === 'running').length;
-  $: stoppedControllers = $sessions.filter(s => s.controller_status === 'not running').length;
-  $: errorControllers = $sessions.filter(s => s.controller_status === 'error').length;
 
   // 액션 핸들러
   function handleAction(actionId: string) {
@@ -92,10 +73,6 @@
   // 액션 가용성 확인
   function isActionDisabled(actionId: string): boolean {
     switch (actionId) {
-      case 'start_all':
-        return stoppedControllers === 0;
-      case 'stop_all':
-        return runningControllers === 0;
       case 'teardown':
         return activeSessions === 0;
       default:
@@ -111,12 +88,6 @@
 
     if (isActionDisabled(action.id)) {
       switch (action.id) {
-        case 'start_all':
-          tooltip += ' - No stopped controllers';
-          break;
-        case 'stop_all':
-          tooltip += ' - No running controllers';
-          break;
         case 'teardown':
           tooltip += ' - No active sessions';
           break;
@@ -137,7 +108,7 @@
         ⚡ Quick Actions
       </h3>
       <p class="text-sm text-base-content/60 mt-1">
-        Manage sessions and controllers with one click
+        Manage tmux sessions with one click
       </p>
     </div>
 
@@ -145,23 +116,17 @@
     <div class="status-summary hidden lg:flex items-center gap-4 text-sm">
       <div class="stat-badge bg-primary/10 text-primary px-3 py-1 rounded-full">
         <span class="font-semibold">{activeSessions}</span>
-        <span class="text-xs ml-1">Active</span>
+        <span class="text-xs ml-1">Active Sessions</span>
       </div>
-      <div class="stat-badge bg-success/10 text-success px-3 py-1 rounded-full">
-        <span class="font-semibold">{runningControllers}</span>
-        <span class="text-xs ml-1">Running</span>
+      <div class="stat-badge bg-base-300 text-base-content px-3 py-1 rounded-full">
+        <span class="font-semibold">{totalSessions}</span>
+        <span class="text-xs ml-1">Total Sessions</span>
       </div>
-      {#if errorControllers > 0}
-        <div class="stat-badge bg-error/10 text-error px-3 py-1 rounded-full">
-          <span class="font-semibold">{errorControllers}</span>
-          <span class="text-xs ml-1">Errors</span>
-        </div>
-      {/if}
     </div>
   </div>
 
   <!-- 액션 버튼들 -->
-  <div class="actions-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+  <div class="actions-grid grid grid-cols-1 md:grid-cols-3 gap-4">
     {#each quickActions as action}
       <div class="action-card">
         <button
@@ -198,15 +163,7 @@
         </button>
 
         <!-- 액션별 추가 정보 -->
-        {#if action.id === 'start_all' && stoppedControllers > 0}
-          <div class="action-info text-xs text-center mt-2 text-base-content/60">
-            {stoppedControllers} controller{stoppedControllers > 1 ? 's' : ''} to start
-          </div>
-        {:else if action.id === 'stop_all' && runningControllers > 0}
-          <div class="action-info text-xs text-center mt-2 text-base-content/60">
-            {runningControllers} controller{runningControllers > 1 ? 's' : ''} to stop
-          </div>
-        {:else if action.id === 'teardown' && activeSessions > 0}
+        {#if action.id === 'teardown' && activeSessions > 0}
           <div class="action-info text-xs text-center mt-2 text-base-content/60">
             {activeSessions} session{activeSessions > 1 ? 's' : ''} to teardown
           </div>
@@ -215,39 +172,6 @@
     {/each}
   </div>
 
-  <!-- 배치 작업 섹션 -->
-  <div class="batch-operations mt-6 pt-6 border-t border-base-content/10">
-    <h4 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
-      📦 Batch Operations
-    </h4>
-
-    <div class="batch-grid grid grid-cols-1 md:grid-cols-3 gap-3">
-      <!-- 선택된 세션들에 대한 배치 작업 -->
-      <button
-        class="btn btn-sm btn-outline"
-        disabled={$isLoading}
-        on:click={() => handleAction('restart_failed')}
-      >
-        🔄 Restart Failed Controllers
-      </button>
-
-      <button
-        class="btn btn-sm btn-outline"
-        disabled={$isLoading}
-        on:click={() => handleAction('view_all_logs')}
-      >
-        📋 Open All Logs
-      </button>
-
-      <button
-        class="btn btn-sm btn-outline"
-        disabled={$isLoading}
-        on:click={() => handleAction('export_config')}
-      >
-        💾 Export Configuration
-      </button>
-    </div>
-  </div>
 
   <!-- 단축키 도움말 -->
   <div class="keyboard-help mt-4 text-xs text-base-content/50">

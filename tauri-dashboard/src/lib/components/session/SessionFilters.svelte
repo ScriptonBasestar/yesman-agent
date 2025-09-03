@@ -12,13 +12,6 @@
     { value: 'unknown', label: 'Unknown' }
   ];
 
-  const controllerStatusOptions = [
-    { value: '', label: 'All Controllers' },
-    { value: 'running', label: 'Running' },
-    { value: 'stopped', label: 'Stopped' },
-    { value: 'error', label: 'Error' },
-    { value: 'unknown', label: 'Unknown' }
-  ];
 
   const sortOptions = [
     { value: 'name', label: 'Name' },
@@ -38,10 +31,6 @@
     updateFilters({ status: target.value });
   }
 
-  function handleControllerStatusChange(event: Event) {
-    const target = event.target as HTMLSelectElement;
-    updateFilters({ controllerStatus: target.value });
-  }
 
   function handleSortChange(event: Event) {
     const target = event.target as HTMLSelectElement;
@@ -69,7 +58,6 @@
   $: activeFilterCount = [
     $sessionFilters.search,
     $sessionFilters.status,
-    $sessionFilters.controllerStatus,
     $sessionFilters.showOnlyErrors
   ].filter(Boolean).length;
 </script>
@@ -94,7 +82,7 @@
     {/if}
   </div>
 
-  <div class="filters-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+  <div class="filters-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
     <!-- 검색 필터 -->
     <div class="filter-item">
       <label class="label" for="search-input">
@@ -130,22 +118,6 @@
       </select>
     </div>
 
-    <!-- 컨트롤러 상태 필터 -->
-    <div class="filter-item">
-      <label class="label" for="controller-select">
-        <span class="label-text text-xs font-medium">Controller</span>
-      </label>
-      <select
-        id="controller-select"
-        class="select select-sm select-bordered w-full"
-        value={$sessionFilters.controllerStatus}
-        on:change={handleControllerStatusChange}
-      >
-        {#each controllerStatusOptions as option}
-          <option value={option.value}>{option.label}</option>
-        {/each}
-      </select>
-    </div>
 
     <!-- 정렬 기준 -->
     <div class="filter-item">
@@ -216,27 +188,11 @@
       </button>
 
       <button
-        class="btn btn-xs btn-outline"
-        class:btn-active={$sessionFilters.controllerStatus === 'running'}
-        on:click={() => updateFilters({ controllerStatus: $sessionFilters.controllerStatus === 'running' ? '' : 'running' })}
-      >
-        🤖 Running Controllers
-      </button>
-
-      <button
         class="btn btn-xs btn-outline btn-error"
         class:btn-active={$sessionFilters.showOnlyErrors}
         on:click={handleShowOnlyErrorsToggle}
       >
         ❌ With Errors
-      </button>
-
-      <button
-        class="btn btn-xs btn-outline"
-        class:btn-active={$sessionFilters.controllerStatus === 'stopped'}
-        on:click={() => updateFilters({ controllerStatus: $sessionFilters.controllerStatus === 'stopped' ? '' : 'stopped' })}
-      >
-        ⏹️ Stopped Controllers
       </button>
     </div>
   </div>
