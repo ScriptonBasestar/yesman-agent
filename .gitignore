@@ -17,6 +17,7 @@ integration_test_results.json
 safety-report.json
 
 .playwright-mcp/
+tmp/
 
 # =============================================================================
 # TAURI DASHBOARD PROTECTION
