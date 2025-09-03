@@ -127,17 +127,8 @@ class SessionManager:
                 if controller_status == "unknown":
                     controller_status = "not running"
 
-            # Get template name with proper fallback
-            template_name = project_conf.get("template_name")
-            if template_name is None:
-                template_display = "none"
-            else:
-                # Check if template file actually exists
-                template_path = self.config.get_templates_dir() / f"{template_name}.yaml"
-                if template_path.exists():
-                    template_display = template_name
-                else:
-                    template_display = "N/A"  # Template defined but file missing
+            # Template system removed - sessions are direct
+            template_display = "none"
 
             # Analyze progress if session is running
             progress = None

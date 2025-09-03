@@ -1,4 +1,8 @@
-"""Workflow template management with YAML configuration support."""
+"""DEPRECATED: Workflow template management with YAML configuration support.
+
+This module is deprecated as templates have been removed from the new configuration system.
+Please use direct session configurations instead.
+"""
 
 import logging
 from datetime import UTC, datetime

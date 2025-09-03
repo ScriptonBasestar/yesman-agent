@@ -28,8 +28,6 @@ class TmuxManager:
     def __init__(self, config: "YesmanConfig") -> None:
         self.config = config
         self.logger = logging.getLogger("yesman.tmux")
-        # Directory for session templates
-        self.templates_path = config.get_templates_dir()
         self.sessions_path = config.get_sessions_dir()
 
     def create_session(self, session_name: str, config_dict: dict) -> bool:
