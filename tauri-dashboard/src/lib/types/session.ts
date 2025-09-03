@@ -1,8 +1,17 @@
+export interface WorkspaceDefinition {
+	rel_dir: string;
+	allowed_paths: string[];
+	description?: string;
+}
+
+export interface WorkspaceConfig {
+	base_dir: string;
+}
+
 export interface PaneInfo {
 	id: string;
 	command: string;
 	is_claude: boolean;
-	is_controller: boolean;
 	current_task: string | null;
 	idle_time: number;
 	last_activity: string | null; // ISO 8601 date string
@@ -25,25 +34,25 @@ export interface WindowInfo {
 export interface Session {
 	project_name: string;
 	session_name: string; // This will be used as the ID
-	template: string;
 	exists: boolean;
 	status: 'running' | 'stopped';
 	windows: WindowInfo[];
-	controller_status: 'running' | 'not running' | 'unknown';
 	description?: string;
-	controller_error?: string | null;
 	uptime?: string;
 	last_activity_timestamp?: number;
 	total_panes?: number;
+	// Workspace configuration
+	workspace_config?: WorkspaceConfig;
+	workspace_definitions?: Record<string, WorkspaceDefinition>;
+	workspaces?: Record<string, WorkspaceDefinition>; // Alternative flat structure
 }
 
 export interface SessionFilters {
 	search: string;
 	status: string;
-	controllerStatus: string;
 	sortBy: 'session_name' | 'status' | 'uptime' | 'last_activity';
 	sortOrder: 'asc' | 'desc';
-	showOnlyErrors: boolean;
+	hasWorkspaces: boolean; // Filter by sessions with workspace configuration
 }
 
 export interface MetricData {
@@ -56,7 +65,8 @@ export interface MetricData {
 export interface DashboardStats {
 	total_sessions: number;
 	running_sessions: number;
-	active_controllers: number;
+	sessions_with_workspaces: number;
+	total_workspaces: number;
 }
 
 export interface NotificationData {
@@ -67,8 +77,8 @@ export interface NotificationData {
 	timestamp: Date;
 }
 
-export type ControllerStatus = 'Active' | 'Ready' | 'Not Available' | 'Error';
 export type SessionStatus = 'running' | 'stopped' | 'unknown';
+export type WorkspaceType = 'workspace_config' | 'flat_workspaces';
 
 // User Experience Types
 export interface TroubleshootingIssue {

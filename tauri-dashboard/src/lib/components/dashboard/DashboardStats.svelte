@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { sessions, isLoading } from '$lib/stores/sessions';
+  import { sessions, isLoading, hasWorkspaceConfiguration, getSessionWorkspaces } from '$lib/stores/sessions';
   import { onMount } from 'svelte';
   import { health, healthState, isHealthy, isUnhealthy } from '$lib/stores/health';
 
@@ -28,6 +28,11 @@
   $: inactiveSessions = $sessions.filter(s => s.status === 'stopped').length;
   $: unknownSessions = $sessions.filter(s => s.status === 'unknown').length;
 
+  $: sessionsWithWorkspaces = $sessions.filter(s => hasWorkspaceConfiguration(s)).length;
+  $: totalWorkspaces = $sessions.reduce((sum, s) => {
+    const workspaces = getSessionWorkspaces(s);
+    return sum + Object.keys(workspaces).length;
+  }, 0);
 
   $: totalWindows = $sessions.reduce((sum, s) => sum + (s.windows?.length || 0), 0);
   $: totalPanes = $sessions.reduce((sum, s) => sum + (s.total_panes || 0), 0);
@@ -186,33 +191,33 @@
       </div>
     </div>
 
-    <!-- 리소스 사용량 -->
-    <div class="stat-card bg-gradient-to-br from-info/10 to-info/5 border border-info/20 rounded-xl p-6">
+    <!-- 워크스페이스 통계 -->
+    <div class="stat-card bg-gradient-to-br from-secondary/10 to-secondary/5 border border-secondary/20 rounded-xl p-6">
       <div class="stat-header flex items-center justify-between mb-4">
-        <div class="stat-icon text-info">
-          <span class="text-3xl">📊</span>
+        <div class="stat-icon text-secondary">
+          <span class="text-3xl">🗂️</span>
         </div>
-        <div class="stat-trend text-xs text-info">
-          {uptime}
+        <div class="stat-trend text-xs text-secondary">
+          {sessionsWithWorkspaces}/{totalSessions} configured
         </div>
       </div>
 
       <div class="stat-content">
         <div class="stat-title text-lg font-bold text-base-content">
-          {totalWindows}W/{totalPanes}P
+          {totalWorkspaces}
         </div>
         <div class="stat-subtitle text-sm text-base-content/70">
-          Windows/Panes
+          Workspaces Total
         </div>
 
         <div class="stat-breakdown mt-3 space-y-2 text-xs">
           <div class="flex justify-between">
-            <span class="text-base-content/60">Memory:</span>
-            <span class="font-semibold">{performanceMetrics.memoryUsage}%</span>
+            <span class="text-base-content/60">Sessions:</span>
+            <span class="font-semibold">{sessionsWithWorkspaces}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-base-content/60">CPU:</span>
-            <span class="font-semibold">{performanceMetrics.cpuUsage}%</span>
+            <span class="text-base-content/60">Windows/Panes:</span>
+            <span class="font-semibold">{totalWindows}W/{totalPanes}P</span>
           </div>
         </div>
       </div>

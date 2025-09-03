@@ -36,6 +36,12 @@
       description: 'Multi-AI support'
     },
     {
+      path: '/workspaces',
+      icon: '🗂️',
+      label: 'Workspaces',
+      description: 'Development environments'
+    },
+    {
       path: '/logs',
       icon: '📋',
       label: 'Logs',

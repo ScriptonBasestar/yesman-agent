@@ -8,12 +8,11 @@
     isLoading,
     error,
     refreshSessions,
-    startController,
-    stopController,
-    restartController,
     viewSessionLogs,
     createTmuxSession,
-    getAvailableProjects
+    getAvailableProjects,
+    updateSessionWorkspaces,
+    getWorkspaceInfo
   } from '$lib/stores/sessions';
   import { showNotification } from '$lib/stores/notifications';
   import { api } from '$lib/utils/api';
@@ -34,31 +33,37 @@
     }
   });
 
-  // 세션 카드 이벤트 핸들러
-  async function handleStartController(event: CustomEvent) {
+  // 워크스페이스 관리 모달 상태
+  let showWorkspaceModal = false;
+  let selectedSessionForWorkspace = '';
+  let workspaceConfig = {};
+
+  // 워크스페이스 관리 이벤트 핸들러
+  async function handleManageWorkspaces(event: CustomEvent) {
     const { session } = event.detail;
+    selectedSessionForWorkspace = session;
+    
     try {
-      await startController(session);
+      const workspaceInfo = await getWorkspaceInfo(session);
+      workspaceConfig = workspaceInfo || {};
+      showWorkspaceModal = true;
     } catch (error) {
-      console.error('Failed to start controller:', error);
+      console.error('Failed to load workspace info:', error);
+      showNotification('error', 'Load Failed', 'Failed to load workspace configuration');
     }
   }
 
-  async function handleStopController(event: CustomEvent) {
-    const { session } = event.detail;
-    try {
-      await stopController(session);
-    } catch (error) {
-      console.error('Failed to stop controller:', error);
-    }
-  }
+  async function handleSaveWorkspaces() {
+    if (!selectedSessionForWorkspace) return;
 
-  async function handleRestartController(event: CustomEvent) {
-    const { session } = event.detail;
     try {
-      await restartController(session);
+      await updateSessionWorkspaces(selectedSessionForWorkspace, workspaceConfig);
+      showWorkspaceModal = false;
+      selectedSessionForWorkspace = '';
+      workspaceConfig = {};
     } catch (error) {
-      console.error('Failed to restart controller:', error);
+      console.error('Failed to save workspace configuration:', error);
+      showNotification('error', 'Save Failed', 'Failed to save workspace configuration');
     }
   }
 
@@ -162,7 +167,7 @@
           🖥️ Tmux Sessions
         </h1>
         <p class="text-base-content/70 mt-2">
-          Manage your tmux sessions and Claude controllers
+          Manage your tmux sessions and workspace configurations
         </p>
       </div>
 
@@ -248,23 +253,23 @@
           </div>
 
           <div class="stat">
-            <div class="stat-title">Active</div>
+            <div class="stat-title">Running</div>
             <div class="stat-value text-success">
-              {$sessionStats.active}
+              {$sessionStats.running}
             </div>
           </div>
 
           <div class="stat">
-            <div class="stat-title">Running Controllers</div>
+            <div class="stat-title">With Workspaces</div>
             <div class="stat-value text-info">
-              {$sessionStats.runningControllers}
+              {$sessionStats.sessionsWithWorkspaces}
             </div>
           </div>
 
           <div class="stat">
-            <div class="stat-title">Errors</div>
-            <div class="stat-value text-error">
-              {$sessionStats.errorControllers}
+            <div class="stat-title">Total Workspaces</div>
+            <div class="stat-value text-secondary">
+              {$sessionStats.totalWorkspaces}
             </div>
           </div>
         </div>
@@ -275,14 +280,12 @@
         {#each $filteredSessions as session (session.session_name)}
           <SessionCard
             {session}
-            on:startController={handleStartController}
-            on:stopController={handleStopController}
-            on:restartController={handleRestartController}
             on:viewLogs={handleViewLogs}
             on:attachSession={handleAttachSession}
             on:viewDetails={handleViewDetails}
             on:startSession={handleStartSession}
             on:stopSession={handleStopSession}
+            on:manageWorkspaces={handleManageWorkspaces}
           />
         {/each}
       </div>
@@ -328,6 +331,131 @@
           class="btn btn-ghost"
           disabled={isCreatingSession}
           on:click={cancelCreateSession}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- 워크스페이스 관리 모달 -->
+{#if showWorkspaceModal}
+  <div class="modal modal-open">
+    <div class="modal-box max-w-4xl">
+      <h3 class="font-bold text-lg mb-4">Manage Workspaces - {selectedSessionForWorkspace}</h3>
+      
+      <div class="tabs tabs-boxed mb-6">
+        <button class="tab tab-active">Configuration</button>
+        <button class="tab">Preview</button>
+      </div>
+
+      <div class="workspace-editor">
+        <div class="alert alert-info mb-4">
+          <div class="flex items-start gap-2">
+            <span>ℹ️</span>
+            <div>
+              <div class="font-medium">Workspace Configuration</div>
+              <div class="text-sm">
+                Define secure development environments with directory access controls.
+                Use either hierarchical structure (workspace_config + workspace_definitions) or flat structure (workspaces).
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- JSON Editor for workspace configuration -->
+        <div class="form-control mb-6">
+          <label class="label">
+            <span class="label-text font-medium">Workspace Configuration (JSON)</span>
+          </label>
+          <textarea
+            class="textarea textarea-bordered font-mono text-sm h-96"
+            placeholder="Enter workspace configuration..."
+            bind:value={JSON.stringify(workspaceConfig, null, 2)}
+            on:input={(e) => {
+              try {
+                workspaceConfig = JSON.parse(e.target.value);
+              } catch (err) {
+                console.warn('Invalid JSON:', err);
+              }
+            }}
+          ></textarea>
+          <div class="label">
+            <span class="label-text-alt">
+              Example: {"workspace_config": {"base_dir": "~/projects"}, "workspace_definitions": {"frontend": {"rel_dir": "./app", "allowed_paths": ["."], "description": "Frontend workspace"}}}
+            </span>
+          </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="workspace-templates mb-4">
+          <div class="label">
+            <span class="label-text font-medium">Quick Templates</span>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button
+              class="btn btn-sm btn-outline"
+              on:click={() => {
+                workspaceConfig = {
+                  workspace_config: { base_dir: '~/projects/myapp' },
+                  workspace_definitions: {
+                    frontend: {
+                      rel_dir: './frontend',
+                      allowed_paths: ['.', './src', './public'],
+                      description: 'Frontend workspace'
+                    },
+                    backend: {
+                      rel_dir: './backend', 
+                      allowed_paths: ['.', './src', './tests'],
+                      description: 'Backend workspace'
+                    }
+                  }
+                };
+              }}
+            >
+              📁 Hierarchical Template
+            </button>
+            <button
+              class="btn btn-sm btn-outline"
+              on:click={() => {
+                workspaceConfig = {
+                  workspaces: {
+                    main: {
+                      rel_dir: '~/projects/myproject',
+                      allowed_paths: ['.'],
+                      description: 'Main project workspace'
+                    }
+                  }
+                };
+              }}
+            >
+              📋 Flat Template
+            </button>
+            <button
+              class="btn btn-sm btn-outline"
+              on:click={() => { workspaceConfig = {}; }}
+            >
+              🗑️ Clear
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-action">
+        <button
+          class="btn btn-primary"
+          on:click={handleSaveWorkspaces}
+        >
+          💾 Save Configuration
+        </button>
+        <button
+          class="btn btn-ghost"
+          on:click={() => {
+            showWorkspaceModal = false;
+            selectedSessionForWorkspace = '';
+            workspaceConfig = {};
+          }}
         >
           Cancel
         </button>

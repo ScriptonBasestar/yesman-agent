@@ -7,14 +7,13 @@
   // 필터 옵션들
   const statusOptions = [
     { value: '', label: 'All Statuses' },
-    { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' },
+    { value: 'running', label: 'Running' },
+    { value: 'stopped', label: 'Stopped' },
     { value: 'unknown', label: 'Unknown' }
   ];
 
-
   const sortOptions = [
-    { value: 'name', label: 'Name' },
+    { value: 'session_name', label: 'Session Name' },
     { value: 'status', label: 'Status' },
     { value: 'uptime', label: 'Uptime' },
     { value: 'last_activity', label: 'Last Activity' }
@@ -43,9 +42,9 @@
     });
   }
 
-  function handleShowOnlyErrorsToggle() {
+  function handleHasWorkspacesToggle() {
     updateFilters({
-      showOnlyErrors: !$sessionFilters.showOnlyErrors
+      hasWorkspaces: !$sessionFilters.hasWorkspaces
     });
   }
 
@@ -58,7 +57,7 @@
   $: activeFilterCount = [
     $sessionFilters.search,
     $sessionFilters.status,
-    $sessionFilters.showOnlyErrors
+    $sessionFilters.hasWorkspaces
   ].filter(Boolean).length;
 </script>
 
@@ -160,14 +159,14 @@
         <span class="label-text text-xs font-medium">Options</span>
       </div>
       <div class="form-control">
-        <label class="label cursor-pointer" for="errors-only-toggle">
-          <span class="label-text text-xs">Errors only</span>
+        <label class="label cursor-pointer" for="workspaces-only-toggle">
+          <span class="label-text text-xs">With workspaces only</span>
           <input
-            id="errors-only-toggle"
+            id="workspaces-only-toggle"
             type="checkbox"
-            class="toggle toggle-sm toggle-error"
-            checked={$sessionFilters.showOnlyErrors}
-            on:change={handleShowOnlyErrorsToggle}
+            class="toggle toggle-sm toggle-primary"
+            checked={$sessionFilters.hasWorkspaces}
+            on:change={handleHasWorkspacesToggle}
           />
         </label>
       </div>
@@ -181,18 +180,18 @@
 
       <button
         class="btn btn-xs btn-outline"
-        class:btn-active={$sessionFilters.status === 'active'}
-        on:click={() => updateFilters({ status: $sessionFilters.status === 'active' ? '' : 'active' })}
+        class:btn-active={$sessionFilters.status === 'running'}
+        on:click={() => updateFilters({ status: $sessionFilters.status === 'running' ? '' : 'running' })}
       >
-        🟢 Active Sessions
+        🟢 Running Sessions
       </button>
 
       <button
-        class="btn btn-xs btn-outline btn-error"
-        class:btn-active={$sessionFilters.showOnlyErrors}
-        on:click={handleShowOnlyErrorsToggle}
+        class="btn btn-xs btn-outline btn-primary"
+        class:btn-active={$sessionFilters.hasWorkspaces}
+        on:click={handleHasWorkspacesToggle}
       >
-        ❌ With Errors
+        🗂️ With Workspaces
       </button>
     </div>
   </div>

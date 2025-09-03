@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import type { Session } from '$lib/types/session';
+  import { getSessionWorkspaces, hasWorkspaceConfiguration } from '$lib/stores/sessions';
 
   export let session: Session;
 
@@ -25,7 +26,6 @@
     }
   };
 
-
   // 세션 상태 계산
   $: sessionStyle = statusStyles[session.status as keyof typeof statusStyles] || statusStyles.unknown;
 
@@ -36,6 +36,11 @@
   $: hasClaudeRunning = session.windows && session.windows.some(w =>
     w.panes && w.panes.some(p => p.is_claude || p.command === 'claude')
   );
+
+  // 워크스페이스 정보 계산
+  $: workspaces = getSessionWorkspaces(session);
+  $: workspaceNames = Object.keys(workspaces);
+  $: hasWorkspaces = hasWorkspaceConfiguration(session);
 
   // 시간 포맷팅
   function formatUptime(uptime: string | null): string {
@@ -81,6 +86,10 @@
 
   function handleStopSession() {
     dispatch('stopSession', { session: session.session_name });
+  }
+
+  function handleManageWorkspaces() {
+    dispatch('manageWorkspaces', { session: session.session_name });
   }
 </script>
 
@@ -139,8 +148,8 @@
       </div>
 
       <div class="stat-item bg-base-200 p-3 rounded-lg">
-        <div class="stat-title text-xs text-base-content/60">Uptime</div>
-        <div class="stat-value text-sm font-mono">{formatUptime(session.uptime)}</div>
+        <div class="stat-title text-xs text-base-content/60">Workspaces</div>
+        <div class="stat-value text-lg font-bold">{workspaceNames.length}</div>
       </div>
 
       <div class="stat-item bg-base-200 p-3 rounded-lg">
@@ -148,6 +157,61 @@
         <div class="stat-value text-sm">{formatLastActivity(session.last_activity_timestamp)}</div>
       </div>
     </div>
+
+    <!-- 워크스페이스 정보 -->
+    {#if hasWorkspaces}
+      <div class="workspace-info bg-primary/10 border border-primary/20 p-3 rounded-lg mb-4">
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <span class="text-primary">🗂️</span>
+            <div>
+              <div class="text-sm font-medium text-primary">
+                Workspace Configuration Active
+              </div>
+              <div class="text-xs text-base-content/60">
+                {workspaceNames.length} workspace{workspaceNames.length !== 1 ? 's' : ''} configured
+                {#if workspaceNames.length > 0}
+                  : {workspaceNames.join(', ')}
+                {/if}
+              </div>
+              {#if session.workspace_config?.base_dir}
+                <div class="text-xs text-base-content/50 font-mono">
+                  Base: {session.workspace_config.base_dir}
+                </div>
+              {/if}
+            </div>
+          </div>
+          <button
+            class="btn btn-primary btn-sm"
+            on:click={handleManageWorkspaces}
+            title="Manage workspaces"
+          >
+            ⚙️ Manage
+          </button>
+        </div>
+      </div>
+    {:else}
+      <div class="workspace-info bg-warning/10 border border-warning/20 p-3 rounded-lg mb-4">
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <span class="text-warning">⚠️</span>
+            <div>
+              <div class="text-sm font-medium text-warning">No Workspace Configuration</div>
+              <div class="text-xs text-base-content/60">
+                Configure workspaces to define secure development environments
+              </div>
+            </div>
+          </div>
+          <button
+            class="btn btn-outline btn-warning btn-sm"
+            on:click={handleManageWorkspaces}
+            title="Configure workspaces"
+          >
+            🗂️ Configure
+          </button>
+        </div>
+      </div>
+    {/if}
 
     <!-- 세션 액션 -->
     <div class="session-actions">
@@ -208,7 +272,7 @@
     {#if session.windows && session.windows.length > 0}
       <div class="windows-section mt-4">
         <div class="collapse collapse-arrow bg-base-200">
-          <input type="checkbox" checked />
+          <input type="checkbox" />
           <div class="collapse-title text-sm font-medium">
             📋 Windows ({session.windows.length})
           </div>
@@ -263,6 +327,60 @@
                               </div>
                             </div>
                           {/each}
+                        </div>
+                      {/if}
+                    </div>
+                  </div>
+                </div>
+              {/each}
+            </div>
+          </div>
+        </div>
+      </div>
+    {/if}
+
+    <!-- 워크스페이스 상세 (접기/펼치기) -->
+    {#if hasWorkspaces && workspaceNames.length > 0}
+      <div class="workspaces-section mt-4">
+        <div class="collapse collapse-arrow bg-primary/5">
+          <input type="checkbox" />
+          <div class="collapse-title text-sm font-medium text-primary">
+            🗂️ Workspaces ({workspaceNames.length})
+          </div>
+          <div class="collapse-content">
+            <div class="space-y-2">
+              {#each workspaceNames as workspaceName}
+                {@const workspace = workspaces[workspaceName]}
+                <div class="workspace-item bg-base-100 p-3 rounded border border-primary/20">
+                  <div class="flex items-start gap-2">
+                    <span class="text-base text-primary mt-0.5">📁</span>
+                    <div class="flex-1">
+                      <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-primary">{workspaceName}</span>
+                        <span class="badge badge-primary badge-xs">
+                          {workspace.allowed_paths?.length || 0} paths
+                        </span>
+                      </div>
+                      
+                      {#if workspace.description}
+                        <div class="text-xs text-base-content/70 mb-2">
+                          {workspace.description}
+                        </div>
+                      {/if}
+
+                      <div class="text-xs font-mono text-base-content/60 mb-2">
+                        <span class="text-base-content/50">📂 Directory:</span>
+                        <span class="bg-base-200 px-1 rounded">{workspace.rel_dir}</span>
+                      </div>
+
+                      {#if workspace.allowed_paths && workspace.allowed_paths.length > 0}
+                        <div class="allowed-paths">
+                          <div class="text-xs text-base-content/50 mb-1">Allowed paths:</div>
+                          <div class="flex flex-wrap gap-1">
+                            {#each workspace.allowed_paths as path}
+                              <span class="badge badge-outline badge-xs font-mono">{path}</span>
+                            {/each}
+                          </div>
                         </div>
                       {/if}
                     </div>

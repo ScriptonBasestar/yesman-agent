@@ -17,10 +17,9 @@ export const error = writable<string | null>(null);
 export const sessionFilters = writable<SessionFilters>({
   search: '',
   status: '',
-  controllerStatus: '',
-  sortBy: 'session_name', // Fix: 'name' -> 'session_name'
+  sortBy: 'session_name',
   sortOrder: 'asc',
-  showOnlyErrors: false
+  hasWorkspaces: false
 });
 
 // 자동 새로고침 설정
@@ -51,15 +50,10 @@ export const filteredSessions = derived(
       filtered = filtered.filter(session => session.status === $filters.status);
     }
 
-    // 컨트롤러 상태 필터
-    if ($filters.controllerStatus) {
-      filtered = filtered.filter(session => session.controller_status === $filters.controllerStatus);
-    }
-
-    // 에러만 표시
-    if ($filters.showOnlyErrors) {
+    // 워크스페이스 필터
+    if ($filters.hasWorkspaces) {
       filtered = filtered.filter(session =>
-        !!session.controller_error // Fix: check controller_error existence
+        !!(session.workspace_config || session.workspace_definitions || session.workspaces)
       );
     }
 
@@ -103,16 +97,31 @@ export const filteredSessions = derived(
 );
 
 // 세션 통계 (파생 스토어)
-export const sessionStats = derived(sessions, ($sessions) => ({
-  total: $sessions.length,
-  active: $sessions.filter(s => s.status === 'running').length, // Fix: 'active' -> 'running'
-  inactive: $sessions.filter(s => s.status === 'stopped').length, // Fix: 'inactive' -> 'stopped'
-  runningControllers: $sessions.filter(s => s.controller_status === 'running').length,
-  stoppedControllers: $sessions.filter(s => s.controller_status === 'not running').length, // Fix: 'stopped' -> 'not running'
-  errorControllers: $sessions.filter(s => !!s.controller_error).length, // Fix: check controller_error existence
-  totalWindows: $sessions.reduce((sum, s) => sum + (s.windows?.length || 0), 0),
-  totalPanes: $sessions.reduce((sum, s) => sum + (s.total_panes || 0), 0)
-}));
+export const sessionStats = derived(sessions, ($sessions) => {
+  const sessionsWithWorkspaces = $sessions.filter(s => 
+    !!(s.workspace_config || s.workspace_definitions || s.workspaces)
+  ).length;
+  
+  const totalWorkspaces = $sessions.reduce((sum, s) => {
+    if (s.workspace_definitions) {
+      return sum + Object.keys(s.workspace_definitions).length;
+    }
+    if (s.workspaces) {
+      return sum + Object.keys(s.workspaces).length;
+    }
+    return sum;
+  }, 0);
+
+  return {
+    total: $sessions.length,
+    running: $sessions.filter(s => s.status === 'running').length,
+    stopped: $sessions.filter(s => s.status === 'stopped').length,
+    sessionsWithWorkspaces,
+    totalWorkspaces,
+    totalWindows: $sessions.reduce((sum, s) => sum + (s.windows?.length || 0), 0),
+    totalPanes: $sessions.reduce((sum, s) => sum + (s.total_panes || 0), 0)
+  };
+});
 
 // 자동 새로고침 인터벌 ID
 let refreshIntervalId: number | null = null;
@@ -149,16 +158,17 @@ export async function refreshSessions(isInitial: boolean = false): Promise<void>
 			return {
 				project_name: typeof raw.project_name === 'string' && raw.project_name ? raw.project_name : String(raw.session_name || ''),
 				session_name: String(raw.session_name || ''),
-				template: typeof raw.template === 'string' ? raw.template : '',
 				exists: normalizedStatus === 'running',
 				status: normalizedStatus,
 				windows: rawWindows,
-				controller_status: 'unknown',
-				description: typeof raw.template === 'string' && raw.template ? raw.template : undefined,
-				controller_error: null,
+				description: raw.description || undefined,
 				uptime: undefined,
 				last_activity_timestamp: undefined,
 				total_panes: totalPanes,
+				// Workspace configuration from API response
+				workspace_config: raw.workspace_config || undefined,
+				workspace_definitions: raw.workspace_definitions || undefined,
+				workspaces: raw.workspaces || undefined,
 			};
 		});
  
@@ -172,16 +182,17 @@ export async function refreshSessions(isInitial: boolean = false): Promise<void>
 			.map((name) => ({
 				project_name: name,
 				session_name: name,
-				template: '',
 				exists: false,
-				status: 'stopped',
+				status: 'stopped' as const,
 				windows: [],
-				controller_status: 'unknown',
 				description: undefined,
-				controller_error: null,
 				uptime: undefined,
 				last_activity_timestamp: undefined,
 				total_panes: 0,
+				// No workspace configuration for placeholders
+				workspace_config: undefined,
+				workspace_definitions: undefined,
+				workspaces: undefined,
 			}));
  
 		const merged = [...processedFromApi, ...placeholders];
@@ -198,8 +209,10 @@ export async function refreshSessions(isInitial: boolean = false): Promise<void>
           !next ||
           current.session_name !== next.session_name ||
           current.status !== next.status ||
-          current.controller_status !== next.controller_status ||
-          (current.windows?.length || 0) !== (next.windows?.length || 0)
+          (current.windows?.length || 0) !== (next.windows?.length || 0) ||
+          JSON.stringify(current.workspace_config) !== JSON.stringify(next.workspace_config) ||
+          JSON.stringify(current.workspace_definitions) !== JSON.stringify(next.workspace_definitions) ||
+          JSON.stringify(current.workspaces) !== JSON.stringify(next.workspaces)
         );
       });
 
@@ -307,54 +320,36 @@ export function clearSessionSelection(): void {
 }
 
 /**
- * 컨트롤러 액션들
+ * 워크스페이스 유틸리티 함수들
  */
-export async function startController(sessionName: string): Promise<void> {
-  try {
-    // 3. API 함수 변경 및 파라미터 유지 (session_name이 ID로 사용됨)
-    await pythonBridge.start_claude(sessionName);
-    // Fix: Correct argument order
-    showNotification('success', 'Controller Started', `Controller started for ${sessionName}`);
-
-    updateSessionControllerStatus(sessionName, 'running');
-    setTimeout(refreshSessions, 1000); // 상태 반영을 위해 새로고침
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    // Fix: Correct argument order
-    showNotification('error', 'Error', `Failed to start controller: ${errorMessage}`);
-    throw err;
+export function getSessionWorkspaces(session: Session): Record<string, any> {
+  if (session.workspaces) {
+    return session.workspaces;
   }
+  if (session.workspace_definitions) {
+    return session.workspace_definitions;
+  }
+  return {};
 }
 
-export async function stopController(sessionName: string): Promise<void> {
-  try {
-    // 4. API 함수 변경
-    await pythonBridge.stop_claude(sessionName);
-    // Fix: Correct argument order
-    showNotification('success', 'Controller Stopped', `Controller stopped for ${sessionName}`);
-    // Fix: Use a valid status type
-    updateSessionControllerStatus(sessionName, 'not running');
-    setTimeout(refreshSessions, 1000);
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    // Fix: Correct argument order
-    showNotification('error', 'Error', `Failed to stop controller: ${errorMessage}`);
-    throw err;
+export function getWorkspaceAbsolutePath(session: Session, workspaceName: string): string | null {
+  const workspaces = getSessionWorkspaces(session);
+  if (!workspaces[workspaceName]) return null;
+  
+  const workspace = workspaces[workspaceName];
+  const relDir = workspace.rel_dir;
+  
+  // If using workspace_config with base_dir
+  if (session.workspace_config?.base_dir && !relDir.startsWith('/')) {
+    return `${session.workspace_config.base_dir}/${relDir}`.replace(/\/+/g, '/');
   }
+  
+  // Otherwise return as-is (absolute path or flat workspace)
+  return relDir;
 }
 
-export async function restartController(sessionName: string): Promise<void> {
-  try {
-    showNotification('info', 'Restarting', `Restarting controller for ${sessionName}...`);
-    // Use the dedicated restart endpoint
-    await pythonBridge.restart_claude(sessionName);
-    showNotification('success', 'Controller Restarted', `Controller for ${sessionName} has been restarted.`);
-    setTimeout(refreshSessions, 1000);
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    showNotification('error', 'Restart Failed', `Failed to restart controller: ${errorMessage}`);
-    throw err;
-  }
+export function hasWorkspaceConfiguration(session: Session): boolean {
+  return !!(session.workspace_config || session.workspace_definitions || session.workspaces);
 }
 
 /**
@@ -457,97 +452,48 @@ export async function teardownAllSessions(): Promise<void> {
   }
 }
 
-// 8. start/stopAllControllers 구현 - 새로운 bulk API 사용
-export async function startAllControllers(): Promise<void> {
+/**
+ * 워크스페이스 설정 업데이트
+ */
+export async function updateSessionWorkspaces(sessionName: string, workspaceConfig: any): Promise<void> {
   try {
-    showNotification('info', 'Starting All', 'Starting all controllers...');
-
-    const response = await fetch('/api/controllers/start-all', {
-      method: 'POST',
+    showNotification('info', 'Updating Workspaces', `Updating workspace configuration for ${sessionName}...`);
+    
+    const response = await fetch(`/api/sessions/${sessionName}/workspaces`, {
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-      }
+      },
+      body: JSON.stringify(workspaceConfig)
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Failed to start controllers: ${errorText}`);
+      throw new Error(`Failed to update workspaces: ${errorText}`);
     }
 
-    const result = await response.json();
-
-    if (result.errors && result.errors.length > 0) {
-      showNotification('warning', 'Partial Success',
-        `Started ${result.started}/${result.total_sessions} controllers. Errors: ${result.errors.join('; ')}`);
-    } else {
-      showNotification('success', 'Success', result.message);
-    }
-
+    showNotification('success', 'Workspaces Updated', `Workspace configuration updated for ${sessionName}`);
     setTimeout(refreshSessions, 1000);
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    showNotification('error', 'Error', `Failed to start all controllers: ${errorMessage}`);
-    throw err;
-  }
-}
-
-export async function stopAllControllers(): Promise<void> {
-  try {
-    showNotification('info', 'Stopping All', 'Stopping all controllers...');
-
-    const response = await fetch('/api/controllers/stop-all', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to stop controllers: ${errorText}`);
-    }
-
-    const result = await response.json();
-
-    if (result.errors && result.errors.length > 0) {
-      showNotification('warning', 'Partial Success',
-        `Stopped ${result.stopped}/${result.total_sessions} controllers. Errors: ${result.errors.join('; ')}`);
-    } else {
-      showNotification('success', 'Success', result.message);
-    }
-
-    setTimeout(refreshSessions, 1000);
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    showNotification('error', 'Error', `Failed to stop all controllers: ${errorMessage}`);
+    showNotification('error', 'Update Failed', `Failed to update workspaces: ${errorMessage}`);
     throw err;
   }
 }
 
 /**
- * 내부적으로 세션의 컨트롤러 상태를 업데이트합니다.
- * @param sessionName - 세션 이름
- * @param status - 새로운 컨트롤러 상태
+ * 워크스페이스 정보 가져오기
  */
-function updateSessionControllerStatus(sessionName: string, status: 'running' | 'not running' | 'unknown'): void {
-  sessions.update(current =>
-    current.map(s =>
-      s.session_name === sessionName
-        ? { ...s, controller_status: status }
-        : s
-    )
-  );
-}
-
-/**
- * 컨트롤러 상태 업데이트 (외부 사용용)
- */
-export function updateControllerStatus(sessionName: string, status?: string): void {
-  if (status) {
-    updateSessionControllerStatus(sessionName, status as 'running' | 'not running' | 'unknown');
-  } else {
-    // status가 없으면 해당 세션의 상태를 새로고침
-    refreshSessions();
+export async function getWorkspaceInfo(sessionName: string): Promise<any> {
+  try {
+    const response = await fetch(`/api/sessions/${sessionName}/workspaces`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch workspace info');
+    }
+    return await response.json();
+  } catch (err) {
+    console.error(`Failed to get workspace info for ${sessionName}:`, err);
+    return null;
   }
 }
 
