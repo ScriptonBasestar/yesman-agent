@@ -67,7 +67,6 @@ windows:
     layout: tiled
     panes:
       - shell_command: ["cd ~/projects/my-website", "git status"]
-      - shell_command: ["cd ~/projects/my-website", "claude"]
       - shell_command: ["htop"]
       - shell_command: ["cd ~/projects/my-website", "npm run lint"]
 ```
@@ -177,12 +176,6 @@ windows:
       - shell_command:
           - "cd {{ project_path }}"
           - "code ."
-
-  - window_name: claude
-    panes:
-      - shell_command:
-          - "cd {{ project_path }}"
-          - "claude"
 ```
 
 ### 데이터 사이언스 환경
@@ -220,13 +213,6 @@ windows:
     panes:
       - shell_command: ["htop"]
       - shell_command: ["nvidia-smi -l 1"]
-
-  - window_name: claude
-    panes:
-      - shell_command:
-          - "cd {{ project_path }}"
-          - "conda activate {{ env_name | default('base') }}"
-          - "claude"
 ```
 
 ## 🚀 고급 설정
@@ -281,12 +267,6 @@ windows:
     panes:
       - shell_command: ["curl -s http://localhost:8080/health"]
       - shell_command: ["tail -f ~/logs/microservices.log"]
-
-  - window_name: claude
-    panes:
-      - shell_command:
-          - "cd ~/projects/microservices"
-          - "claude"
 ```
 
 ### 환경별 설정 관리
@@ -359,9 +339,6 @@ defaults:
   auto_response: true
   session_timeout: 600  # 10분
   
-  # 팀 규칙
-  claude_trust_level: "medium"
-  auto_start_claude: false  # 수동 시작 선호
 
 # 팀 공통 응답 패턴
 response_patterns:
@@ -480,12 +457,6 @@ windows:
       - shell_command: ["tail -f ~/logs/django.log"]
       - shell_command: ["watch 'docker ps'"]
       - shell_command: ["curl -s http://localhost:8000/health"]
-
-  - window_name: claude
-    panes:
-      - shell_command:
-          - "cd {{ project_path }}/backend"
-          - "claude"
 ```
 
 ## 🔍 문제 해결 시나리오

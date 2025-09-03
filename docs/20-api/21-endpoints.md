@@ -707,8 +707,7 @@ session_data = {
     "name": "my-new-project",
     "template": "django",
     "config": {
-        "start_directory": "/home/user/my-new-project",
-        "auto_start_claude": True
+        "start_directory": "/home/user/my-new-project"
     }
 }
 
