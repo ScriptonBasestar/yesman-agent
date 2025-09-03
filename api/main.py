@@ -15,7 +15,7 @@ from libs.core.error_handling import YesmanError
 
 from .background_tasks import task_runner
 from .middleware.error_handler import add_request_id_middleware, global_error_handler
-from .routers import agents, ai_providers, config, controllers, dashboard, logs, sessions, websocket_router, workflows
+from .routers import agents, ai_providers, config, dashboard, logs, sessions, websocket_router, workflows
 from .routers.websocket_router import ConnectionManager
 
 # Copyright (c) 2024 Yesman Claude Project
@@ -96,7 +96,6 @@ app.add_middleware(
 
 # Include API routers
 app.include_router(sessions.router, prefix="/api", tags=["sessions"])
-app.include_router(controllers.router, prefix="/api", tags=["controllers"])
 app.include_router(config.router, prefix="/api", tags=["configuration"])
 app.include_router(logs.router, prefix="/api", tags=["logs"])
 app.include_router(agents.router, prefix="/api", tags=["agents"])
@@ -168,7 +167,6 @@ async def api_info() -> dict[str, str | dict[str, str] | None]:
         "version": "0.1.0",
         "endpoints": {
             "sessions": "/api/sessions",
-            "controllers": "/api/controllers",
             "config": "/api/config",
             "logs": "/api/logs",
             "agents": "/api/agents",

@@ -172,99 +172,31 @@ except Exception as e:
 
 #[command]
 pub async fn get_controller_status(session_name: String) -> Result<String, String> {
-    let script = format!(r#"
-import sys
-sys.path.append('.')
-sys.path.append('..')
-
-try:
-    from libs.core.claude_manager import ClaudeManager
-    cm = ClaudeManager()
-    controller = cm.get_controller('{}')
-    if controller:
-        if controller.is_running:
-            print('Active')
-        else:
-            print('Ready')
-    else:
-        print('Not Available')
-except Exception as e:
-    print('Error')
-"#, session_name);
-
-    execute_python_script(&script)
+    // Controller functionality is deprecated
+    // Return a consistent deprecated status
+    let _ = session_name; // Suppress unused parameter warning
+    Ok("Deprecated".to_string())
 }
 
 #[command]
 pub async fn start_controller(session_name: String) -> Result<bool, String> {
-    let script = format!(r#"
-import sys
-sys.path.append('.')
-sys.path.append('..')
-
-try:
-    from libs.core.claude_manager import ClaudeManager
-    cm = ClaudeManager()
-    controller = cm.get_controller('{}')
-    if controller:
-        result = controller.start()
-        print(result)
-    else:
-        print(False)
-except Exception as e:
-    print(False)
-"#, session_name);
-
-    let result = execute_python_script(&script)?;
-    Ok(result.trim() == "True")
+    // Controller functionality is deprecated
+    let _ = session_name; // Suppress unused parameter warning
+    Err("Controller functionality is deprecated and no longer supported".to_string())
 }
 
 #[command]
 pub async fn stop_controller(session_name: String) -> Result<bool, String> {
-    let script = format!(r#"
-import sys
-sys.path.append('.')
-sys.path.append('..')
-
-try:
-    from libs.core.claude_manager import ClaudeManager
-    cm = ClaudeManager()
-    controller = cm.get_controller('{}')
-    if controller:
-        result = controller.stop()
-        print(result)
-    else:
-        print(False)
-except Exception as e:
-    print(False)
-"#, session_name);
-
-    let result = execute_python_script(&script)?;
-    Ok(result.trim() == "True")
+    // Controller functionality is deprecated
+    let _ = session_name; // Suppress unused parameter warning
+    Err("Controller functionality is deprecated and no longer supported".to_string())
 }
 
 #[command]
 pub async fn restart_claude_pane(session_name: String) -> Result<bool, String> {
-    let script = format!(r#"
-import sys
-sys.path.append('.')
-sys.path.append('..')
-
-try:
-    from libs.core.claude_manager import ClaudeManager
-    cm = ClaudeManager()
-    controller = cm.get_controller('{}')
-    if controller:
-        result = controller.restart_claude_pane()
-        print(result)
-    else:
-        print(False)
-except Exception as e:
-    print(False)
-"#, session_name);
-
-    let result = execute_python_script(&script)?;
-    Ok(result.trim() == "True")
+    // Controller functionality is deprecated
+    let _ = session_name; // Suppress unused parameter warning
+    Err("Controller functionality is deprecated and no longer supported".to_string())
 }
 
 #[command]

@@ -63,14 +63,9 @@ async def get_sessions() -> list[dict[str, Any]]:
         # Convert SessionInfo objects to web-friendly format
         web_sessions = []
         for session in sessions:
-            # Get accurate controller status using ClaudeManager
-            # (same as individual controller status API)
-            try:
-                controller = claude_manager.get_controller(session.session_name)
-                actual_controller_status = "running" if controller.is_running else "stopped"
-            except Exception:
-                # Fallback to original status if controller lookup fails
-                actual_controller_status = session.controller_status
+            # Controller functionality is no longer supported
+            # Set all controller status to "not supported"
+            actual_controller_status = "not supported"
 
             web_sessions.append(
                 {

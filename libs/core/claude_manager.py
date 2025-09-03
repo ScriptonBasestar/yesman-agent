@@ -2,7 +2,6 @@ import logging
 from collections.abc import Callable
 
 from .claude_monitor import ClaudeMonitor
-from .claude_process_controller import ClaudeProcessController
 from .claude_session_manager import ClaudeSessionManager
 from .claude_status_manager import ClaudeStatusManager
 from .prompt_detector import PromptInfo
@@ -26,13 +25,9 @@ class DashboardController:
         # Initialize component managers
         self.session_manager = ClaudeSessionManager(session_name, pane_id)
         self.status_manager = ClaudeStatusManager(session_name)
-        self.process_controller = ClaudeProcessController(
-            self.session_manager,
-            self.status_manager,
-        )
         self.monitor = ClaudeMonitor(
             self.session_manager,
-            self.process_controller,
+            None,  # process_controller no longer needed
             self.status_manager,
         )
 
@@ -78,7 +73,7 @@ class DashboardController:
         Returns:
         str: Description of return value.
         """
-        return self.process_controller.selected_model
+        return "default"  # No longer using process controller
 
     def set_status_callback(self, callback: Callable) -> None:
         """Set callback for status updates."""
@@ -117,16 +112,17 @@ class DashboardController:
         return self.monitor.stop_monitoring()
 
     def restart_claude_pane(self) -> bool:
-        """Restart Claude pane.
+        """Restart Claude pane - No longer supported.
 
         Returns:
-        bool: Description of return value.
+        bool: Always returns False as this functionality is deprecated.
         """
-        return self.process_controller.restart_claude_pane()
+        self.logger.warning("restart_claude_pane is no longer supported")
+        return False
 
     def set_model(self, model: str) -> None:
-        """Set the selected model."""
-        self.process_controller.set_model(model)
+        """Set the selected model - No longer supported."""
+        self.logger.warning(f"set_model({model}) is no longer supported")
 
     def set_auto_next(self, enabled: bool) -> None:
         """Enable or disable auto-next responses."""
@@ -157,8 +153,8 @@ class DashboardController:
         return content
 
     def send_input(self, text: str) -> None:
-        """Send input to Claude pane."""
-        self.process_controller.send_input(text)
+        """Send input to Claude pane - No longer supported."""
+        self.logger.warning(f"send_input({text}) is no longer supported")
 
     def is_waiting_for_input(self) -> bool:
         """Check if Claude is currently waiting for user input.

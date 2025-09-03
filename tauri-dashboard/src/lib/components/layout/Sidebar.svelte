@@ -25,9 +25,9 @@
     },
     {
       path: '/controllers',
-      icon: '🤖',
+      icon: '⚠️',
       label: 'Controllers',
-      description: 'Claude managers'
+      description: 'Deprecated (removed)'
     },
     {
       path: '/agents',
@@ -68,18 +68,6 @@
       icon: '⚡',
       label: 'Setup All Sessions',
       variant: 'btn-primary'
-    },
-    {
-      action: 'start_all',
-      icon: '▶️',
-      label: 'Start All Controllers',
-      variant: 'btn-success'
-    },
-    {
-      action: 'stop_all',
-      icon: '⏹️',
-      label: 'Stop All Controllers',
-      variant: 'btn-error'
     },
     {
       action: 'teardown',

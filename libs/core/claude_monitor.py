@@ -26,7 +26,7 @@ class ClaudeMonitor:
     def __init__(
         self,
         session_manager: object,
-        process_controller: object,
+        process_controller: object | None,
         status_manager: object,
     ) -> None:
         self.session_manager = session_manager
@@ -175,14 +175,8 @@ class ClaudeMonitor:
                 try:
                     content = cast("str", cast("Any", self.session_manager).capture_pane_content())
 
-                    # Check if Claude is still running
-                    if not cast("Any", self.process_controller).is_claude_running():
-                        if self.is_auto_next_enabled:
-                            cast("Any", self.status_manager).update_activity("🔄 Auto-restarting Claude...")
-                            cast("Any", self.process_controller).restart_claude_pane()
-                            continue
-                        cast("Any", self.status_manager).update_status("[yellow]Claude not running. Auto-restart disabled.[/]")
-                        continue
+                    # Skip Claude process monitoring as it's no longer supported
+                    # Note: Interactive shell is deprecated, so no process control needed
 
                     # Check for prompts and auto-respond if enabled
                     prompt_info = self._check_for_prompt(content)
@@ -212,7 +206,10 @@ class ClaudeMonitor:
                                 )
 
                                 if success:
-                                    cast("Any", self.process_controller).send_input(ai_response)
+                                    if self.process_controller:
+                                        cast("Any", self.process_controller).send_input(ai_response)
+                                    else:
+                                        self.logger.warning(f"Cannot send input '{ai_response}' - process controller unavailable")
                                     cast("Any", self.status_manager).update_activity(f"🤖 AI auto-responded: '{ai_response}' (confidence: {confidence:.2f})")
                                     cast("Any", self.status_manager).record_response(prompt_info.type.value, ai_response, content)
                                     self.adaptive_response.confirm_response_success(
@@ -371,7 +368,10 @@ class ClaudeMonitor:
             # Use pattern-based response or fallback
             response = getattr(prompt_info, "recommended_response", None) or "1"
 
-        cast("Any", self.process_controller).send_input(response)
+        if self.process_controller:
+            cast("Any", self.process_controller).send_input(response)
+        else:
+            self.logger.warning(f"Cannot send input '{response}' - process controller unavailable")
         cast("Any", self.status_manager).record_response(prompt_info.type.value, response, prompt_info.question)
         self.logger.info("Auto-responding to numbered selection with: %s", response)
         return True
@@ -385,7 +385,10 @@ class ClaudeMonitor:
             # Use pattern-based response or fallback
             response = getattr(prompt_info, "recommended_response", None) or "y"
 
-        cast("Any", self.process_controller).send_input(response)
+        if self.process_controller:
+            cast("Any", self.process_controller).send_input(response)
+        else:
+            self.logger.warning(f"Cannot send input '{response}' - process controller unavailable")
         cast("Any", self.status_manager).record_response(prompt_info.type.value, response, prompt_info.question)
         self.logger.info("Auto-responding to binary choice with: %s", response)
         return True
@@ -399,7 +402,10 @@ class ClaudeMonitor:
             # Use pattern-based response or fallback
             response = getattr(prompt_info, "recommended_response", None) or "1"
 
-        cast("Any", self.process_controller).send_input(response)
+        if self.process_controller:
+            cast("Any", self.process_controller).send_input(response)
+        else:
+            self.logger.warning(f"Cannot send input '{response}' - process controller unavailable")
         cast("Any", self.status_manager).record_response(prompt_info.type.value, response, prompt_info.question)
         self.logger.info("Auto-responding to binary selection with: %s", response)
         return True
@@ -410,7 +416,10 @@ class ClaudeMonitor:
 
         if "continue" in question or "press enter" in question:
             response = ""  # Just press Enter
-            cast("Any", self.process_controller).send_input(response)
+            if self.process_controller:
+                cast("Any", self.process_controller).send_input(response)
+            else:
+                self.logger.warning(f"Cannot send input '{response}' - process controller unavailable")
             cast("Any", self.status_manager).record_response(prompt_info.type.value, "Enter", prompt_info.question)
             self.logger.info("Auto-responding to login redirect with Enter")
             return True
