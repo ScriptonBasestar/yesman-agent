@@ -15,8 +15,6 @@ class WorkspaceDefinition(BaseModel):
     
     path: str  # Relative or absolute path
     allowed_paths: list[str] = Field(default_factory=lambda: ["."])
-    security_policy: str = "default"
-    max_size_mb: int = Field(default=100, ge=10, le=1000)
     description: str | None = None
 
     @field_validator("path", "allowed_paths", mode="after")
@@ -34,24 +32,19 @@ class WorkspaceConfig(BaseModel):
     """Workspace configuration with base directory support."""
     
     # Base directory for relative paths
-    base_directory: str = "~/projects"
+    base_dir: str = "~/projects"
     
     # Individual workspace definitions
     definitions: dict[str, WorkspaceDefinition] = Field(default_factory=dict)
     
-    # Global workspace settings
-    security_policy: str = "default"
-    cleanup_policy: str = Field(default="on_session_end", pattern="^(on_session_end|manual|daily)$")
-    auto_cleanup_days: int = Field(default=7, ge=1, le=30)
-    
-    @field_validator("base_directory", mode="after")
+    @field_validator("base_dir", mode="after")
     @classmethod
-    def expand_base_directory(cls, v: str) -> str:
+    def expand_base_dir(cls, v: str) -> str:
         """Expand user home directory in base directory path."""
         return str(Path(v).expanduser())
     
     def get_absolute_path(self, workspace_name: str) -> Path | None:
-        """Get absolute path for a workspace, resolving relative paths from base_directory."""
+        """Get absolute path for a workspace, resolving relative paths from base_dir."""
         if workspace_name not in self.definitions:
             return None
         
@@ -62,8 +55,8 @@ class WorkspaceConfig(BaseModel):
         if workspace_path.is_absolute():
             return workspace_path
         
-        # Otherwise, resolve relative to base_directory
-        base_path = Path(self.base_directory)
+        # Otherwise, resolve relative to base_dir
+        base_path = Path(self.base_dir)
         return base_path / workspace_path
 
 
@@ -103,9 +96,7 @@ class YesmanConfigSchema(BaseModel):
     session_name: str | None = None
     description: str | None = None
 
-    # Core settings
-    mode: str = Field(default="local", pattern="^(merge|isolated|local)$")
-    root_dir: str = "~/.scripton/yesman"
+    # No core settings needed - simplified configuration
 
     # Workspace configuration
     workspace_config: WorkspaceConfig | None = None
@@ -130,11 +121,6 @@ class YesmanConfigSchema(BaseModel):
     # Custom settings (allows complete flexibility)
     custom: dict[str, Any] = Field(default_factory=dict)
 
-    @field_validator("root_dir")
-    @classmethod
-    def expand_path(cls, v: str) -> str:
-        """Expand user home directory in paths."""
-        return str(Path(v).expanduser())
 
     def model_post_init(self, __context: object) -> None:
         """Post-initialization validation and setup."""

@@ -56,7 +56,7 @@ def register_claude_services() -> None:
 
             workspace_manager = DefaultWorkspaceManager(
                 base_path=Path(claude_config.headless.workspace_root),
-                allowed_paths=[Path(config.root_dir), Path.cwd()],
+                allowed_paths=[Path("~/.scripton/yesman").expanduser(), Path.cwd()],
                 security_policy=security_policy,
             )
 

@@ -42,8 +42,8 @@ class YesmanConfig:
         # Load configuration
         self._config_schema = self._loader.load()
 
-        # Setup paths for backward compatibility
-        self.root_dir = Path(self._config_schema.root_dir).expanduser()
+        # Setup paths with fixed root directory
+        self.root_dir = Path("~/.scripton/yesman").expanduser()
         self.global_path = self.root_dir / "yesman.yaml"
         self.local_path = Path.cwd() / ".scripton" / "yesman" / "yesman.yaml"
 
