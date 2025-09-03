@@ -10,71 +10,16 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 """Configuration schemas using Pydantic for type safety and validation."""
 
 
-class TmuxConfig(BaseModel):
-    """Tmux-specific configuration settings."""
+class WorkspaceDefinition(BaseModel):
+    """Individual workspace configuration."""
+    
+    path: str  # Relative or absolute path
+    allowed_paths: list[str] = Field(default_factory=lambda: ["."])
+    security_policy: str = "default"
+    max_size_mb: int = Field(default=100, ge=10, le=1000)
+    description: str | None = None
 
-    default_shell: str = "/bin/bash"
-    base_index: int = 0
-    pane_base_index: int = 0
-    mouse: bool = True
-    status_position: str = Field(default="bottom", pattern="^(top|bottom)$")
-    status_interval: int = Field(default=1, ge=1, le=60)
-
-
-class LoggingConfig(BaseModel):
-    """Logging configuration settings."""
-
-    level: str = Field(default="INFO", pattern="^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$")
-    format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    file: str | None = None
-    log_path: str = "~/.scripton/yesman/logs/"
-    max_size: int = Field(default=10485760, ge=1048576)  # 10MB minimum
-    backup_count: int = Field(default=5, ge=1, le=20)
-
-    @field_validator("level")
-    @classmethod
-    def uppercase_level(cls, v: str) -> str:
-        """Ensure log level is uppercase.
-
-        Returns:
-        str: Description of return value.
-        """
-        return v.upper()
-
-
-class SessionConfig(BaseModel):
-    """Session management configuration."""
-
-    sessions_dir: str = "sessions"
-    templates_dir: str = "templates"
-    default_window_name: str = "main"
-    default_layout: str = "even-horizontal"
-
-
-class AIConfig(BaseModel):
-    """AI/LLM configuration settings."""
-
-    provider: str = Field(default="anthropic", pattern="^(anthropic|openai|local)$")
-    model: str = "claude-3-opus-20240229"
-    temperature: float = Field(default=0.7, ge=0.0, le=2.0)
-    max_tokens: int = Field(default=4096, ge=100, le=32000)
-    api_key_env: str = "ANTHROPIC_API_KEY"
-    base_url: str | None = None
-
-
-class HeadlessConfig(BaseModel):
-    """Claude Code Headless configuration settings."""
-
-    enabled: bool = False
-    claude_binary_path: str = "claude"
-    workspace_root: str = "~/.scripton/yesman/workspaces"
-    allowed_tools: list[str] = Field(default_factory=lambda: ["Read", "Edit", "Bash", "Write"])
-    max_concurrent_agents: int = Field(default=5, ge=1, le=20)
-    agent_timeout: int = Field(default=300, ge=30, le=3600)  # seconds
-    forbidden_paths: list[str] = Field(default_factory=lambda: ["/etc", "~/.ssh", "/root", "/sys", "/proc"])
-    cleanup_interval: int = Field(default=300, ge=60, le=3600)  # seconds
-
-    @field_validator("workspace_root", "forbidden_paths", mode="after")
+    @field_validator("path", "allowed_paths", mode="after")
     @classmethod
     def expand_paths(cls, v) -> str | list[str]:
         """Expand user home directory in paths."""
@@ -85,74 +30,114 @@ class HeadlessConfig(BaseModel):
         return v
 
 
-class ClaudeConfig(BaseModel):
-    """Claude Code integration configuration."""
+class WorkspaceConfig(BaseModel):
+    """Workspace configuration with base directory support."""
+    
+    # Base directory for relative paths
+    base_directory: str = "~/projects"
+    
+    # Individual workspace definitions
+    definitions: dict[str, WorkspaceDefinition] = Field(default_factory=dict)
+    
+    # Global workspace settings
+    security_policy: str = "default"
+    cleanup_policy: str = Field(default="on_session_end", pattern="^(on_session_end|manual|daily)$")
+    auto_cleanup_days: int = Field(default=7, ge=1, le=30)
+    
+    @field_validator("base_directory", mode="after")
+    @classmethod
+    def expand_base_directory(cls, v: str) -> str:
+        """Expand user home directory in base directory path."""
+        return str(Path(v).expanduser())
+    
+    def get_absolute_path(self, workspace_name: str) -> Path | None:
+        """Get absolute path for a workspace, resolving relative paths from base_directory."""
+        if workspace_name not in self.definitions:
+            return None
+        
+        workspace_def = self.definitions[workspace_name]
+        workspace_path = Path(workspace_def.path)
+        
+        # If path is already absolute, return as-is
+        if workspace_path.is_absolute():
+            return workspace_path
+        
+        # Otherwise, resolve relative to base_directory
+        base_path = Path(self.base_directory)
+        return base_path / workspace_path
 
-    mode: str = Field(default="interactive", pattern="^(interactive|headless)$")
-    headless: HeadlessConfig = Field(default_factory=HeadlessConfig)
+
+class WindowConfig(BaseModel):
+    """Individual window configuration."""
+    
+    window_name: str
+    layout: str = "even-horizontal"
+    start_directory: str | None = None
+    panes: list[str | dict] = Field(default_factory=list)
 
 
-class DatabaseConfig(BaseModel):
-    """Database configuration (optional)."""
-
-    enabled: bool = False
-    url: str = "sqlite:///~/.scripton/yesman/yesman.db"
-    pool_size: int = Field(default=5, ge=1, le=20)
-    echo: bool = False
-
-
-class ServerConfig(BaseModel):
-    """Server configuration settings."""
-
-    host: str = "localhost"
-    port: int = Field(default=10501, ge=1, le=65535)
+class SessionConfig(BaseModel):
+    """Individual session configuration."""
+    
+    session_name: str
+    start_directory: str
+    description: str | None = None
+    
+    # Window configurations
+    windows: list[WindowConfig] = Field(default_factory=list)
+    
+    # Environment variables
+    environment: dict[str, str] = Field(default_factory=dict)
+    
+    # Scripts
+    before_script: str | None = None
+    after_script: str | None = None
 
 
 class YesmanConfigSchema(BaseModel):
     """Main configuration schema for Yesman."""
 
-    model_config = ConfigDict(extra="allow")  # Allow extra fields for testing
+    model_config = ConfigDict(extra="allow")  # Allow extra fields for flexibility
+
+    # Top-level metadata
+    session_name: str | None = None
+    description: str | None = None
 
     # Core settings
-    mode: str = Field(default="merge", pattern="^(merge|isolated|local)$")
+    mode: str = Field(default="local", pattern="^(merge|isolated|local)$")
     root_dir: str = "~/.scripton/yesman"
 
-    # Sub-configurations
-    tmux: TmuxConfig = Field(default_factory=TmuxConfig)
-    logging: LoggingConfig = Field(default_factory=LoggingConfig)
-    session: SessionConfig = Field(default_factory=SessionConfig)
-    ai: AIConfig = Field(default_factory=AIConfig)
-    claude: ClaudeConfig = Field(default_factory=ClaudeConfig)
-    database: DatabaseConfig = Field(default_factory=DatabaseConfig)
-    server: ServerConfig = Field(default_factory=ServerConfig)
+    # Workspace configuration
+    workspace_config: WorkspaceConfig | None = None
+    workspaces: dict[str, WorkspaceDefinition] | None = None  # Alternative flat structure
 
-    # Additional settings
-    confidence_threshold: float = Field(default=0.8, ge=0.0, le=1.0)
-    auto_cleanup_days: int = Field(default=30, ge=1)
-    enable_telemetry: bool = False
+    # Session configuration
+    session_config: dict[str, SessionConfig] | None = None
+    sessions: dict[str, SessionConfig] | None = None  # Alternative flat structure
 
-    # Custom settings (allows flexibility)
+    # Logging settings
+    logging: dict[str, Any] = Field(default_factory=lambda: {
+        "level": "INFO",
+        "file": "~/.scripton/yesman/logs/yesman.log"
+    })
+
+    # Server settings
+    server: dict[str, Any] = Field(default_factory=lambda: {
+        "host": "localhost", 
+        "port": 10501
+    })
+
+    # Custom settings (allows complete flexibility)
     custom: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("root_dir")
     @classmethod
     def expand_path(cls, v: str) -> str:
-        """Expand user home directory in paths.
-
-        Returns:
-        str: Description of return value.
-        """
+        """Expand user home directory in paths."""
         return str(Path(v).expanduser())
 
     def model_post_init(self, __context: object) -> None:
         """Post-initialization validation and setup."""
-        # Expand paths in nested configs
-        if self.logging.log_path:
-            self.logging.log_path = str(Path(self.logging.log_path).expanduser())
-        if self.logging.file:
-            self.logging.file = str(Path(self.logging.file).expanduser())
-        if self.database.url.startswith("sqlite:///"):
-            db_path = self.database.url.replace("sqlite:///", "")
-            self.database.url = f"sqlite:///{Path(db_path).expanduser()}"
-
-    # Config is now handled by model_config above
+        # Expand paths in logging config
+        if isinstance(self.logging, dict) and "file" in self.logging:
+            self.logging["file"] = str(Path(self.logging["file"]).expanduser())

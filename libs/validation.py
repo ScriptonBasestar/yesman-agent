@@ -134,33 +134,6 @@ def validate_pane_command(command: str, max_length: int | None = None) -> tuple[
     return True, None
 
 
-def validate_template_exists(template_name: str, templates_dir: str | None = None) -> tuple[bool, str | None]:
-    """Check if template exists.
-
-    Args:
-        template_name: Name of the template (without extension)
-        templates_dir: Directory containing templates (defaults to 'templates')
-
-    Returns:
-        Tuple of (exists, error_message)
-    """
-    if not template_name:
-        return False, "Template name cannot be empty"
-
-    # Get templates directory
-    if templates_dir is None:
-        templates_dir = os.environ.get("YESMAN_TEMPLATES_DIR", "templates")
-
-    template_path = Path(templates_dir) / f"{template_name}.yaml"
-
-    if not template_path.exists():
-        return False, f"Template '{template_name}' not found at {template_path}"
-
-    if not template_path.is_file():
-        return False, f"Template path '{template_path}' is not a file"
-
-    return True, None
-
 
 def validate_directory_path(path: str, must_exist: bool = True, create_if_missing: bool = False) -> tuple[bool, str | None]:
     """Validate directory path.

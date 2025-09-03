@@ -2,13 +2,16 @@
 
 # Copyright notice.
 
+# DEPRECATED: This file is no longer used in the new configuration system.
+# Please use libs/core/config_schema.py instead.
+
 import os
 from dataclasses import dataclass
 from pathlib import Path
 
 # Copyright (c) 2024 Yesman Claude Project
 # Licensed under the MIT License
-"""Central settings and configuration management."""
+"""DEPRECATED: Central settings and configuration management."""
 
 
 @dataclass
@@ -37,7 +40,6 @@ class PathSettings:
     """Path configuration settings."""
 
     home_dir: str = "~/.scripton/yesman"
-    templates_dir: str = "~/.scripton/yesman/templates"
     logs_dir: str = "~/.scripton/yesman/logs"
     cache_dir: str = "~/.scripton/yesman/cache"
     sessions_dir: str = "~/.scripton/yesman/sessions"
@@ -119,7 +121,6 @@ class AppSettings:
 
         # Path settings
         self.paths.home_dir = os.getenv("YESMAN_HOME_DIR", self.paths.home_dir)
-        self.paths.templates_dir = os.getenv("YESMAN_TEMPLATES_DIR", self.paths.templates_dir)
 
         # Session settings
         self.sessions.default_timeout = int(os.getenv("YESMAN_SESSION_TIMEOUT", self.sessions.default_timeout))
@@ -132,7 +133,6 @@ class AppSettings:
     def _expand_paths(self) -> None:
         """Expand user paths (~) to absolute paths."""
         self.paths.home_dir = str(Path(self.paths.home_dir).expanduser())
-        self.paths.templates_dir = str(Path(self.paths.templates_dir).expanduser())
         self.paths.logs_dir = str(Path(self.paths.logs_dir).expanduser())
         self.paths.cache_dir = str(Path(self.paths.cache_dir).expanduser())
         self.paths.sessions_dir = str(Path(self.paths.sessions_dir).expanduser())
@@ -143,7 +143,6 @@ class AppSettings:
         """Create necessary directories if they don't exist."""
         directories = [
             self.paths.home_dir,
-            self.paths.templates_dir,
             self.paths.logs_dir,
             self.paths.cache_dir,
             self.logging.default_path,
@@ -174,7 +173,6 @@ class AppSettings:
             },
             "paths": {
                 "home_dir": self.paths.home_dir,
-                "templates_dir": self.paths.templates_dir,
                 "logs_dir": self.paths.logs_dir,
                 "cache_dir": self.paths.cache_dir,
                 "sessions_dir": self.paths.sessions_dir,

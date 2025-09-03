@@ -63,19 +63,25 @@ class YesmanConfig:
     def _setup_logging(self) -> None:
         """Setup logging based on configuration."""
         log_config = self._config_schema.logging
-        log_path = ensure_log_directory(Path(log_config.log_path))
-        log_file = log_path / "yesman.log"
+        
+        # Handle new flexible logging structure
+        log_level = log_config.get("level", "INFO")
+        log_file_path = log_config.get("file", "~/.scripton/yesman/logs/yesman.log")
+        
+        # Ensure log directory exists
+        log_file = Path(log_file_path).expanduser()
+        log_file.parent.mkdir(parents=True, exist_ok=True)
 
         # Configure logging
         handlers: list[logging.Handler] = [logging.FileHandler(log_file)]
 
         # Add console handler in development mode
-        if self._config_schema.logging.level == "DEBUG":
+        if log_level == "DEBUG":
             handlers.append(logging.StreamHandler())
 
         logging.basicConfig(
-            level=getattr(logging, log_config.level),
-            format=log_config.format,
+            level=getattr(logging, log_level),
+            format=log_config.get("format", "%(asctime)s - %(name)s - %(levelname)s - %(message)s"),
             handlers=handlers,
         )
 
@@ -83,9 +89,7 @@ class YesmanConfig:
         """Create necessary directories."""
         directories = [
             self.root_dir,
-            self.root_dir / self._config_schema.session.sessions_dir,
-            self.root_dir / self._config_schema.session.templates_dir,
-            Path(self._config_schema.logging.log_path).expanduser(),
+            self.root_dir / "sessions",  # Default sessions directory
         ]
 
         for directory in directories:
@@ -137,11 +141,15 @@ class YesmanConfig:
 
     def get_sessions_dir(self) -> Path:
         """Get sessions directory path."""
-        return self.root_dir / self._config_schema.session.sessions_dir
+        return self.root_dir / "sessions"
 
-    def get_templates_dir(self) -> Path:
-        """Get templates directory path."""
-        return self.root_dir / self._config_schema.session.templates_dir
+    def get_workspace_config(self) -> dict | None:
+        """Get workspace configuration."""
+        if hasattr(self._config_schema, 'workspace_config') and self._config_schema.workspace_config:
+            return self._config_schema.workspace_config.model_dump()
+        elif hasattr(self._config_schema, 'workspaces') and self._config_schema.workspaces:
+            return {"definitions": self._config_schema.workspaces}
+        return None
 
     def reload(self) -> None:
         """Reload configuration from all sources."""
