@@ -251,8 +251,9 @@
       
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700">Workspace Path</label>
+          <label for="workspace_path" class="block text-sm font-medium text-gray-700">Workspace Path</label>
           <input 
+            id="workspace_path"
             type="text" 
             bind:value={createConfig.workspace_path}
             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
@@ -260,8 +261,9 @@
         </div>
         
         <div>
-          <label class="block text-sm font-medium text-gray-700">Model</label>
+          <label for="model" class="block text-sm font-medium text-gray-700">Model</label>
           <select 
+            id="model"
             bind:value={createConfig.model}
             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
           >
@@ -272,8 +274,9 @@
         </div>
         
         <div>
-          <label class="block text-sm font-medium text-gray-700">Timeout (seconds)</label>
+          <label for="timeout" class="block text-sm font-medium text-gray-700">Timeout (seconds)</label>
           <input 
+            id="timeout"
             type="number" 
             bind:value={createConfig.timeout}
             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
@@ -307,8 +310,9 @@
       
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700">Task Prompt</label>
+          <label for="task_prompt" class="block text-sm font-medium text-gray-700">Task Prompt</label>
           <textarea 
+            id="task_prompt"
             bind:value={taskPrompt}
             rows="4"
             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"

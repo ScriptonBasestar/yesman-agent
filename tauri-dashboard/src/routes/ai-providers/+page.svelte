@@ -15,6 +15,7 @@
     name: '',
     description: ''
   };
+  let configJson = JSON.stringify(registerConfig.config, null, 2);
   
   // Task execution
   let showTaskForm = false;
@@ -329,15 +330,16 @@
         <div>
           <label class="block text-sm font-medium text-gray-700">Configuration (JSON)</label>
           <textarea 
-            bind:value={JSON.stringify(registerConfig.config, null, 2)}
+            bind:value={configJson}
             on:input={(e) => {
               try {
                 registerConfig.config = JSON.parse(e.target.value);
+                configJson = e.target.value;
               } catch {}
             }}
             rows="8"
             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 font-mono text-xs"
-            placeholder='{"api_key": "your-key", "base_url": "https://api.example.com"}'
+            placeholder={`{"api_key": "your-key", "base_url": "https://api.example.com"}`}
           ></textarea>
           <div class="text-xs text-gray-500 mt-1">
             Example configs vary by provider. Check documentation for required fields.

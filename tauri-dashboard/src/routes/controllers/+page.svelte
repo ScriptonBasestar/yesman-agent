@@ -30,14 +30,14 @@
     <div class="flex justify-center gap-4">
       <button
         class="btn btn-primary"
-        onclick="window.location.href = '/sessions'"
+        on:click={() => window.location.href = '/sessions'}
       >
         📋 Go to Sessions
       </button>
       
       <button
         class="btn btn-outline"
-        onclick="window.location.href = '/'"
+        on:click={() => window.location.href = '/'}
       >
         🏠 Dashboard Home
       </button>
