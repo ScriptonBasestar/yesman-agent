@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from ...claude.headless_adapter import HeadlessAdapter
-from ...claude.workspace import WorkspaceSecurityManager
+from ...claude.workspace import DefaultWorkspaceManager, DefaultSecurityPolicy
 from ...yesman_config import YesmanConfig
 from ..provider_interface import AIProvider, AIProviderType, AIResponse, AITask, TaskStatus
 
@@ -36,11 +36,13 @@ class ClaudeCodeProvider(AIProvider):
             yesman_config = YesmanConfig.from_yaml(self.config.get("config_path"))
             self.headless_adapter = HeadlessAdapter(yesman_config)
 
-            # WorkspaceSecurityManager 초기화
-            self.workspace_manager = WorkspaceSecurityManager(
-                base_path=Path(self.config.get("workspace_base", "/tmp/yesman-workspaces")),
-                max_workspace_size_mb=self.config.get("max_workspace_size_mb", 1000),
-                max_workspaces=self.config.get("max_workspaces", 10),
+            # DefaultWorkspaceManager 초기화
+            workspace_base = Path(self.config.get("workspace_base", "/tmp/yesman-workspaces"))
+            security_policy = DefaultSecurityPolicy()
+            self.workspace_manager = DefaultWorkspaceManager(
+                base_path=workspace_base,
+                allowed_paths=[workspace_base],
+                security_policy=security_policy,
             )
 
             # Claude CLI 존재 확인
@@ -81,7 +83,7 @@ class ClaudeCodeProvider(AIProvider):
                     "status": "healthy",
                     "claude_version": version,
                     "active_processes": len(self._active_processes),
-                    "workspace_count": len(self.workspace_manager.get_all_workspaces()) if self.workspace_manager else 0,
+                    "workspace_count": len(self.workspace_manager.list_active_sandboxes()) if self.workspace_manager else 0,
                 }
             else:
                 return {"status": "unhealthy", "error": stderr.decode().strip()}
@@ -101,7 +103,7 @@ class ClaudeCodeProvider(AIProvider):
             if task.workspace_path:
                 workspace_path = Path(task.workspace_path)
             else:
-                workspace_path = await self.workspace_manager.create_workspace(f"task-{task.task_id[:8]}")
+                workspace_path = self.workspace_manager.create_sandbox(f"task-{task.task_id[:8]}")
 
             # Claude CLI 명령 구성
             claude_binary = self.config.get("claude_binary_path", "claude")
@@ -186,7 +188,7 @@ class ClaudeCodeProvider(AIProvider):
             if task.workspace_path:
                 workspace_path = Path(task.workspace_path)
             else:
-                workspace_path = await self.workspace_manager.create_workspace(f"stream-{task.task_id[:8]}")
+                workspace_path = self.workspace_manager.create_sandbox(f"stream-{task.task_id[:8]}")
 
             # Claude CLI 명령 구성 (스트림 모드)
             claude_binary = self.config.get("claude_binary_path", "claude")
@@ -284,7 +286,7 @@ class ClaudeCodeProvider(AIProvider):
 
         # 워크스페이스 정리
         if self.workspace_manager:
-            await self.workspace_manager.cleanup_old_workspaces(max_age_hours=24)
+            self.workspace_manager.cleanup_orphaned_sandboxes()
 
     def get_required_config_keys(self) -> list[str]:
         """필수 설정 키 목록."""
