@@ -4,9 +4,6 @@
 session_name: "my-project"
 description: "Basic development session"
 
-mode: "local" 
-root_dir: "~/.scripton/yesman"
-
 # Simple session with one window
 sessions:
   development:

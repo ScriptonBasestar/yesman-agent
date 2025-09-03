@@ -4,12 +4,9 @@
 session_name: "django-webapp"
 description: "Django development with database and testing"
 
-mode: "local"
-root_dir: "~/.scripton/yesman"
-
 # Workspace configuration for Django project structure
 workspace_config:
-  base_directory: "~/projects/django-app"
+  base_dir: "~/projects/django-app"
   
   definitions:
     backend:
@@ -22,7 +19,6 @@ workspace_config:
         - "./static"
         - "./media"
         - "./templates"
-      max_size_mb: 500
       description: "Django backend workspace"
       
     frontend:
@@ -32,11 +28,8 @@ workspace_config:
         - "./src"
         - "./static"
         - "./templates"
-      max_size_mb: 200  
-      description: "Frontend assets workspace"
   
-  security_policy: "default"
-  cleanup_policy: "on_session_end"
+      description: "Frontend assets workspace"
 
 sessions:
   django-dev:

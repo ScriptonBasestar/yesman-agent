@@ -4,12 +4,9 @@
 session_name: "data-science-project"
 description: "Data science and ML development environment"
 
-mode: "local"
-root_dir: "~/.scripton/yesman"
-
 # Workspace for data science project structure
 workspace_config:
-  base_directory: "~/projects/ml-project"
+  base_dir: "~/projects/ml-project"
   
   definitions:
     notebooks:
@@ -19,19 +16,16 @@ workspace_config:
         - "../data"
         - "../models"
         - "../src"
-      max_size_mb: 500
       description: "Jupyter notebooks workspace"
       
     data:
       path: "./data"
       allowed_paths: ["."]
-      max_size_mb: 2000  # Large datasets
       description: "Dataset storage workspace"
       
     models:
       path: "./models"
       allowed_paths: ["."]
-      max_size_mb: 1000
       description: "ML models workspace"
       
     src:
@@ -42,11 +36,7 @@ workspace_config:
         - "./training" 
         - "./evaluation"
         - "./deployment"
-      max_size_mb: 200
       description: "Source code workspace"
-  
-  security_policy: "default"
-  cleanup_policy: "manual"  # Keep data safe
 
 sessions:
   ml-development:

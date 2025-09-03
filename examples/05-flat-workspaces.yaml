@@ -4,33 +4,26 @@
 session_name: "monorepo-project"
 description: "Monorepo development with flat workspace definitions"
 
-mode: "local"
-root_dir: "~/.scripton/yesman"
-
 # Alternative flat workspace structure (simpler syntax)
 workspaces:
   web:
     path: "~/projects/monorepo/packages/web"
     allowed_paths: ["."]
-    max_size_mb: 150
     description: "Web application package"
     
   api:
     path: "~/projects/monorepo/packages/api"
     allowed_paths: ["."]  
-    max_size_mb: 100
     description: "API service package"
     
   shared:
     path: "~/projects/monorepo/packages/shared"
     allowed_paths: ["."]
-    max_size_mb: 50
     description: "Shared utilities package"
     
   docs:
     path: "~/projects/monorepo/docs"
     allowed_paths: ["."]
-    max_size_mb: 25
     description: "Project documentation"
 
 # Sessions using the flat workspaces

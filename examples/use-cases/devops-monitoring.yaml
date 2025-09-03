@@ -4,12 +4,9 @@
 session_name: "devops-infrastructure"
 description: "DevOps tooling and infrastructure monitoring"
 
-mode: "local"
-root_dir: "~/.scripton/yesman"
-
 # Workspace for DevOps and infrastructure
 workspace_config:
-  base_directory: "~/projects/infrastructure"
+  base_dir: "~/projects/infrastructure"
   
   definitions:
     terraform:
@@ -18,7 +15,6 @@ workspace_config:
         - "."
         - "./modules"
         - "./environments"
-      max_size_mb: 100
       description: "Terraform infrastructure as code"
       
     ansible:
@@ -28,7 +24,6 @@ workspace_config:
         - "./playbooks"
         - "./roles"
         - "./inventory"
-      max_size_mb: 150
       description: "Ansible configuration management"
       
     kubernetes:
@@ -37,7 +32,6 @@ workspace_config:
         - "."
         - "./manifests"
         - "./helm"
-      max_size_mb: 100
       description: "Kubernetes manifests and Helm charts"
       
     monitoring:
@@ -47,11 +41,7 @@ workspace_config:
         - "./grafana"
         - "./prometheus"
         - "./logs"
-      max_size_mb: 200
       description: "Monitoring and observability configs"
-  
-  security_policy: "strict"
-  cleanup_policy: "manual"
 
 sessions:
   devops-main:

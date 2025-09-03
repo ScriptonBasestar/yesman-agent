@@ -4,9 +4,6 @@
 session_name: "web-development"
 description: "Web development with multiple windows"
 
-mode: "local"
-root_dir: "~/.scripton/yesman"
-
 sessions:
   web-dev:
     session_name: "web-dev"

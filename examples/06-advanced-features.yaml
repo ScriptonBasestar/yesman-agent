@@ -4,9 +4,6 @@
 session_name: "advanced-development"
 description: "Advanced configuration with scripts and complex layouts"
 
-mode: "local"
-root_dir: "~/.scripton/yesman"
-
 # Advanced session with scripts
 sessions:
   advanced-dev:
@@ -76,9 +73,9 @@ sessions:
           - docker stats                   # Container stats
           - bash                          # Free terminal
 
-# Workspace with strict security
+# Workspace configuration for advanced development
 workspace_config:
-  base_directory: "~/projects/advanced-app"
+  base_dir: "~/projects/advanced-app"
   
   definitions:
     app:
@@ -89,20 +86,12 @@ workspace_config:
         - "./services"
         - "./utils"
         - "./tests"
-      security_policy: "strict"
-      max_size_mb: 500
       description: "Main application code"
       
     config:
       path: "./config"
       allowed_paths: ["."]
-      security_policy: "restricted"
-      max_size_mb: 10
       description: "Configuration files"
-  
-  security_policy: "strict"
-  cleanup_policy: "daily"
-  auto_cleanup_days: 3
 
 # Advanced logging configuration
 logging:
