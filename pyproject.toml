@@ -8,7 +8,7 @@ version = "0.1.0"
 authors = [
     {name = "Yesman Claude Developer"},
 ]
-description = "Automated Claude CLI tool with project management"
+description = "Workspace management server with Tauri desktop app"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.11"
@@ -18,40 +18,31 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "click>=8.0",
     "pyyaml>=5.4",
-    "pexpect>=4.8",
     "tmuxp>=1.55.0",
     "libtmux>=0.46.2",
-    "rich>=13.0.0",
     "psutil>=5.9.0",
-    "textual>=0.41.0",
     "fastapi>=0.116.0",
     "uvicorn>=0.35.0",
     "jinja2>=3.1.6",
     "python-multipart>=0.0.20",
-    "sb-libs-py>=0.1.0",
-    "bandit>=1.8.6",
     "requests>=2.32.4",
     "starlette>=0.47.2",
     "urllib3>=2.5.0",
     "sse-starlette>=3.0.2",
     "aiohttp>=3.12.15",
-    "langchain>=0.3.27",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
 ]
 
 [project.urls]
 Homepage = "https://github.com/yourusername/yesman-claude"
 
-[project.scripts]
-yesman = "yesman:cli"
 
-[tool.setuptools]
-py-modules = ["yesman", "auto_claude"]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["yesman*", "commands*", "libs*"]
+include = ["api*", "libs*"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
@@ -95,7 +86,7 @@ filterwarnings = [
 
 [tool.coverage.run]
 branch = true
-source = ["libs", "commands"]
+source = ["libs", "api"]
 omit = [
     "*/tests/*",
     "*/__pycache__/*",

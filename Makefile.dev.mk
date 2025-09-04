@@ -14,54 +14,20 @@
 .PHONY: start stop restart status logs run run-detached
 
 # Application control
-start: run ## quick start: run yesman
-stop: ## stop running yesman processes
-	@echo -e "$(YELLOW)Stopping yesman processes...$(RESET)"
-	@pkill -f "yesman" || echo -e "$(GREEN)No running yesman processes found$(RESET)"
+start: run-api-server ## quick start: run API server
+stop: stop-servers ## stop running server processes
 
-restart: stop start ## restart yesman
+restart: stop start ## restart servers
 
-yesman-status: ## check yesman status
-	@echo -e "$(CYAN)Checking for running yesman processes...$(RESET)"
-	@pgrep -f "yesman" > /dev/null && echo -e "$(GREEN)✅ yesman is running$(RESET)" || echo -e "$(RED)❌ yesman is not running$(RESET)"
+status: dashboard-status ## check server status
 
 logs: ## show recent log files
 	@echo -e "$(CYAN)Recent log files:$(RESET)"
 	@find . -name "*.log" -type f -mtime -7 -exec ls -la {} \; 2>/dev/null || echo -e "$(YELLOW)No recent log files found$(RESET)"
 
-run: ## run yesman.py (shows help)
-	@echo -e "$(CYAN)Running yesman...$(RESET)"
-	uv run ./yesman.py --help
+run: run-api-server ## run API server (default)
 
-run-dashboard: ## run yesman dashboard  
-	@echo -e "$(CYAN)Running yesman dashboard...$(RESET)"
-	uv run ./yesman.py dashboard run
-
-run-ls: ## run yesman ls
-	@echo -e "$(CYAN)Listing projects...$(RESET)"
-	uv run ./yesman.py ls
-
-run-status: ## run yesman status
-	@echo -e "$(CYAN)Checking status...$(RESET)"
-	uv run ./yesman.py status
-
-run-show: ## run yesman show
-	@echo -e "$(CYAN)Showing sessions...$(RESET)"
-	uv run ./yesman.py show
-
-run-dashboard-debug: ## run yesman dashboard in debug mode with dev tools
-	@echo -e "$(CYAN)Running yesman dashboard in debug mode...$(RESET)"
-	@echo -e "$(YELLOW)Dev tools will be available - press F12 or right-click -> Inspect$(RESET)"
-	YESMAN_DEBUG=1 uv run ./yesman.py dashboard run --dev
-
-run-dev: ## run yesman.py in development mode
-	@echo -e "$(CYAN)Running yesman in development mode...$(RESET)"
-	uv run ./yesman.py --dev
-
-run-detached: ## run yesman in background
-	@echo -e "$(CYAN)Running yesman in background...$(RESET)"
-	nohup uv run ./yesman.py > yesman.log 2>&1 &
-	@echo -e "$(GREEN)✅ yesman started in background (see yesman.log)$(RESET)"
+run-detached: run-api-server ## run API server in background (already implemented below)
 
 # ==============================================================================
 # Development Workflow Targets
@@ -146,7 +112,7 @@ dev-info: ## show development environment information
 	@echo -e "  • $(CYAN)dashboard-status$(RESET)    Check dashboard server status"
 	@echo ""
 	@echo -e "$(GREEN)🚀 Server Commands:$(RESET)"
-	@echo -e "  • $(CYAN)start$(RESET)               Start yesman services"
+	@echo -e "  • $(CYAN)start$(RESET)               Start API server"
 	@echo -e "  • $(CYAN)stop$(RESET)                Stop all services"
 	@echo -e "  • $(CYAN)restart$(RESET)             Restart services"
 	@echo -e "  • $(CYAN)status$(RESET)              Check service status"
@@ -160,7 +126,6 @@ dev-info: ## show development environment information
 	@echo ""
 	@echo -e "$(GREEN)🐛 Debug Commands:$(RESET)"
 	@echo -e "  • $(CYAN)debug-api$(RESET)           Debug API server"
-	@echo -e "  • $(CYAN)debug-frontend$(RESET)      Debug frontend"
 	@echo -e "  • $(CYAN)logs$(RESET)                Show service logs"
 	@echo ""
 	@echo -e "$(GREEN)📊 Current Status:$(RESET)"
@@ -195,17 +160,17 @@ dev-status: ## show current development status
 .PHONY: dashboard dev-dashboard run-web-dashboard run-tauri-dev run-api-server debug-api stop-servers dashboard-status dashboard-web dashboard-desktop dashboard-open dashboard-stop
 
 # Default dashboard command - auto-detect best interface
-dashboard: ## run yesman dashboard (auto-detect interface)
+dashboard: ## run dashboard (auto-detect interface)
 	@echo -e "$(CYAN)Checking Dashboard Status...$(RESET)"
-	@if ps aux | grep -E "(yesman-dashboard|yesman-tauri-dashboard)$$" | grep -v grep > /dev/null 2>&1; then \
+	@if ps aux | grep -E "(tauri|tauri dev)" | grep -v grep > /dev/null 2>&1; then \
 		echo -e "$(GREEN)✅ Tauri dashboard is already running!$(RESET)"; \
 		echo -e "$(BLUE)🖥️  Desktop app should be visible on your screen$(RESET)"; \
 	elif netstat -tlnp 2>/dev/null | grep -q ":5173.*LISTEN" || ss -tlnp 2>/dev/null | grep -q ":5173.*LISTEN"; then \
 		echo -e "$(GREEN)✅ Vite dev server is running$(RESET)"; \
 		echo -e "$(BLUE)🌐 Web dashboard available at: http://localhost:5173$(RESET)"; \
 	else \
-		echo -e "$(CYAN)Starting Yesman Dashboard...$(RESET)"; \
-		uv run ./yesman.py dashboard run; \
+		echo -e "$(CYAN)Starting Web Dashboard...$(RESET)"; \
+		make run-web-dashboard; \
 	fi
 
 dev-dashboard: run-api-server run-web-dashboard ## full development environment (API + Web dashboard)
@@ -225,7 +190,7 @@ run-web-dashboard: ## run web dashboard only (Vite dev server)
 
 run-tauri-dev: ## run Tauri desktop app in development mode  
 	@echo -e "$(CYAN)Starting Tauri Development Mode...$(RESET)"
-	@if ps aux | grep -E "(yesman-dashboard|yesman-tauri-dashboard)$$" | grep -v grep > /dev/null 2>&1; then \
+	@if ps aux | grep -E "(tauri|tauri dev)" | grep -v grep > /dev/null 2>&1; then \
 		echo -e "$(GREEN)✅ Tauri desktop app is already running!$(RESET)"; \
 		echo -e "$(BLUE)🖥️  Desktop app should be visible on your screen$(RESET)"; \
 	elif [ -d "tauri-dashboard" ]; then \
@@ -273,7 +238,7 @@ dashboard-status: ## check dashboard server status
 		echo -e "$(RED)❌ Not running$(RESET)"; \
 	fi
 	@echo -n -e "  Tauri Dev:          "; \
-	if ps aux | grep -E "(yesman-dashboard|yesman-tauri-dashboard)$$" | grep -v grep > /dev/null 2>&1; then \
+	if ps aux | grep -E "(tauri|tauri dev)" | grep -v grep > /dev/null 2>&1; then \
 		echo -e "$(GREEN)✅ Running$(RESET)"; \
 	else \
 		echo -e "$(RED)❌ Not running$(RESET)"; \
