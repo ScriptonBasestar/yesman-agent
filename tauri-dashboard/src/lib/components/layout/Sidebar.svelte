@@ -20,8 +20,8 @@
     {
       path: '/sessions',
       icon: '🖥️',
-      label: 'Sessions',
-      description: 'Tmux sessions'
+      label: 'Projects',
+      description: 'Project sessions'
     },
     {
       path: '/agents',
@@ -66,13 +66,13 @@
     {
       action: 'setup',
       icon: '⚡',
-      label: 'Setup All Sessions',
+      label: 'Setup All Projects',
       variant: 'btn-primary'
     },
     {
       action: 'teardown',
       icon: '🛑',
-      label: 'Teardown All Sessions',
+      label: 'Teardown All Projects',
       variant: 'btn-error btn-outline'
     }
   ];
@@ -190,7 +190,7 @@
 
         <div class="stat-item bg-base-100 p-2 rounded-lg">
           <div class="flex justify-between items-center">
-            <span class="text-xs text-base-content/70">Sessions</span>
+            <span class="text-xs text-base-content/70">Projects</span>
             <span class="text-xs font-mono text-base-content badge badge-primary badge-sm">3</span>
           </div>
         </div>

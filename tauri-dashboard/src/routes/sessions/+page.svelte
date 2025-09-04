@@ -131,7 +131,7 @@
 
   async function createSession() {
     if (!selectedProject) {
-      showNotification('warning', 'No Project Selected', 'Please select a project to create a session.');
+      showNotification('warning', 'No Project Selected', 'Please select a project to create a project.');
       return;
     }
 
@@ -155,7 +155,7 @@
 </script>
 
 <svelte:head>
-  <title>Sessions - Yesman Dashboard</title>
+  <title>Projects - Yesman Dashboard</title>
 </svelte:head>
 
 <div class="sessions-page p-6 space-y-6">
@@ -164,10 +164,10 @@
     <div class="flex justify-between items-center mb-6">
       <div>
         <h1 class="text-3xl font-bold text-base-content flex items-center gap-3">
-          🖥️ Tmux Sessions
+          🖥️ Projects
         </h1>
         <p class="text-base-content/70 mt-2">
-          Manage your tmux sessions and workspace configurations
+          Manage your projects and workspace configurations
         </p>
       </div>
 
@@ -185,7 +185,7 @@
           class="btn btn-primary btn-sm"
           on:click={handleCreateSession}
         >
-          ➕ New Session
+          ➕ New Project
         </button>
       </div>
     </div>
@@ -218,12 +218,12 @@
     {:else if $filteredSessions.length === 0}
       <div class="no-sessions text-center py-20">
         <div class="text-8xl mb-6">🖥️</div>
-        <h3 class="text-2xl font-semibold mb-4">No sessions found</h3>
+        <h3 class="text-2xl font-semibold mb-4">No projects found</h3>
         <p class="text-base-content/70 mb-6 max-w-md mx-auto">
           {#if $error}
-            There was an error loading sessions. Please try refreshing.
+            There was an error loading projects. Please try refreshing.
           {:else}
-            You don't have any tmux sessions yet. Create your first session to get started.
+            You don't have any projects yet. Create your first project to get started.
           {/if}
         </p>
 
@@ -232,7 +232,7 @@
             class="btn btn-primary"
             on:click={handleCreateSession}
           >
-            ➕ Create First Session
+            ➕ Create First Project
           </button>
 
           <button
@@ -248,7 +248,7 @@
       <div class="sessions-stats mb-6">
         <div class="stats stats-horizontal shadow">
           <div class="stat">
-            <div class="stat-title">Total Sessions</div>
+            <div class="stat-title">Total Projects</div>
             <div class="stat-value text-primary">{$sessionStats.total}</div>
           </div>
 
@@ -297,7 +297,7 @@
 {#if showCreateModal}
   <div class="modal modal-open">
     <div class="modal-box">
-      <h3 class="font-bold text-lg mb-4">Create New Session</h3>
+      <h3 class="font-bold text-lg mb-4">Create New Project</h3>
 
       <div class="form-control mb-4">
         <label for="project-select" class="label">
@@ -325,7 +325,7 @@
           disabled={isCreatingSession || !selectedProject}
           on:click={createSession}
         >
-          {isCreatingSession ? 'Creating...' : 'Create Session'}
+          {isCreatingSession ? 'Creating...' : 'Create Project'}
         </button>
         <button
           class="btn btn-ghost"

@@ -91,6 +91,11 @@
   function handleManageWorkspaces() {
     dispatch('manageWorkspaces', { session: session.session_name });
   }
+
+  function handleViewWorkspaceDefinitions() {
+    // 워크스페이스 정의 보기 - workspaces 페이지로 이동
+    window.location.href = `/workspaces?session=${session.session_name}`;
+  }
 </script>
 
 <div class="session-card card bg-base-100 shadow-lg border border-base-content/10 hover:shadow-xl transition-shadow">
@@ -136,7 +141,19 @@
     </div>
 
     <!-- 세션 통계 -->
-    <div class="session-stats grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+    <div class="session-stats grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
+      <div class="stat-item bg-base-200 p-3 rounded-lg cursor-pointer hover:bg-base-300 transition-colors {workspaceNames.length === 0 ? 'border border-dashed border-base-content/30' : ''}" 
+           on:click={handleViewWorkspaceDefinitions}
+           on:keydown={(e) => e.key === 'Enter' && handleViewWorkspaceDefinitions()}
+           tabindex="0"
+           title="Click to view workspace definitions">
+        <div class="stat-title text-xs text-base-content/60">Workspace Definitions</div>
+        <div class="stat-value text-lg font-bold {workspaceNames.length === 0 ? 'text-base-content/50' : ''}">{workspaceNames.length}</div>
+        <div class="text-xs {workspaceNames.length === 0 ? 'text-warning' : 'text-primary'} mt-1">
+          {workspaceNames.length === 0 ? '⚠️ Configure' : '👁️ View'}
+        </div>
+      </div>
+
       <div class="stat-item bg-base-200 p-3 rounded-lg">
         <div class="stat-title text-xs text-base-content/60">Windows</div>
         <div class="stat-value text-lg font-bold">{session.windows?.length || 0}</div>

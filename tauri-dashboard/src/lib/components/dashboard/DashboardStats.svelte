@@ -140,7 +140,7 @@
           {totalSessions}
         </div>
         <div class="stat-subtitle text-sm text-base-content/70">
-          Tmux Sessions
+          Projects
         </div>
 
         <div class="stat-breakdown mt-3 grid grid-cols-3 gap-2 text-xs">
@@ -212,7 +212,7 @@
 
         <div class="stat-breakdown mt-3 space-y-2 text-xs">
           <div class="flex justify-between">
-            <span class="text-base-content/60">Sessions:</span>
+            <span class="text-base-content/60">Projects:</span>
             <span class="font-semibold">{sessionsWithWorkspaces}</span>
           </div>
           <div class="flex justify-between">
@@ -261,7 +261,7 @@
           ></div>
         </div>
         <div class="text-xs text-base-content/60 mt-1">
-          {activeSessions} sessions active
+          {activeSessions} projects active
         </div>
       </div>
 

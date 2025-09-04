@@ -18,16 +18,16 @@
     {
       id: 'setup',
       icon: '⚡',
-      label: 'Setup All Sessions',
-      description: 'Create all sessions from config',
+      label: 'Setup All Projects',
+      description: 'Create all projects from config',
       variant: 'btn-primary',
       hotkey: 'S'
     },
     {
       id: 'teardown',
       icon: '🛑',
-      label: 'Teardown All Sessions',
-      description: 'Stop and remove all sessions',
+      label: 'Teardown All Projects',
+      description: 'Stop and remove all projects',
       variant: 'btn-error btn-outline',
       hotkey: 'Ctrl+D',
       confirmRequired: true
@@ -89,7 +89,7 @@
     if (isActionDisabled(action.id)) {
       switch (action.id) {
         case 'teardown':
-          tooltip += ' - No active sessions';
+          tooltip += ' - No active projects';
           break;
       }
     }
@@ -108,7 +108,7 @@
         ⚡ Quick Actions
       </h3>
       <p class="text-sm text-base-content/60 mt-1">
-        Manage tmux sessions with one click
+        Manage tmux projects with one click
       </p>
     </div>
 
@@ -116,11 +116,11 @@
     <div class="status-summary hidden lg:flex items-center gap-4 text-sm">
       <div class="stat-badge bg-primary/10 text-primary px-3 py-1 rounded-full">
         <span class="font-semibold">{activeSessions}</span>
-        <span class="text-xs ml-1">Active Sessions</span>
+        <span class="text-xs ml-1">Active Projects</span>
       </div>
       <div class="stat-badge bg-base-300 text-base-content px-3 py-1 rounded-full">
         <span class="font-semibold">{totalSessions}</span>
-        <span class="text-xs ml-1">Total Sessions</span>
+        <span class="text-xs ml-1">Total Projects</span>
       </div>
     </div>
   </div>
@@ -165,7 +165,7 @@
         <!-- 액션별 추가 정보 -->
         {#if action.id === 'teardown' && activeSessions > 0}
           <div class="action-info text-xs text-center mt-2 text-base-content/60">
-            {activeSessions} session{activeSessions > 1 ? 's' : ''} to teardown
+            {activeSessions} project{activeSessions > 1 ? 's' : ''} to teardown
           </div>
         {/if}
       </div>

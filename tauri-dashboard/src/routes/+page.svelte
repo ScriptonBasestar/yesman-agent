@@ -10,19 +10,12 @@
     isLoading,
     isBackgroundLoading,
     error,
-    refreshSessions,
-    updateControllerStatus
+    refreshSessions
   } from '$lib/stores/sessions';
   import { notifySuccess, notifyError } from '$lib/stores/notifications';
   import { api } from '$lib/utils/api';
   import ConnectionStatusBadge from '$lib/components/common/ConnectionStatusBadge.svelte';
 
-  // 세션 상태 변경 핸들러
-  function handleSessionStatusChanged(event: CustomEvent) {
-    const { session } = event.detail;
-    updateControllerStatus(session);
-    notifySuccess('Status Updated', `Controller status updated for ${session}`);
-  }
 
   // 세션 상세보기 핸들러
   function handleViewDetails(event: CustomEvent) {

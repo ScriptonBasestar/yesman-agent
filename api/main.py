@@ -95,7 +95,7 @@ app.add_middleware(
 )
 
 # Include API routers
-app.include_router(sessions.router, prefix="/api", tags=["sessions"])
+app.include_router(sessions.router, prefix="/api", tags=["projects"])
 app.include_router(config.router, prefix="/api", tags=["configuration"])
 app.include_router(logs.router, prefix="/api", tags=["logs"])
 app.include_router(agents.router, prefix="/api", tags=["agents"])

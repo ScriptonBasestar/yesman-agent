@@ -6,7 +6,7 @@ Yesman-Agent의 FastAPI 기반 REST API 엔드포인트 완전 가이드입니�
 
 1. [API 개요](#api-%EA%B0%9C%EC%9A%94)
 1. [인증 및 보안](#%EC%9D%B8%EC%A6%9D-%EB%B0%8F-%EB%B3%B4%EC%95%88)
-1. [세션 관리](#%EC%84%B8%EC%85%98-%EA%B4%80%EB%A6%AC)
+1. [프로젝트 관리](#%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8-%EA%B4%80%EB%A6%AC)
 1. [컨트롤러 관리](#%EC%BB%A8%ED%8A%B8%EB%A1%A4%EB%9F%AC-%EA%B4%80%EB%A6%AC)
 1. [건강도 모니터링](#%EA%B1%B4%EA%B0%95%EB%8F%84-%EB%AA%A8%EB%8B%88%ED%84%B0%EB%A7%81)
 1. [성능 메트릭](#%EC%84%B1%EB%8A%A5-%EB%A9%94%ED%8A%B8%EB%A6%AD)
@@ -58,7 +58,7 @@ API 서버는 다음 도메인에서의 접근을 허용합니다:
 - `http://localhost:3000` (기타 개발 서버)
 - `https://tauri.localhost` (Tauri 프로덕션)
 
-## 📋 세션 관리
+## 📋 프로젝트 관리
 
 ### 모든 세션 조회
 
@@ -131,7 +131,7 @@ curl -X GET "http://localhost:10501/api/sessions/my-project"
 }
 ```
 
-### 세션 설정 (생성)
+### 프로젝트 설정 (생성)
 
 **POST** `/sessions/{session_name}/setup`
 
@@ -156,7 +156,7 @@ curl -X POST "http://localhost:10501/api/sessions/my-project/setup"
 }
 ```
 
-### 세션 삭제 (Teardown)
+### 프로젝트 삭제 (Teardown)
 
 **DELETE** `/sessions/{session_name}`
 
@@ -195,7 +195,7 @@ curl -X POST "http://localhost:10501/api/sessions/setup-all"
 curl -X POST "http://localhost:10501/api/sessions/teardown-all"
 ```
 
-### 세션 시작
+### 프로젝트 시작
 
 **POST** `/sessions/{session_name}/start`
 
@@ -205,7 +205,7 @@ curl -X POST "http://localhost:10501/api/sessions/teardown-all"
 curl -X POST "http://localhost:10501/api/sessions/my-project/start"
 ```
 
-### 세션 중지
+### 프로젝트 중지
 
 **POST** `/sessions/{session_name}/stop`
 
@@ -215,7 +215,7 @@ curl -X POST "http://localhost:10501/api/sessions/my-project/start"
 curl -X POST "http://localhost:10501/api/sessions/my-project/stop"
 ```
 
-### 세션 상태 조회
+### 프로젝트 상태 조회
 
 **GET** `/sessions/{session_name}/status`
 
