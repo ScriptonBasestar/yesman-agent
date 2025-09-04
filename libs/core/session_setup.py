@@ -7,7 +7,6 @@ import pathlib
 import subprocess
 from typing import TYPE_CHECKING, Any
 
-import click
 import yaml
 
 from libs.validation import (
@@ -16,8 +15,13 @@ from libs.validation import (
     validate_window_name,
 )
 
-from .base_command import CommandError
+from .error_handling import YesmanError
 from .settings import settings
+
+
+class SessionSetupError(YesmanError):
+    """Session setup specific error."""
+    pass
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -121,7 +125,7 @@ class SessionConfigBuilder:
             Complete session configuration dictionary
 
         Raises:
-            CommandError: If template loading fails
+            SessionSetupError: If template loading fails
         """
         template_name = session_conf.get("template_name")
         template_conf = self._load_template(template_name)
@@ -149,7 +153,7 @@ class SessionConfigBuilder:
             Template configuration dictionary
 
         Raises:
-            CommandError: If template loading fails
+            SessionSetupError: If template loading fails
         """
         if not template_name:
             return {}
@@ -161,7 +165,7 @@ class SessionConfigBuilder:
 
         if not template_file.is_file():
             msg = f"Template '{template_name}' not found at {template_file}"
-            raise CommandError(
+            raise SessionSetupError(
                 msg,
             )
 
@@ -170,7 +174,7 @@ class SessionConfigBuilder:
                 return yaml.safe_load(tf) or {}
         except Exception as e:
             msg = f"Failed to read template {template_file}: {e}"
-            raise CommandError(msg) from e
+            raise SessionSetupError(msg) from e
 
 
 class SessionSetupService:
@@ -233,7 +237,7 @@ class SessionSetupService:
         if session_filter:
             if session_filter not in all_sessions:
                 msg = f"Session '{session_filter}' not defined in projects.yaml"
-                raise CommandError(msg)
+                raise SessionSetupError(msg)
             return {session_filter: all_sessions[session_filter]}
 
         return dict(all_sessions)
@@ -278,7 +282,7 @@ class SessionSetupService:
             click.echo(f"✅ Successfully created session: {session_name}")
             return True
 
-        except CommandError as e:
+        except SessionSetupError as e:
             click.echo(f"❌ Error setting up session '{session_name}': {e.message}")
             return False
         except Exception as e:
@@ -305,7 +309,7 @@ class SessionSetupService:
             )
         except subprocess.CalledProcessError as e:
             msg = f"Failed to kill existing session: {e}"
-            raise CommandError(msg) from e
+            raise SessionSetupError(msg) from e
 
     def _create_session(self, config_dict: dict[str, Any]) -> None:
         """Create tmux session from configuration."""
@@ -315,10 +319,10 @@ class SessionSetupService:
                 create_func(config_dict)
             else:
                 msg = "tmux_manager does not support create_session_from_config"
-                raise CommandError(msg)
+                raise SessionSetupError(msg)
         except Exception as e:
             msg = f"Failed to create tmux session: {e}"
-            raise CommandError(msg) from e
+            raise SessionSetupError(msg) from e
 
     def _dry_run_sessions(self, sessions: dict[str, Any]) -> tuple[int, int]:
         """Dry run mode - show what would be done without actually creating sessions.

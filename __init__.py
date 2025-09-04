@@ -1,1 +1,1 @@
-"""Yesman CLI package."""
+"""Yesman workspace management server package."""

@@ -13,8 +13,6 @@ from typing import Any
 
 import yaml
 from pydantic import ValidationError as PydanticValidationError
-from rich.console import Console
-from rich.table import Table
 
 from .config_loader import ConfigLoader
 from .config_schema import YesmanConfigSchema
@@ -261,16 +259,16 @@ class ConfigValidator:
     def display_results(self, result: ValidationResult, verbose: bool = False) -> None:
         """Display validation results with Rich formatting."""
         if result.is_valid and not result.warnings and not verbose:
-            self.console.print("✅ All configuration validation passed", style="green bold")
+            print("✅ All configuration validation passed", style="green bold")
             return
 
         # Summary
         if result.is_valid:
-            self.console.print("✅ Configuration is valid", style="green bold")
+            print("✅ Configuration is valid", style="green bold")
         else:
-            self.console.print("❌ Configuration has issues", style="red bold")
+            print("❌ Configuration has issues", style="red bold")
 
-        self.console.print()
+        print()
 
         # Create summary table
         table = Table(title="Validation Summary")
@@ -285,26 +283,26 @@ class ConfigValidator:
         if verbose and result.info:
             table.add_row("Info", "ℹ️", str(len(result.info)), style="blue")
 
-        self.console.print(table)
-        self.console.print()
+        print(table)
+        print()
 
         # Detailed issues
         for error in result.errors:
-            self.console.print(f"❌ {error.message}", style="red")
+            print(f"❌ {error.message}", style="red")
             if error.suggestion:
-                self.console.print(f"   💡 {error.suggestion}", style="yellow")
-            self.console.print()
+                print(f"   💡 {error.suggestion}", style="yellow")
+            print()
 
         for warning in result.warnings:
-            self.console.print(f"⚠️  {warning.message}", style="yellow")
+            print(f"⚠️  {warning.message}", style="yellow")
             if warning.suggestion:
-                self.console.print(f"   💡 {warning.suggestion}", style="cyan")
-            self.console.print()
+                print(f"   💡 {warning.suggestion}", style="cyan")
+            print()
 
         if verbose:
             for info in result.info:
-                self.console.print(f"ℹ️  {info.message}", style="blue")
-                self.console.print()
+                print(f"ℹ️  {info.message}", style="blue")
+                print()
 
     def auto_fix(self, result: ValidationResult) -> int:
         """Attempt to automatically fix fixable issues."""
@@ -321,8 +319,8 @@ class ConfigValidator:
 
                     os.chmod(error.file_path, 0o755)
                     fixed_count += 1
-                    self.console.print(f"✅ Fixed permissions for: {error.file_path}", style="green")
+                    print(f"✅ Fixed permissions for: {error.file_path}", style="green")
             except Exception as e:
-                self.console.print(f"❌ Failed to fix {error.message}: {e}", style="red")
+                print(f"❌ Failed to fix {error.message}: {e}", style="red")
 
         return fixed_count

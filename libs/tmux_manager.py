@@ -10,7 +10,6 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
-import click
 import libtmux
 import yaml
 from tmuxp.workspace.builder import WorkspaceBuilder
@@ -328,12 +327,12 @@ class TmuxManager:
         server = libtmux.Server()
         sessions = list(server.sessions)
         if not sessions:
-            click.echo("No running tmux sessions found")
+            print("No running tmux sessions found")
             return
-        click.echo("Running tmux sessions:")
+        print("Running tmux sessions:")
         for sess in sessions:
             name = sess.get("session_name")
-            click.echo(f"  - {name}")
+            print(f"  - {name}")
 
     def get_session_info(self, session_name: str) -> dict[str, object]:
         """Get session information directly from tmux.
