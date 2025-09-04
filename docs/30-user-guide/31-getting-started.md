@@ -44,7 +44,9 @@ Yesman-Claude 시작 가이드 - 설치부터 기본 사용법까지 모든 것�
 1. **설치 테스트**:
 
    ```bash
-   uv run ./yesman.py --help
+   python run-server.py --help
+   # or
+   ./run-dashboard.sh web
    ```
 
 ### 첫 번째 단계
@@ -52,33 +54,43 @@ Yesman-Claude 시작 가이드 - 설치부터 기본 사용법까지 모든 것�
 1. **사용 가능한 템플릿 확인**:
 
    ```bash
-   uv run ./yesman.py ls
+   # Server API를 통해 템플릿 확인
+   ./run-dashboard.sh web
+   # 브라우저에서 http://localhost:5173 접속
    ```
 
 1. **첫 번째 세션 생성**:
 
    ```bash
-   uv run ./yesman.py setup
+   # API 서버를 통해 세션 생성
+   python run-server.py &
+   # 또는 통합 스크립트 사용
+   ./start-yesman.sh
    ```
 
 1. **대시보드 열기**:
 
    ```bash
-   uv run ./yesman.py dashboard run
+   # 웹 대시보드 실행
+   ./run-dashboard.sh web
+   # 또는 Tauri 데스크톱 앱
+   ./run-dashboard.sh tauri
    ```
 
 ## 📊 대시보드 인터페이스
 
-Yesman-Claude는 세 가지 대시보드 인터페이스를 제공하며, 각각 다른 사용 사례에 최적화되어 있습니다.
+Yesman-Claude는 두 가지 대시보드 인터페이스를 제공하며, 각각 다른 사용 사례에 최적화되어 있습니다.
 
-### 터미널 사용자 인터페이스 (TUI)
+### 웹 인터페이스 (SvelteKit)
 
-TUI는 실시간 업데이트와 완전한 키보드 탐색 기능을 갖춘 풍부한 터미널 기반 대시보드를 제공합니다.
+현대적인 웹 기반 대시보드로 FastAPI 백엔드를 통해 제공됩니다.
 
-**TUI 실행**:
+**웹 실행**:
 
 ```bash
-uv run ./yesman.py dashboard run --interface tui
+# 웹 대시보드 시작
+./run-dashboard.sh web
+# 브라우저에서 http://localhost:5173 접속
 ```
 
 **기능**:
@@ -86,24 +98,21 @@ uv run ./yesman.py dashboard run --interface tui
 - 실시간 세션 모니터링
 - 활동 히트맵
 - 프로젝트 건강 지표
-- 키보드 전용 탐색
-- 낮은 리소스 사용량
-- SSH 친화적
+- 브라우저 기반 접근
+- 원격 모니터링
+- 팀 협업 지원
 
-**적합한 용도**: SSH 세션, 헤드리스 서버, 최소 환경
+**적합한 용도**: 원격 모니터링, 팀 협업, 브라우저 기반 워크플로
 
-### 웹 인터페이스
+### Tauri 데스크톱 앱
 
-웹 인터페이스는 REST API 백엔드와 함께 브라우저 기반 대시보드를 제공합니다.
+네이티브 데스크톱 애플리케이션으로 시스템 통합 기능을 제공합니다.
 
-**웹 인터페이스 실행**:
+**Tauri 실행**:
 
 ```bash
-# 기본 포트 (8000)
-uv run ./yesman.py dash web
-
-# 커스텀 포트
-uv run ./yesman.py dash web --port 3000
+# 데스크톱 앱 시작
+./run-dashboard.sh tauri
 
 # 브라우저 자동 열기
 uv run ./yesman.py dash web --open

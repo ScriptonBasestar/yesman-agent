@@ -56,7 +56,7 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies: [types-PyYAML]
-        files: ^(libs/|commands/|api/)
+        files: ^(libs/|api/)
         args: [--config-file=pyproject.toml, --ignore-missing-imports, --disable-error-code=union-attr,arg-type,assignment,return-value,attr-defined,call-arg,index,var-annotated,dict-item]
         stages: [manual]  # Move to manual stage to avoid blocking pushes
 

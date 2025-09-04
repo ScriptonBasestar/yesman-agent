@@ -199,7 +199,7 @@ class SessionSetupService:
         sessions = self._load_sessions_config(session_filter)
 
         if not sessions:
-            click.echo("No sessions to set up")
+            print("No sessions to set up")
             return 0, 0
 
         if dry_run:
@@ -215,14 +215,14 @@ class SessionSetupService:
                 else:
                     failed_count += 1
             except Exception as e:
-                click.echo(f"❌ Failed to set up session '{session_name}': {e}")
+                print(f"❌ Failed to set up session '{session_name}': {e}")
                 failed_count += 1
 
         # Summary
-        click.echo("\n📊 Setup Summary:")
-        click.echo(f"  ✅ Successful: {successful_count}")
+        print("\n📊 Setup Summary:")
+        print(f"  ✅ Successful: {successful_count}")
         if failed_count > 0:
-            click.echo(f"  ❌ Failed: {failed_count}")
+            print(f"  ❌ Failed: {failed_count}")
 
         return successful_count, failed_count
 
@@ -253,7 +253,7 @@ class SessionSetupService:
         Returns:
             True if successful, False otherwise
         """
-        click.echo(f"🔧 Setting up session: {session_name}")
+        print(f"🔧 Setting up session: {session_name}")
 
         try:
             # Build configuration
@@ -262,31 +262,31 @@ class SessionSetupService:
             # Validate configuration
             if not self.validator.validate_session_config(session_name, config_dict):
                 for error in self.validator.get_validation_errors():
-                    click.echo(f"❌ Validation error: {error}")
+                    print(f"❌ Validation error: {error}")
                 return False
 
             # Check if session already exists
             if self._session_exists(session_name):
-                click.echo(f"⚠️  Session '{session_name}' already exists")
+                print(f"⚠️  Session '{session_name}' already exists")
                 if force:
-                    click.echo(f"🔨 Force mode: Killing existing session '{session_name}'")
+                    print(f"🔨 Force mode: Killing existing session '{session_name}'")
                     self._kill_session(session_name)
-                elif not click.confirm("Do you want to kill the existing session and recreate it?"):
-                    click.echo(f"⏭️  Skipping session '{session_name}'")
+                elif input("Do you want to kill the existing session and recreate it? (y/N): ").lower() not in ['y', 'yes']:
+                    print(f"⏭️  Skipping session '{session_name}'")
                     return False
                 else:
                     self._kill_session(session_name)
 
             # Create session
             self._create_session(config_dict)
-            click.echo(f"✅ Successfully created session: {session_name}")
+            print(f"✅ Successfully created session: {session_name}")
             return True
 
         except SessionSetupError as e:
-            click.echo(f"❌ Error setting up session '{session_name}': {e.message}")
+            print(f"❌ Error setting up session '{session_name}': {e.message}")
             return False
         except Exception as e:
-            click.echo(f"❌ Unexpected error setting up session '{session_name}': {e}")
+            print(f"❌ Unexpected error setting up session '{session_name}': {e}")
             return False
 
     def _session_exists(self, session_name: str) -> bool:
@@ -333,14 +333,14 @@ class SessionSetupService:
         Returns:
             Tuple of (planned_count, validation_errors_count)
         """
-        click.echo("🔍 DRY-RUN MODE: Showing what would be done")
-        click.echo("=" * 50)
+        print("🔍 DRY-RUN MODE: Showing what would be done")
+        print("=" * 50)
 
         planned_count = 0
         validation_errors_count = 0
 
         for session_name, session_conf in sessions.items():
-            click.echo(f"\n🔧 Would set up session: {session_name}")
+            print(f"\n🔧 Would set up session: {session_name}")
 
             try:
                 # Build configuration (validation only)
@@ -348,37 +348,37 @@ class SessionSetupService:
 
                 # Show session details
                 windows = config_dict.get("windows", [])
-                click.echo(f"  🪟 Windows: {len(windows)}")
+                print(f"  🪟 Windows: {len(windows)}")
 
                 for i, window in enumerate(windows, 1):
                     window_name = window.get("window_name", f"window-{i}")
                     panes = window.get("panes", [])
-                    click.echo(f"    {i}. {window_name} ({len(panes)} panes)")
+                    print(f"    {i}. {window_name} ({len(panes)} panes)")
 
                 # Check validation (but don't modify anything)
                 if not self.validator.validate_session_config(session_name, config_dict):
-                    click.echo("  ❌ Validation errors:")
+                    print("  ❌ Validation errors:")
                     for error in self.validator.get_validation_errors():
-                        click.echo(f"    - {error}")
+                        print(f"    - {error}")
                     validation_errors_count += 1
                 else:
                     # Check if session already exists
                     if self._session_exists(session_name):
-                        click.echo(f"  ⚠️  Session '{session_name}' already exists (would be recreated)")
+                        print(f"  ⚠️  Session '{session_name}' already exists (would be recreated)")
                     else:
-                        click.echo("  ✨ New session would be created")
+                        print("  ✨ New session would be created")
 
                     planned_count += 1
 
             except Exception as e:
-                click.echo(f"  ❌ Configuration error: {e}")
+                print(f"  ❌ Configuration error: {e}")
                 validation_errors_count += 1
 
         # Summary
-        click.echo("\n📊 DRY-RUN Summary:")
-        click.echo(f"  ✨ Sessions planned: {planned_count}")
+        print("\n📊 DRY-RUN Summary:")
+        print(f"  ✨ Sessions planned: {planned_count}")
         if validation_errors_count > 0:
-            click.echo(f"  ❌ Validation errors: {validation_errors_count}")
-        click.echo("\n💡 Use without --dry-run to actually create the sessions")
+            print(f"  ❌ Validation errors: {validation_errors_count}")
+        print("\n💡 Use without --dry-run to actually create the sessions")
 
         return planned_count, validation_errors_count
