@@ -138,8 +138,9 @@ export async function check(): Promise<void> {
       const unsubscribe = healthState.subscribe(v => (previous = v));
       unsubscribe();
 
-      // 최신 상태 반영
-      healthStore.set({ ...res.data, lastUpdated: new Date(res.timestamp) });
+      // 최신 상태 반영 - timestamp를 올바르게 처리
+      const lastUpdated = res.data.last_updated ? new Date(res.data.last_updated) : new Date(res.timestamp);
+      healthStore.set({ ...res.data, lastUpdated });
 
       // 상태 변경 콜백 호출
       if (onStatusChangeCallback) {

@@ -192,7 +192,7 @@ export class ApiClient {
 
     // 매핑 로직: overall_score와 categories.status를 HealthStatus로 변환
     const score: number = Number(res.data.overall_score ?? 0);
-    const overall: HealthStatus['overall'] = score >= 80 ? 'healthy' : score >= 50 ? 'warning' : 'error';
+    const overall: HealthStatus['overall'] = score >= 75 ? 'healthy' : score >= 50 ? 'warning' : 'error';
 
     const components: HealthStatus['components'] = {};
     const categories = res.data.categories || {};
