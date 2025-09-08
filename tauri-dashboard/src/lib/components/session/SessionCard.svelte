@@ -143,6 +143,7 @@
     <!-- 세션 통계 -->
     <div class="session-stats grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
       <div class="stat-item bg-base-200 p-3 rounded-lg cursor-pointer hover:bg-base-300 transition-colors {workspaceNames.length === 0 ? 'border border-dashed border-base-content/30' : ''}" 
+           role="button"
            on:click={handleViewWorkspaceDefinitions}
            on:keydown={(e) => e.key === 'Enter' && handleViewWorkspaceDefinitions()}
            tabindex="0"

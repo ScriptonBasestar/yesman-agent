@@ -89,11 +89,11 @@
     <!-- API 서버 상태 -->
     <div class="stat-card bg-gradient-to-br from-base-300 to-base-200 border border-base-content/20 rounded-xl p-6">
       <div class="stat-header flex items-center justify-between mb-4">
-        <div class="stat-icon {$isHealthy ? 'text-success' : $isUnhealthy ? 'text-error' : 'text-warning'}">
-          <span class="text-3xl">{$isHealthy ? '✅' : $isUnhealthy ? '❌' : '⚠️'}</span>
+        <div class="stat-icon {$isHealthy ? 'text-success' : $health.overall === 'error' ? 'text-error' : 'text-warning'}">
+          <span class="text-3xl">{$isHealthy ? '✅' : $health.overall === 'error' ? '❌' : '⚠️'}</span>
         </div>
-        <div class="stat-trend text-xs {$isHealthy ? 'text-success' : $isUnhealthy ? 'text-error' : 'text-warning'}">
-          {$isHealthy ? 'Healthy' : $isUnhealthy ? 'Unhealthy' : 'Degraded'}
+        <div class="stat-trend text-xs {$isHealthy ? 'text-success' : $health.overall === 'error' ? 'text-error' : 'text-warning'}">
+          {$isHealthy ? 'Healthy' : $health.overall === 'error' ? 'Unhealthy' : $health.overall === 'warning' ? 'Warning' : 'Unknown'}
         </div>
       </div>
 
@@ -112,7 +112,7 @@
           </div>
           <div class="flex justify-between">
             <span class="text-base-content/60">Last Check:</span>
-            <span class="font-semibold">{$healthState.lastCheck ? formatLastCheck($healthState.lastCheck) : 'Never'}</span>
+            <span class="font-semibold">{$health.lastUpdated ? formatLastCheck($health.lastUpdated) : 'Never'}</span>
           </div>
           {#if $healthState.consecutiveFailures > 0}
             <div class="flex justify-between">

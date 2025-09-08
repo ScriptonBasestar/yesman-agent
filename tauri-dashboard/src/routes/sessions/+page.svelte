@@ -37,6 +37,7 @@
   let showWorkspaceModal = false;
   let selectedSessionForWorkspace = '';
   let workspaceConfig = {};
+  let workspaceConfigJson = '';
 
   // 워크스페이스 관리 이벤트 핸들러
   async function handleManageWorkspaces(event: CustomEvent) {
@@ -46,6 +47,7 @@
     try {
       const workspaceInfo = await getWorkspaceInfo(session);
       workspaceConfig = workspaceInfo || {};
+      workspaceConfigJson = JSON.stringify(workspaceConfig, null, 2);
       showWorkspaceModal = true;
     } catch (error) {
       console.error('Failed to load workspace info:', error);
@@ -372,7 +374,7 @@
           <textarea
             class="textarea textarea-bordered font-mono text-sm h-96"
             placeholder="Enter workspace configuration..."
-            bind:value={JSON.stringify(workspaceConfig, null, 2)}
+            bind:value={workspaceConfigJson}
             on:input={(e) => {
               try {
                 workspaceConfig = JSON.parse(e.target.value);
@@ -383,7 +385,7 @@
           ></textarea>
           <div class="label">
             <span class="label-text-alt">
-              Example: {"workspace_config": {"base_dir": "~/projects"}, "workspace_definitions": {"frontend": {"rel_dir": "./app", "allowed_paths": ["."], "description": "Frontend workspace"}}}
+              Example: {`{"workspace_config": {"base_dir": "~/projects"}, "workspace_definitions": {"frontend": {"rel_dir": "./app", "allowed_paths": ["."], "description": "Frontend workspace"}}}`}
             </span>
           </div>
         </div>

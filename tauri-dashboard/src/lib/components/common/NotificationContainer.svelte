@@ -261,7 +261,7 @@
   }
 
   .toast-close-btn {
-    @apply absolute top-2 right-2 btn btn-ghost btn-xs btn-circle;
+    @apply absolute top-2 right-2 w-6 h-6 rounded-full bg-transparent border-0 flex items-center justify-center text-xs hover:bg-base-content/10 transition-colors;
   }
 
   @keyframes shrink {
