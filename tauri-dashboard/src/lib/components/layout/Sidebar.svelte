@@ -18,10 +18,10 @@
       description: 'Main overview'
     },
     {
-      path: '/sessions',
+      path: '/projects',
       icon: '🖥️',
       label: 'Projects',
-      description: 'Project sessions'
+      description: 'Sessions & workspaces'
     },
     {
       path: '/agents',
@@ -34,12 +34,6 @@
       icon: '🤖',
       label: 'AI Providers',
       description: 'Multi-AI support'
-    },
-    {
-      path: '/workspaces',
-      icon: '🗂️',
-      label: 'Workspaces',
-      description: 'Development environments'
     },
     {
       path: '/logs',

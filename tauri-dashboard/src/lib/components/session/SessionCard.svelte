@@ -141,14 +141,14 @@
     </div>
 
     <!-- 세션 통계 -->
-    <div class="session-stats grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
+    <div class="session-stats grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
       <div class="stat-item bg-base-200 p-3 rounded-lg cursor-pointer hover:bg-base-300 transition-colors {workspaceNames.length === 0 ? 'border border-dashed border-base-content/30' : ''}" 
            role="button"
            on:click={handleViewWorkspaceDefinitions}
            on:keydown={(e) => e.key === 'Enter' && handleViewWorkspaceDefinitions()}
            tabindex="0"
            title="Click to view workspace definitions">
-        <div class="stat-title text-xs text-base-content/60">Workspace Definitions</div>
+        <div class="stat-title text-xs text-base-content/60">Workspaces</div>
         <div class="stat-value text-lg font-bold {workspaceNames.length === 0 ? 'text-base-content/50' : ''}">{workspaceNames.length}</div>
         <div class="text-xs {workspaceNames.length === 0 ? 'text-warning' : 'text-primary'} mt-1">
           {workspaceNames.length === 0 ? '⚠️ Configure' : '👁️ View'}
@@ -166,13 +166,8 @@
       </div>
 
       <div class="stat-item bg-base-200 p-3 rounded-lg">
-        <div class="stat-title text-xs text-base-content/60">Workspaces</div>
-        <div class="stat-value text-lg font-bold">{workspaceNames.length}</div>
-      </div>
-
-      <div class="stat-item bg-base-200 p-3 rounded-lg">
         <div class="stat-title text-xs text-base-content/60">Last Activity</div>
-        <div class="stat-value text-sm">{formatLastActivity(session.last_activity_timestamp)}</div>
+        <div class="stat-value text-xs">{formatLastActivity(session.last_activity_timestamp)}</div>
       </div>
     </div>
 
