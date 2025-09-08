@@ -1,0 +1,1 @@
+"""Dashboard module for Yesman project health monitoring and widgets."""
