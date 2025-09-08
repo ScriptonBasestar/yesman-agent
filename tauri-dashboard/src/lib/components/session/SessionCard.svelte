@@ -93,8 +93,8 @@
   }
 
   function handleViewWorkspaceDefinitions() {
-    // 워크스페이스 정의 보기 - workspaces 페이지로 이동
-    window.location.href = `/workspaces?session=${session.session_name}`;
+    // 워크스페이스 정의 보기 - projects 페이지의 workspaces 탭으로 이동
+    window.location.href = `/projects?tab=workspaces&session=${session.session_name}`;
   }
 </script>
 

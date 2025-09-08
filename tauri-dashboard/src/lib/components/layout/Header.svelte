@@ -16,7 +16,7 @@
   // 페이지 타이틀 매핑
   const pageTitles: Record<string, string> = {
     '/': 'Dashboard Overview',
-    '/sessions': 'Tmux Sessions',
+    '/projects': 'Projects & Workspaces',
     '/controllers': 'Claude Controllers',
     '/logs': 'Activity Logs',
     '/settings': 'Settings'
