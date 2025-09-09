@@ -101,11 +101,11 @@
 <div class="session-card card bg-base-100 shadow-lg border border-base-content/10 hover:shadow-xl transition-shadow">
   <div class="card-body p-6">
     <!-- 카드 헤더 -->
-    <div class="card-header flex items-start justify-between mb-4">
+    <div class="card-header flex items-center justify-between mb-4">
       <div class="session-info flex-1">
-        <div class="flex items-center gap-3 mb-2">
-          <h3 class="card-title text-lg font-semibold">{session.session_name}</h3>
-          <div class="badge {sessionStyle.badge} badge-sm">
+        <div class="flex items-center justify-between gap-3 mb-2">
+          <h3 class="card-title text-lg font-semibold flex-1 min-w-0 break-words">{session.session_name}</h3>
+          <div class="badge {sessionStyle.badge} badge-sm flex-shrink-0">
             {sessionStyle.icon} {session.status}
           </div>
         </div>
@@ -228,30 +228,6 @@
 
     <!-- 세션 액션 -->
     <div class="session-actions">
-      <!-- 세션 상태 경고 -->
-      {#if !isSessionRunning}
-        <div class="session-warning bg-warning/10 border border-warning/20 p-3 rounded-lg mb-3">
-          <div class="flex items-center justify-between gap-3">
-            <div class="flex items-center gap-2">
-              <span class="text-warning">⚠️</span>
-              <div>
-                <div class="text-sm font-medium text-warning">Session Not Running</div>
-                <div class="text-xs text-base-content/60">
-                  Start the tmux session to begin working
-                </div>
-              </div>
-            </div>
-            <button
-              class="btn btn-warning btn-sm"
-              on:click={handleStartSession}
-              title="Start tmux session"
-            >
-              ▶️ Start Session
-            </button>
-          </div>
-        </div>
-      {/if}
-
       <!-- 세션 액션 버튼 -->
       <div class="actions flex gap-2">
         {#if !isSessionRunning}

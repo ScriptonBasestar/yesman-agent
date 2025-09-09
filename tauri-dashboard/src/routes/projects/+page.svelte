@@ -167,6 +167,17 @@
       }
     }
   }
+
+  // 세션 시작 핸들러
+  async function handleStartSession(event: CustomEvent) {
+    const { session } = event.detail;
+    try {
+      const { setupSession } = await import('$lib/stores/sessions');
+      await setupSession(session);
+    } catch (error) {
+      console.error('Failed to start session:', error);
+    }
+  }
 </script>
 
 <svelte:head>
@@ -314,6 +325,7 @@
               {session} 
               on:viewLogs={viewSessionLogs} 
               on:manageWorkspaces={handleManageWorkspaces}
+              on:startSession={handleStartSession}
             />
           {/each}
         </div>

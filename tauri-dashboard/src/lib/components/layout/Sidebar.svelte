@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { sessions } from '$lib/stores/sessions';
   import { page } from '$app/stores';
   import { createEventDispatcher } from 'svelte';
 
@@ -84,29 +85,46 @@
   }
 </script>
 
-<aside class="sidebar bg-base-200 w-64 min-h-screen p-4 space-y-6">
+<aside class="sidebar bg-base-200 min-h-screen space-y-6 transition-all duration-300" class:w-16={isMinimized} class:w-64={!isMinimized} class:p-2={isMinimized} class:p-4={!isMinimized}>
   <!-- 로고 및 타이틀 -->
   <div class="sidebar-header">
-    <div class="flex items-center gap-3 mb-2">
-      <div class="avatar placeholder">
-        <div class="bg-primary text-primary-content rounded-full w-10">
-          <span class="text-xl">🚀</span>
+    {#if isMinimized}
+      <!-- Minimized header: centered avatar with toggle button below -->
+      <div class="flex flex-col items-center gap-2 mb-2">
+        <div class="avatar placeholder">
+          <div class="bg-primary text-primary-content rounded-full w-10">
+            <span class="text-xl">🚀</span>
+          </div>
         </div>
+        <button 
+          class="btn btn-ghost btn-xs" 
+          on:click={toggleMinimized}
+          title="Expand sidebar"
+        >
+          →
+        </button>
       </div>
-      {#if !isMinimized}
+    {:else}
+      <!-- Expanded header: horizontal layout -->
+      <div class="flex items-center gap-3 mb-2">
+        <div class="avatar placeholder">
+          <div class="bg-primary text-primary-content rounded-full w-10">
+            <span class="text-xl">🚀</span>
+          </div>
+        </div>
         <div class="flex-1">
           <h1 class="text-lg font-bold text-base-content">Yesman</h1>
           <p class="text-xs text-base-content/60">Claude Dashboard</p>
         </div>
-      {/if}
-      <button 
-        class="btn btn-ghost btn-sm" 
-        on:click={toggleMinimized}
-        title={isMinimized ? 'Expand sidebar' : 'Minimize sidebar'}
-      >
-        {isMinimized ? '→' : '←'}
-      </button>
-    </div>
+        <button 
+          class="btn btn-ghost btn-sm" 
+          on:click={toggleMinimized}
+          title="Minimize sidebar"
+        >
+          ←
+        </button>
+      </div>
+    {/if}
   </div>
 
   <!-- 네비게이션 메뉴 -->
@@ -122,11 +140,15 @@
         <li>
           <a
             href={item.path}
-            class="menu-item flex items-center gap-3 p-3 rounded-lg transition-colors"
+            class="menu-item transition-colors rounded-lg flex items-center"
             class:active={currentPath === item.path}
-            title={isMinimized ? item.label : ''}
+            class:justify-center={isMinimized}
+            class:gap-3={!isMinimized}
+            class:p-3={!isMinimized}
+            class:p-2={isMinimized}
+            title={isMinimized ? `${item.label}: ${item.description}` : ''}
           >
-            <span class="text-xl">{item.icon}</span>
+            <span class="text-xl" class:mx-auto={isMinimized}>{item.icon}</span>
             {#if !isMinimized}
               <div class="flex-1">
                 <div class="font-medium text-sm">{item.label}</div>
@@ -185,7 +207,7 @@
         <div class="stat-item bg-base-100 p-2 rounded-lg">
           <div class="flex justify-between items-center">
             <span class="text-xs text-base-content/70">Projects</span>
-            <span class="text-xs font-mono text-base-content badge badge-primary badge-sm">3</span>
+            <span class="text-xs font-mono badge badge-primary badge-sm">{$sessions.length}</span>
           </div>
         </div>
       </div>

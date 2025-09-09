@@ -420,6 +420,34 @@ export async function setupAllSessions(): Promise<void> {
   }
 }
 
+/**
+ * 단일 세션을 설정합니다.
+ */
+export async function setupSession(sessionName: string): Promise<void> {
+  try {
+    showNotification('info', 'Starting Session', `Starting session: ${sessionName}`);
+    
+    const response = await fetch(`/api/sessions/${sessionName}/setup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to start session: ${errorText}`);
+    }
+    
+    showNotification('success', 'Session Started', `Session ${sessionName} has been started successfully.`);
+    setTimeout(refreshSessions, 1500);
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    showNotification('error', 'Start Error', `Failed to start session: ${errorMessage}`);
+    throw err;
+  }
+}
+
 export async function teardownAllSessions(): Promise<void> {
   const sessionsToTeardown = get(sessions);
   if (sessionsToTeardown.length === 0) {

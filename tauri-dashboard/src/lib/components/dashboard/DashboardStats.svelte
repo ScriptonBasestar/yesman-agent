@@ -26,7 +26,6 @@
   $: totalSessions = $sessions.length;
   $: activeSessions = $sessions.filter(s => s.status === 'running').length;
   $: inactiveSessions = $sessions.filter(s => s.status === 'stopped').length;
-  $: unknownSessions = $sessions.filter(s => s.status === 'unknown').length;
 
   $: sessionsWithWorkspaces = $sessions.filter(s => hasWorkspaceConfiguration(s)).length;
   $: totalWorkspaces = $sessions.reduce((sum, s) => {
@@ -114,12 +113,6 @@
             <span class="text-base-content/60">Last Check:</span>
             <span class="font-semibold">{$health.lastUpdated ? formatLastCheck($health.lastUpdated) : 'Never'}</span>
           </div>
-          {#if $healthState.consecutiveFailures > 0}
-            <div class="flex justify-between">
-              <span class="text-base-content/60">Failures:</span>
-              <span class="font-semibold text-warning">{$healthState.consecutiveFailures}</span>
-            </div>
-          {/if}
         </div>
       </div>
     </div>
@@ -143,7 +136,7 @@
           Projects
         </div>
 
-        <div class="stat-breakdown mt-3 grid grid-cols-3 gap-2 text-xs">
+        <div class="stat-breakdown mt-3 grid grid-cols-2 gap-2 text-xs">
           <div class="text-center">
             <div class="font-semibold text-success">{activeSessions}</div>
             <div class="text-base-content/60">Active</div>
@@ -151,10 +144,6 @@
           <div class="text-center">
             <div class="font-semibold text-error">{inactiveSessions}</div>
             <div class="text-base-content/60">Inactive</div>
-          </div>
-          <div class="text-center">
-            <div class="font-semibold text-warning">{unknownSessions}</div>
-            <div class="text-base-content/60">Unknown</div>
           </div>
         </div>
       </div>
@@ -213,7 +202,7 @@
         <div class="stat-breakdown mt-3 space-y-2 text-xs">
           <div class="flex justify-between">
             <span class="text-base-content/60">Projects:</span>
-            <span class="font-semibold">{sessionsWithWorkspaces}</span>
+            <span class="font-semibold text-base-content">{sessionsWithWorkspaces}</span>
           </div>
           <div class="flex justify-between">
             <span class="text-base-content/60">Windows/Panes:</span>
