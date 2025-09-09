@@ -1,6 +1,8 @@
 # Yesman Claude
 
-Yesman-Claude is a comprehensive CLI automation tool that manages tmux sessions and automates interactions with Claude Code. It features modern dashboard interfaces (Web, Tauri), AI-powered learning system, and extensive session management capabilities using YAML configuration templates.
+Yesman-Claude is a comprehensive CLI automation tool that manages tmux sessions and automates interactions with Claude
+Code. It features modern dashboard interfaces (Web, Tauri), AI-powered learning system, and extensive session management
+capabilities using YAML configuration templates.
 
 ## 🚀 Key Features
 
@@ -90,16 +92,10 @@ make stop                        # Stop all servers
 
 ## 📋 Interface Comparison
 
-| Feature | Web | Tauri |
-|---------|-----|-------|
-| **Performance** | ⭐⭐⭐ | ⭐⭐⭐⭐ |
-| **Resource Usage** | ⭐⭐⭐ | ⭐⭐⭐⭐ |
-| **Cross-platform** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| **Remote Access** | ⭐⭐⭐⭐⭐ | ⭐ |
-| **User Experience** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **Customization** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| **System Integration** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **AI Provider Management** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| Feature | Web | Tauri | |---------|-----|-------| | **Performance** | ⭐⭐⭐ | ⭐⭐⭐⭐ | | **Resource Usage** | ⭐⭐⭐ | ⭐⭐⭐⭐ |
+| **Cross-platform** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | | **Remote Access** | ⭐⭐⭐⭐⭐ | ⭐ | | **User Experience** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | |
+**Customization** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | | **System Integration** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | | **AI Provider Management** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐
+|
 
 ### When to Use Each Interface
 
@@ -238,20 +234,20 @@ make format                     # Code formatting
 
 - 📚 [Developer Guide](docs/developer-guide.md) - 개발자를 위한 상세 가이드
 - 🏗️ [Architecture Decision Records](docs/adr/) - 아키텍처 결정 기록
-- 🧪 [Testing Guide](docs/developer-guide.md#테스트-가이드) - 테스트 작성 및 실행 가이드
-- ⚙️ [Configuration](docs/developer-guide.md#설정-관리) - 설정 관리 가이드
+- 🧪 [Testing Guide](docs/developer-guide.md#%ED%85%8C%EC%8A%A4%ED%8A%B8-%EA%B0%80%EC%9D%B4%EB%93%9C) - 테스트 작성 및 실행 가이드
+- ⚙️ [Configuration](docs/developer-guide.md#%EC%84%A4%EC%A0%95-%EA%B4%80%EB%A6%AC) - 설정 관리 가이드
 
 ### Contributing
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Make your changes following the [Developer Guide](docs/developer-guide.md)
-4. Add tests for new functionality
-5. Ensure all tests pass: `make test`
-6. Format code: `make format`
-7. Commit changes: `git commit -m 'feat: add my feature'`
-8. Push to the branch: `git push origin feature/my-feature`
-9. Create a Pull Request
+1. Create a feature branch: `git checkout -b feature/my-feature`
+1. Make your changes following the [Developer Guide](docs/developer-guide.md)
+1. Add tests for new functionality
+1. Ensure all tests pass: `make test`
+1. Format code: `make format`
+1. Commit changes: `git commit -m 'feat: add my feature'`
+1. Push to the branch: `git push origin feature/my-feature`
+1. Create a Pull Request
 
 ### Project Structure
 
