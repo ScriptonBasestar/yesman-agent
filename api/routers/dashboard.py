@@ -10,7 +10,6 @@ from typing import Annotated, Any, TypedDict
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.templating import Jinja2Templates
 
-from api.shared import claude_manager
 from libs.core.session_manager import SessionManager
 from libs.dashboard.widgets.activity_heatmap import ActivityHeatmapGenerator
 from libs.dashboard.widgets.project_health import ProjectHealth

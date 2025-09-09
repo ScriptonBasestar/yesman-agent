@@ -2,15 +2,12 @@
 
 # Copyright notice.
 
-import os
-import pathlib
 import subprocess
 from typing import TYPE_CHECKING, Any
 
 import yaml
 
 from libs.validation import (
-    validate_directory_path,
     validate_session_name,
     validate_window_name,
 )
@@ -21,7 +18,9 @@ from .settings import settings
 
 class SessionSetupError(YesmanError):
     """Session setup specific error."""
+
     pass
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -55,13 +54,11 @@ class SessionValidator:
             self.validation_errors.append(error or "Invalid session name")
             return False
 
-
         # Validate windows
         if not self._validate_windows(session_name, config_dict):
             return False
 
         return len(self.validation_errors) == 0
-
 
     def _validate_windows(self, session_name: str, config_dict: dict[str, Any]) -> bool:
         """Validate window configurations."""
@@ -91,7 +88,6 @@ class SessionValidator:
             self.validation_errors.append(error or f"Invalid window name: {window_name_str}")
             return False
 
-
         # Validate panes
         panes = window.get("panes", [])
         if len(panes) > settings.sessions.max_panes_per_window:
@@ -101,7 +97,6 @@ class SessionValidator:
             return False
 
         return True
-
 
     def get_validation_errors(self) -> list[str]:
         """Get list of validation errors."""
@@ -271,7 +266,7 @@ class SessionSetupService:
                 if force:
                     print(f"🔨 Force mode: Killing existing session '{session_name}'")
                     self._kill_session(session_name)
-                elif input("Do you want to kill the existing session and recreate it? (y/N): ").lower() not in ['y', 'yes']:
+                elif input("Do you want to kill the existing session and recreate it? (y/N): ").lower() not in ["y", "yes"]:
                     print(f"⏭️  Skipping session '{session_name}'")
                     return False
                 else:

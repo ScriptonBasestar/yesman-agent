@@ -44,11 +44,11 @@ def register_claude_services() -> None:
     def create_claude_service() -> ClaudeAgentService:
         """Factory function to create appropriate Claude service based on config."""
         config = container.resolve(YesmanConfig)
-        
+
         # Check if claude config exists
-        claude_config = getattr(config._config_schema, 'claude', None)
-        
-        if claude_config and hasattr(claude_config, 'mode') and claude_config.mode == "headless" and hasattr(claude_config, 'headless') and claude_config.headless.enabled:
+        claude_config = getattr(config._config_schema, "claude", None)
+
+        if claude_config and hasattr(claude_config, "mode") and claude_config.mode == "headless" and hasattr(claude_config, "headless") and claude_config.headless.enabled:
             # Create headless adapter
             security_policy = DefaultSecurityPolicy(
                 allowed_tools=claude_config.headless.allowed_tools,

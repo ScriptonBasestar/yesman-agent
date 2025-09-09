@@ -19,7 +19,6 @@ from .core.config_loader import (
     create_default_loader,
 )
 from .core.config_schema import YesmanConfigSchema
-from .utils import ensure_log_directory
 
 
 class YesmanConfig:
@@ -63,11 +62,11 @@ class YesmanConfig:
     def _setup_logging(self) -> None:
         """Setup logging based on configuration."""
         log_config = self._config_schema.logging
-        
+
         # Handle new flexible logging structure
         log_level = log_config.get("level", "INFO")
         log_file_path = log_config.get("file", "~/.scripton/yesman/logs/yesman.log")
-        
+
         # Ensure log directory exists
         log_file = Path(log_file_path).expanduser()
         log_file.parent.mkdir(parents=True, exist_ok=True)
@@ -145,9 +144,9 @@ class YesmanConfig:
 
     def get_workspace_config(self) -> dict | None:
         """Get workspace configuration."""
-        if hasattr(self._config_schema, 'workspace_config') and self._config_schema.workspace_config:
+        if hasattr(self._config_schema, "workspace_config") and self._config_schema.workspace_config:
             return self._config_schema.workspace_config.model_dump()
-        elif hasattr(self._config_schema, 'workspaces') and self._config_schema.workspaces:
+        elif hasattr(self._config_schema, "workspaces") and self._config_schema.workspaces:
             return {"definitions": self._config_schema.workspaces}
         return None
 

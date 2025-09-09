@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from ...claude.headless_adapter import HeadlessAdapter
-from ...claude.workspace import DefaultWorkspaceManager, DefaultSecurityPolicy
+from ...claude.workspace import DefaultSecurityPolicy, DefaultWorkspaceManager
 from ...yesman_config import YesmanConfig
 from ..provider_interface import AIProvider, AIProviderType, AIResponse, AITask, TaskStatus
 

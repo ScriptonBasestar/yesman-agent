@@ -4,7 +4,6 @@ import logging
 import shutil
 import uuid
 from pathlib import Path
-from typing import Optional
 
 from .interfaces import SecurityPolicy, WorkspaceManager
 from .workspace_config_manager import WorkspaceConfigManager
@@ -18,7 +17,7 @@ class DefaultWorkspaceManager(WorkspaceManager):
         base_path: Path,
         allowed_paths: list[Path],
         security_policy: SecurityPolicy,
-        workspace_config_manager: Optional[WorkspaceConfigManager] = None,
+        workspace_config_manager: WorkspaceConfigManager | None = None,
     ) -> None:
         """Initialize workspace manager.
 
@@ -39,7 +38,7 @@ class DefaultWorkspaceManager(WorkspaceManager):
 
         # Track active sandboxes
         self.active_sandboxes: set[str] = set()
-        
+
         # Track workspace assignments per agent
         self.agent_workspace_assignments: dict[str, str] = {}
 
@@ -313,7 +312,6 @@ class DefaultWorkspaceManager(WorkspaceManager):
         except Exception as e:
             self.logger.exception(f"Failed to get sandbox stats for {agent_id}")
             return {"error": str(e)}
-
 
 
 class DefaultSecurityPolicy(SecurityPolicy):
@@ -606,149 +604,148 @@ class DefaultSecurityPolicy(SecurityPolicy):
             "last_updated": time.time(),
         }
 
-
     # Extended methods for workspace configuration support
-    
+
     def assign_workspace_to_agent(self, agent_id: str, workspace_name: str) -> bool:
         """Assign a workspace to an agent.
-        
+
         Args:
             agent_id: Agent identifier
             workspace_name: Name of the workspace to assign
-            
+
         Returns:
             True if assignment was successful
         """
         if not self.workspace_config_manager:
             self.logger.warning("No workspace configuration manager available")
             return False
-            
+
         workspace_info = self.workspace_config_manager.get_workspace_info(workspace_name)
         if not workspace_info:
             self.logger.error(f"Workspace '{workspace_name}' not found")
             return False
-            
+
         self.agent_workspace_assignments[agent_id] = workspace_name
         self.logger.info(f"Assigned workspace '{workspace_name}' to agent {agent_id}")
         return True
-    
+
     def get_agent_workspace(self, agent_id: str) -> str | None:
         """Get the workspace assigned to an agent.
-        
+
         Args:
             agent_id: Agent identifier
-            
+
         Returns:
             Workspace name or None if not assigned
         """
         return self.agent_workspace_assignments.get(agent_id)
-    
+
     def resolve_workspace_from_current_directory(self, current_dir: Path) -> str | None:
         """Resolve workspace from current directory.
-        
+
         Args:
             current_dir: Current working directory
-            
+
         Returns:
             Workspace name or None if not found
         """
         if not self.workspace_config_manager:
             return None
-            
+
         return self.workspace_config_manager.resolve_workspace_from_path(current_dir)
-    
+
     def validate_workspace_path(self, agent_id: str, path: Path) -> bool:
         """Validate if a path is accessible for an agent's workspace.
-        
+
         Args:
-            agent_id: Agent identifier  
+            agent_id: Agent identifier
             path: Path to validate
-            
+
         Returns:
             True if path is accessible
         """
         if not self.workspace_config_manager:
             return super().validate_path(path)
-            
+
         workspace_name = self.get_agent_workspace(agent_id)
         if not workspace_name:
             # Try to resolve workspace from path
             workspace_name = self.resolve_workspace_from_current_directory(path.parent if path.is_file() else path)
             if not workspace_name:
                 return super().validate_path(path)
-                
+
         return self.workspace_config_manager.is_path_allowed_in_workspace(workspace_name, path)
-    
+
     def create_workspace_sandbox(self, agent_id: str, workspace_name: str) -> Path:
         """Create a sandbox for an agent within a specific workspace.
-        
+
         Args:
             agent_id: Agent identifier
             workspace_name: Workspace name to create sandbox in
-            
+
         Returns:
             Path to created sandbox
-            
+
         Raises:
             RuntimeError: If sandbox creation fails
         """
         if not self.workspace_config_manager:
             return self.create_sandbox(agent_id)
-            
+
         workspace_path = self.workspace_config_manager.get_workspace_path(workspace_name)
         if not workspace_path:
             raise RuntimeError(f"Workspace '{workspace_name}' not found")
-            
+
         # Create workspace directory if it doesn't exist
         self.workspace_config_manager.create_workspace_directory(workspace_name)
-        
+
         # Assign workspace to agent
         self.assign_workspace_to_agent(agent_id, workspace_name)
-        
+
         # Create sandbox within workspace
         try:
             sandbox_name = f"claude-agent-{agent_id}-{uuid.uuid4().hex[:8]}"
             sandbox_path = workspace_path / ".yesman" / "sandboxes" / sandbox_name
-            
+
             # Create sandbox directory structure
             sandbox_path.mkdir(parents=True, exist_ok=True)
             sandbox_path.chmod(0o700)
-            
+
             # Create basic structure
             (sandbox_path / "workspace").mkdir(exist_ok=True)
-            (sandbox_path / "logs").mkdir(exist_ok=True)  
+            (sandbox_path / "logs").mkdir(exist_ok=True)
             (sandbox_path / "temp").mkdir(exist_ok=True)
-            
+
             # Create .gitignore
             gitignore = sandbox_path / ".gitignore"
             gitignore.write_text("logs/\ntemp/\n*.log\n*.tmp\n")
-            
+
             # Track active sandbox
             self.active_sandboxes.add(agent_id)
-            
+
             self.logger.info(f"Created workspace sandbox for agent {agent_id} in '{workspace_name}' at {sandbox_path}")
             return sandbox_path
-            
+
         except Exception as e:
             self.logger.exception(f"Failed to create workspace sandbox for agent {agent_id}")
             raise RuntimeError(f"Workspace sandbox creation failed: {e}") from e
-    
+
     def get_workspace_stats(self) -> dict:
         """Get statistics about workspace usage.
-        
+
         Returns:
             Dictionary with workspace statistics
         """
         if not self.workspace_config_manager:
             return {"error": "No workspace configuration manager"}
-            
+
         stats = {
             "total_workspaces": len(self.workspace_config_manager.list_workspace_names()),
             "active_agents": len(self.active_sandboxes),
             "workspace_assignments": len(self.agent_workspace_assignments),
-            "workspaces": {}
+            "workspaces": {},
         }
-        
+
         for workspace_name in self.workspace_config_manager.list_workspace_names():
             workspace_info = self.workspace_config_manager.get_workspace_info(workspace_name)
             if workspace_info:
@@ -756,5 +753,5 @@ class DefaultSecurityPolicy(SecurityPolicy):
                 assigned_agents = [agent_id for agent_id, ws_name in self.agent_workspace_assignments.items() if ws_name == workspace_name]
                 workspace_info["assigned_agents"] = len(assigned_agents)
                 stats["workspaces"][workspace_name] = workspace_info
-                
+
         return stats

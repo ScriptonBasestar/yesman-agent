@@ -1,4 +1,3 @@
-import os
 import re
 from collections.abc import Callable
 from pathlib import Path
@@ -132,7 +131,6 @@ def validate_pane_command(command: str, max_length: int | None = None) -> tuple[
             return False, "Command contains potentially dangerous pattern"
 
     return True, None
-
 
 
 def validate_directory_path(path: str, must_exist: bool = True, create_if_missing: bool = False) -> tuple[bool, str | None]:
