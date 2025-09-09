@@ -5,8 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 Yesman-Claude is a comprehensive CLI automation tool that manages tmux sessions and automates interactions with Claude
-Code. It features multiple dashboard interfaces (Web, Tauri), AI-powered learning system, and extensive session
-management capabilities using YAML configuration templates.
+Code. It features multiple dashboard interfaces (Web, Tauri), AI-powered learning system, AI provider management with
+auto-discovery, and extensive session management capabilities using YAML configuration templates.
 
 ## Development Commands
 
@@ -38,9 +38,10 @@ make install-all
 
 # Dashboard interfaces
 ./yesman.py dashboard run                    # Auto-detect best interface
-make dashboard-web                          # Web development interface
-./yesman.py dashboard run --interface web   # SvelteKit web interface
-./yesman.py dashboard run --interface tauri # Native desktop app
+make dashboard                              # Smart dashboard launcher
+make dashboard-web                          # SvelteKit web interface
+make dashboard-desktop                      # Native desktop app
+make dashboard-full                         # Full development environment
 
 # AI learning system
 ./yesman.py ai status           # Show AI learning status
@@ -48,6 +49,12 @@ make dashboard-web                          # Web development interface
 ./yesman.py ai history          # View response history
 ./yesman.py ai export           # Export learning data
 ./yesman.py ai cleanup          # Clean old data
+
+# AI provider management (via dashboard)
+# Access /ai-providers page for:
+# - Auto-discovery of installed AI tools (Claude Code, Ollama, etc.)
+# - Provider registration and configuration
+# - System-level detection via Tauri commands
 
 # Status and monitoring
 ./yesman.py status              # Quick status overview
@@ -64,16 +71,17 @@ make build-dashboard            # Build SvelteKit components only
 cd tauri-dashboard && npm run build  # Build frontend assets
 
 # Development servers
-make dev-dashboard              # Full development environment
-make run-web-dashboard          # Web dashboard only
-make run-tauri-dev              # Tauri development mode
+make dashboard-full             # Full development environment
+make dashboard-web              # Web dashboard only
+make dashboard-desktop          # Tauri development mode
+make start                      # API server only
 
 # API development
 cd api && python -m uvicorn main:app --reload --host 0.0.0.0 --port 10501
 
 # Quality checks
-make quick                      # Fast check (lint + unit tests)
-make full                       # Complete quality check
+make dev-fast                   # Fast check (lint + unit tests)
+make dev-full                   # Complete quality check
 make format                     # Code formatting
 make test                       # Run all tests
 make test-unit                  # Unit tests only

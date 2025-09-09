@@ -18,7 +18,7 @@ make dev-install
 pip install -e . --config-settings editable_mode=compat
 
 # Alternative using uv (recommended for development)
-uv run ./yesman.py --help
+./yesman.py --help
 ```
 
 ### Running Commands
@@ -27,51 +27,51 @@ uv run ./yesman.py --help
 # List available templates and projects
 ./yesman.py ls
 # or with uv:
-uv run ./yesman.py ls
+./yesman.py ls
 
 # Show running tmux sessions  
-uv run ./yesman.py show
+./yesman.py show
 
 # Create all tmux sessions from session files
-uv run ./yesman.py setup
+./yesman.py setup
 
 # Create specific session
-uv run ./yesman.py setup session-name
+./yesman.py setup session-name
 
 # Teardown all sessions
-uv run ./yesman.py teardown
+./yesman.py teardown
 
 # Teardown specific session
-uv run ./yesman.py teardown session-name
+./yesman.py teardown session-name
 
 # Enter (attach to) a tmux session
-uv run ./yesman.py enter [session_name]
-uv run ./yesman.py enter  # Interactive selection
+./yesman.py enter [session_name]
+./yesman.py enter  # Interactive selection
 
 # Run Tauri desktop dashboard to monitor all sessions
-uv run ./yesman.py dashboard --dev  # Development mode
-uv run ./yesman.py dashboard        # Production mode
+./yesman.py dashboard --dev  # Development mode
+./yesman.py dashboard        # Production mode
 
 # NEW: Interactive session browser with activity monitoring
-uv run ./yesman.py browse           # Interactive session browser
-uv run ./yesman.py browse -i 1.0    # Custom update interval
+./yesman.py browse           # Interactive session browser
+./yesman.py browse -i 1.0    # Custom update interval
 
 # NEW: Comprehensive project status dashboard
-uv run ./yesman.py status           # Quick status overview
-uv run ./yesman.py status -i        # Interactive live dashboard
-uv run ./yesman.py status -d        # Detailed view
+./yesman.py status           # Quick status overview
+./yesman.py status -i        # Interactive live dashboard
+./yesman.py status -d        # Detailed view
 
 # NEW: AI learning system management
-uv run ./yesman.py ai status        # Show AI learning status
-uv run ./yesman.py ai config -t 0.8 # Adjust confidence threshold
-uv run ./yesman.py ai history       # Show response history
-uv run ./yesman.py ai export        # Export learning data
+./yesman.py ai status        # Show AI learning status
+./yesman.py ai config -t 0.8 # Adjust confidence threshold
+./yesman.py ai history       # Show response history
+./yesman.py ai export        # Export learning data
 
 # NEW: Log management and analysis
-uv run ./yesman.py logs configure   # Configure async logging
-uv run ./yesman.py logs analyze     # Analyze log patterns
-uv run ./yesman.py logs tail -f     # Follow logs in real-time
-uv run ./yesman.py logs cleanup     # Clean up old logs
+./yesman.py logs configure   # Configure async logging
+./yesman.py logs analyze     # Analyze log patterns
+./yesman.py logs tail -f     # Follow logs in real-time
+./yesman.py logs cleanup     # Clean up old logs
 
 # Command removed - automate functionality has been deprecated
 ```

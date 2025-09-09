@@ -31,7 +31,10 @@ Yesman-Claude 시작 가이드 - 설치부터 기본 사용법까지 모든 것�
    make dev-install
 
    # 또는 uv 사용 (가장 빠름)
-   uv sync
+   uv run ./yesman.py --help
+
+   # 모든 개발 의존성 설치
+   make install-all
    ```
 
 1. **설정 생성**:
@@ -44,9 +47,9 @@ Yesman-Claude 시작 가이드 - 설치부터 기본 사용법까지 모든 것�
 1. **설치 테스트**:
 
    ```bash
-   python run-server.py --help
+   ./yesman.py --help
    # or
-   ./run-dashboard.sh web
+   make dashboard
    ```
 
 ### 첫 번째 단계
@@ -55,26 +58,26 @@ Yesman-Claude 시작 가이드 - 설치부터 기본 사용법까지 모든 것�
 
    ```bash
    # Server API를 통해 템플릿 확인
-   ./run-dashboard.sh web
+   make dashboard-web
    # 브라우저에서 http://localhost:5173 접속
    ```
 
 1. **첫 번째 세션 생성**:
 
    ```bash
-   # API 서버를 통해 세션 생성
-   python run-server.py &
-   # 또는 통합 스크립트 사용
-   ./start-yesman.sh
+   # API 서버 시작
+   make start
+   # 세션 생성
+   ./yesman.py setup [session-name]
    ```
 
 1. **대시보드 열기**:
 
    ```bash
    # 웹 대시보드 실행
-   ./run-dashboard.sh web
+   make dashboard-web
    # 또는 Tauri 데스크톱 앱
-   ./run-dashboard.sh tauri
+   make dashboard-desktop
    ```
 
 ## 📊 대시보드 인터페이스
@@ -89,7 +92,7 @@ Yesman-Claude는 두 가지 대시보드 인터페이스를 제공하며, 각각
 
 ```bash
 # 웹 대시보드 시작
-./run-dashboard.sh web
+make dashboard-web
 # 브라우저에서 http://localhost:5173 접속
 ```
 
@@ -112,10 +115,10 @@ Yesman-Claude는 두 가지 대시보드 인터페이스를 제공하며, 각각
 
 ```bash
 # 데스크톱 앱 시작
-./run-dashboard.sh tauri
+make dashboard-desktop
 
 # 브라우저 자동 열기
-uv run ./yesman.py dash web --open
+make dashboard-open
 ```
 
 **기능**:
@@ -137,10 +140,10 @@ uv run ./yesman.py dash web --open
 
 ```bash
 # 개발 모드
-uv run ./yesman.py dash tauri --dev
+make dashboard-desktop
 
-# 프로덕션 모드
-uv run ./yesman.py dash tauri
+# 또는 전체 개발 환경
+make dashboard-full
 ```
 
 **기능**:
@@ -175,17 +178,17 @@ sessions:
 **명령어**:
 
 ```bash
-# 모든 세션 생성
-uv run ./yesman.py up
+# 사용 가능한 세션/템플릿 목록
+./yesman.py ls
 
 # 특정 세션 생성
-uv run ./yesman.py up my_project
+./yesman.py setup my_project
 
 # 실행 중인 세션 표시
-uv run ./yesman.py show
+./yesman.py show
 
-# 인터랙티브 세션 브라우저
-uv run ./yesman.py browse
+# 세션 접속
+./yesman.py enter my_project
 ```
 
 ### 세션 템플릿
@@ -223,16 +226,16 @@ panes:
 
 ```bash
 # 세션 생성
-uv run ./yesman.py up
+./yesman.py setup [session-name]
 
 # 세션 모니터링
-uv run ./yesman.py status
+./yesman.py status
 
 # 특정 세션 접속
-uv run ./yesman.py enter my_project
+./yesman.py enter my_project
 
-# 세션 해제
-uv run ./yesman.py down
+# 전체 상태 확인
+./yesman.py dashboard
 ```
 
 ## 🖱️ 사용자 인터페이스
@@ -373,29 +376,29 @@ AI 학습 시스템은 사용자 행동 패턴을 학습하여 시간이 지남�
 
 ```bash
 # 현재 AI 상태 확인
-uv run ./yesman.py ai status
+./yesman.py ai status
 
 # 신뢰도 임계값 설정
-uv run ./yesman.py ai config --threshold 0.8
+./yesman.py ai config --threshold 0.8
 
 # 학습 활성화/비활성화
-uv run ./yesman.py ai config --learning
+./yesman.py ai config --learning
 
 # 자동 응답 활성화/비활성화
-uv run ./yesman.py ai config --auto-response
+./yesman.py ai config --auto-response
 ```
 
 ### 학습 분석
 
 ```bash
 # 응답 히스토리 확인
-uv run ./yesman.py ai history
+./yesman.py ai history
 
 # 응답 예측 테스트
-uv run ./yesman.py ai predict "Continue with the operation?"
+./yesman.py ai predict "Continue with the operation?"
 
 # 학습 데이터 내보내기
-uv run ./yesman.py ai export --format json
+./yesman.py ai export --format json
 ```
 
 ### 응답 패턴
@@ -411,13 +414,13 @@ AI 시스템은 다양한 프롬프트 패턴을 인식합니다:
 
 ```bash
 # 훈련 데이터 추가
-uv run ./yesman.py ai train --pattern "Continue?" --response "y"
+./yesman.py ai train --pattern "Continue?" --response "y"
 
 # 훈련 데이터 가져오기
-uv run ./yesman.py ai import --file training_data.json
+./yesman.py ai import --file training_data.json
 
 # 학습 데이터 리셋
-uv run ./yesman.py ai reset --confirm
+./yesman.py ai reset --confirm
 ```
 
 ## ⚡ 성능 최적화

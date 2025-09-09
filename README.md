@@ -1,12 +1,14 @@
 # Yesman Claude
 
-Yesman-Claude is a comprehensive workspace management server with modern Tauri desktop application. It provides session management and monitoring through a unified SvelteKit interface.
+Yesman-Claude is a comprehensive CLI automation tool that manages tmux sessions and automates interactions with Claude Code. It features modern dashboard interfaces (Web, Tauri), AI-powered learning system, and extensive session management capabilities using YAML configuration templates.
 
 ## 🚀 Key Features
 
 ### Core Functionality
 
+- **Claude Code Automation**: Automated responses and AI-powered learning system
 - **Session Management**: Create and manage tmux sessions using YAML templates
+- **AI Provider Management**: Auto-discovery and management of AI tools (Claude Code, Ollama, etc.)
 - **FastAPI Backend Server**: RESTful API for session and workspace management
 - **SvelteKit Web Interface**: Modern web interface for monitoring and control
 - **Tauri Desktop Application**: Native desktop app with system integration
@@ -14,12 +16,13 @@ Yesman-Claude is a comprehensive workspace management server with modern Tauri d
 
 ### Architecture
 
-- **Python FastAPI Server**: High-performance async backend
+- **Python CLI Core**: Comprehensive automation engine with AI learning
+- **FastAPI Server**: High-performance async backend
 - **SvelteKit Frontend**: Shared codebase for both web and desktop interfaces
 - **Tauri Native Wrapper**: Desktop application with native system integration
+- **AI Learning System**: Adaptive response system with confidence scoring
 - **Configuration Management**: Pydantic-based configuration with environment support
 - **Error Handling**: Centralized error handling with recovery hints
-- **Type Safety**: Full TypeScript-style type hints and validation
 
 ## 📊 Interface Options
 
@@ -29,10 +32,10 @@ Modern web dashboard served via FastAPI backend.
 
 ```bash
 # Start API server
-make run-api-server
+make start
 
 # Start web development server
-make run-web-dashboard
+make dashboard-web
 # Access at: http://localhost:5173
 ```
 
@@ -42,10 +45,10 @@ Native desktop app with the same SvelteKit codebase as web interface.
 
 ```bash
 # Start Tauri development mode
-make run-tauri-dev
+make dashboard-desktop
 
 # Full development environment (API + Web)
-make dev-dashboard
+make dashboard-full
 ```
 
 ## 🔧 Quick Start
@@ -54,33 +57,35 @@ make dev-dashboard
 
 ```bash
 # Development installation (recommended)
-make install-dev
+make dev-install
 # or directly:
 pip install -e . --config-settings editable_mode=compat
 
-# Install dashboard dependencies
-make install-dashboard-deps
+# Using uv (fastest, preferred for development)
+uv run ./yesman.py --help
+
+# Install all development dependencies
+make install-all
 ```
 
 ### Basic Commands
 
 ```bash
-# Start API server
-make run-api-server
-# API available at: http://localhost:10501
+# Core session management
+./yesman.py ls                    # List templates and projects
+./yesman.py setup [session-name]  # Create tmux sessions
+./yesman.py show                  # List running sessions
+./yesman.py enter [session-name]  # Attach to session
 
-# Start web dashboard
-make run-web-dashboard
-# Access at: http://localhost:5173
+# Dashboard interfaces
+make dashboard                    # Auto-detect best interface
+make dashboard-web               # SvelteKit web interface
+make dashboard-desktop           # Native desktop app
 
-# Start desktop app
-make run-tauri-dev
-
-# Check server status
-make dashboard-status
-
-# Stop all servers
-make stop-servers
+# Development workflow
+make start                       # Start API server
+make dev-status                  # Check server status
+make stop                        # Stop all servers
 ```
 
 ## 📋 Interface Comparison
@@ -94,11 +99,12 @@ make stop-servers
 | **User Experience** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
 | **Customization** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
 | **System Integration** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| **AI Provider Management** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
 
 ### When to Use Each Interface
 
 - **Web**: Remote monitoring, team collaboration, browser-based workflows, development
-- **Tauri**: Daily use, best user experience, desktop integration, offline capabilities
+- **Tauri**: Daily use, best user experience, desktop integration, system-level provider detection
 
 ## 설정 파일
 
@@ -189,38 +195,43 @@ Yesman Claude는 현대적이고 유지보수 가능한 아키텍처로 구축�
 ```bash
 # 개발 환경 설정
 git clone <repository-url>
-cd yesman-claude
+cd yesman-agent
+
+# Development installation
+make dev-install
 
 # API server 시작
-make run-api-server
+make start
 
 # 웹 개발 서버 시작 (다른 터미널에서)
-make run-web-dashboard
+make dashboard-web
 
 # 또는 Tauri 개발 모드
-make run-tauri-dev
+make dashboard-desktop
+
+# 전체 개발 환경 (API + Web)
+make dashboard-full
 ```
 
 ### Development Commands
 
 ```bash
-# 서버 상태 확인
-make dashboard-status
+# Core CLI commands
+./yesman.py ls                    # List templates and projects
+./yesman.py setup [session-name]  # Create tmux sessions
+./yesman.py status               # Quick status overview
+./yesman.py ai status           # Show AI learning status
 
-# 모든 서버 중지
-make stop-servers
+# Development workflow
+make dashboard                   # Smart dashboard launcher
+make dev-status                 # Check development service status
+make stop                       # Stop all servers
+make debug-api                  # API server debug mode
 
-# API 서버 디버그 모드
-make debug-api
-
-# 전체 개발 환경 (API + Web)
-make dev-dashboard
-
-# 빠른 품질 검사
-make quick
-
-# 전체 품질 검사
-make full
+# Quality checks
+make dev-fast                   # Quick check (lint-fast + unit tests)
+make dev-full                   # Full quality check
+make format                     # Code formatting
 ```
 
 ### Documentation
@@ -245,13 +256,16 @@ make full
 ### Project Structure
 
 ```
-yesman-claude/
+yesman-agent/
+├── yesman.py          # Main CLI entry point
+├── commands/          # CLI command implementations
+├── libs/              # Core library modules
+│   ├── core/             # Core architecture components
+│   ├── ai/               # AI learning and automation
+│   └── dashboard/        # Dashboard integrations
 ├── api/               # FastAPI backend server
-├── libs/core/         # Core architecture components
-│   ├── config_*.py       # Configuration management
-│   └── session_manager.py # Session management
 ├── tauri-dashboard/   # SvelteKit frontend (Web + Tauri)
-│   ├── src/routes/       # SvelteKit pages
+│   ├── src/routes/       # SvelteKit pages (Projects, AI Providers)
 │   ├── src/lib/          # Reusable components
 │   └── src-tauri/        # Rust backend for desktop
 ├── tests/             # Test suites

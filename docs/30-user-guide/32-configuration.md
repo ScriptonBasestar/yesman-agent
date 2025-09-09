@@ -724,13 +724,13 @@ Validate your configuration:
 
 ```bash
 # Validate all configuration
-uv run ./yesman.py config --validate
+./yesman.py config --validate
 
 # Check specific configuration file
-uv run ./yesman.py config --validate ~/.scripton/yesman/yesman.yaml
+./yesman.py config --validate ~/.scripton/yesman/yesman.yaml
 
 # Export current effective configuration
-uv run ./yesman.py config --export > current_config.yaml
+./yesman.py config --export > current_config.yaml
 ```
 
 ### Reset Configuration
@@ -739,10 +739,10 @@ Reset to defaults:
 
 ```bash
 # Reset to default configuration
-uv run ./yesman.py config --reset
+./yesman.py config --reset
 
 # Reset specific component
-uv run ./yesman.py config --reset dashboard
+./yesman.py config --reset dashboard
 
 # Backup current config before reset
 cp ~/.scripton/yesman/yesman.yaml ~/.scripton/yesman/yesman.yaml.backup
@@ -755,13 +755,13 @@ Debug configuration loading issues:
 ```bash
 # Enable debug logging for config
 export YESMAN_DEBUG=1
-uv run ./yesman.py --help
+./yesman.py --help
 
 # Check configuration merge
-uv run ./yesman.py config --show-merge
+./yesman.py config --show-merge
 
 # Trace configuration loading
-uv run ./yesman.py config --trace-loading
+./yesman.py config --trace-loading
 ```
 
 ______________________________________________________________________

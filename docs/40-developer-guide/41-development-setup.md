@@ -44,10 +44,10 @@ export YESMAN_ENV=development
 
 # 설정 파일 생성 (선택적)
 mkdir -p ~/.scripton/yesman
-cp config/development.yaml ~/.scripton/yesman/yesman.yaml
+cp examples/global-yesman/yesman.yaml ~/.scripton/yesman/yesman.yaml
 
-# Git hooks 설치 (권장)
-make hooks-install
+# 모든 의존성 설치
+make install-all
 
 # 코드 품질 검사
 make lint
@@ -96,7 +96,7 @@ make dev-install
 pip install -e . --config-settings editable_mode=compat
 
 # Alternative using uv (recommended for development)
-uv run ./yesman.py --help
+./yesman.py --help
 ```
 
 ### Running Commands
@@ -105,51 +105,41 @@ uv run ./yesman.py --help
 # List available templates and projects
 ./yesman.py ls
 # or with uv:
-uv run ./yesman.py ls
+./yesman.py ls
 
 # Show running tmux sessions  
-uv run ./yesman.py show
+./yesman.py show
 
 # Create all tmux sessions from session files
-uv run ./yesman.py setup
+./yesman.py setup
 
 # Create specific session
-uv run ./yesman.py setup session-name
+./yesman.py setup session-name
 
 # Teardown all sessions
-uv run ./yesman.py teardown
+./yesman.py teardown
 
 # Teardown specific session
-uv run ./yesman.py teardown session-name
+./yesman.py teardown session-name
 
 # Enter (attach to) a tmux session
-uv run ./yesman.py enter [session_name]
-uv run ./yesman.py enter  # Interactive selection
+./yesman.py enter [session_name]
+./yesman.py enter  # Interactive selection
 
-# Run Tauri desktop dashboard to monitor all sessions
-uv run ./yesman.py dashboard --dev  # Development mode
-uv run ./yesman.py dashboard        # Production mode
+# 대시보드 실행
+make dashboard                      # 자동 감지 대시보드
+make dashboard-web                  # 웹 대시보드
+make dashboard-desktop              # 데스크톱 앱
 
-# NEW: Interactive session browser with activity monitoring
-uv run ./yesman.py browse           # Interactive session browser
-uv run ./yesman.py browse -i 1.0    # Custom update interval
+# 상태 모니터링
+./yesman.py status                  # 빠른 상태 확인
+./yesman.py status -d               # 상세 뷰
 
-# NEW: Comprehensive project status dashboard
-uv run ./yesman.py status           # Quick status overview
-uv run ./yesman.py status -i        # Interactive live dashboard
-uv run ./yesman.py status -d        # Detailed view
-
-# NEW: AI learning system management
-uv run ./yesman.py ai status        # Show AI learning status
-uv run ./yesman.py ai config -t 0.8 # Adjust confidence threshold
-uv run ./yesman.py ai history       # Show response history
-uv run ./yesman.py ai export        # Export learning data
-
-# NEW: Log management and analysis
-uv run ./yesman.py logs configure   # Configure async logging
-uv run ./yesman.py logs analyze     # Analyze log patterns
-uv run ./yesman.py logs tail -f     # Follow logs in real-time
-uv run ./yesman.py logs cleanup     # Clean up old logs
+# AI 학습 시스템 관리
+./yesman.py ai status               # AI 학습 상태
+./yesman.py ai config -t 0.8        # 신뢰도 임계값 조정
+./yesman.py ai history              # 응답 히스토리
+./yesman.py ai export               # 학습 데이터 내보내기
 ```
 
 ### Testing and Development Commands
@@ -164,9 +154,17 @@ python -m pytest tests/test_full_automation.py
 python -m pytest tests/test_session_manager_cache.py
 
 # Debug specific components (located in debug/ directory)
-python debug/debug_content.py      # Debug content collection
-python debug/debug_controller.py   # Debug dashboard controller  
-python debug/debug_tmux.py        # Debug tmux operations
+# API 서버 시작
+make start                          # API 서버 백그라운드 실행
+make debug-api                      # API 서버 디버그 모드
+
+# Tauri 데스크톱 앱 개발
+make dashboard-desktop              # Tauri 개발 모드
+
+# 디버깅 스크립트
+python debug/debug_content.py      # 콘텐츠 수집 디버깅
+python debug/debug_controller.py   # 대시보드 컴트롤러 디버깅
+python debug/debug_tmux.py         # tmux 작업 디버깅
 
 # FastAPI server for REST API
 cd api && python -m uvicorn main:app --reload
@@ -185,14 +183,14 @@ The project uses comprehensive code quality tools:
 - **bandit** for security vulnerability scanning
 - **pre-commit** for automatic quality checks
 
-Quick commands:
+빠른 명령어:
 
 ```bash
-make format      # Format code with Ruff
-make lint        # Check code quality
-make lint-fix    # Auto-fix linting issues
-make test        # Run all tests
-make full        # Complete quality check
+make format      # Ruff로 코드 포맷
+make lint        # 코드 품질 검사
+make lint-fix    # 린팅 문제 자동 수정
+make test        # 모든 테스트 실행
+make dev-full    # 완전한 품질 검사
 ```
 
 ## 🏗️ 아키텍처 개요

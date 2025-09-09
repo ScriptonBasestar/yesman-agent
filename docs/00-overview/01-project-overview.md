@@ -49,9 +49,17 @@ Claude Code 자동화를 통해 개발자의 생산성을 향상시키고, 반�
 
 ### 4. 멀티 인터페이스
 
-- CLI 도구 (Python)
-- REST API (FastAPI)
-- 네이티브 데스크톱 앱 (Tauri + Svelte)
+- **CLI Interface**: 강력한 명령줄 인터페이스로 모든 기능 접근
+- **SvelteKit Web Dashboard**: 브라우저 기반 모니터링 및 제어
+- **Tauri Desktop Application**: 네이티브 데스크톱 앱으로 시스템 통합
+- **REST API (FastAPI)**: 고성능 비동기 백엔드 서비스
+
+### 5. AI Provider Management
+
+- **자동 검색**: 시스템에 설치된 AI 도구 자동 탐지 (Claude Code, Ollama, etc.)
+- **다중 검색 방식**: CLI 도구, 환경변수, 실행 중인 서비스 검색
+- **상태 관리**: not_installed, detected, registered, active 상태 추적
+- **크로스 플랫폼**: Tauri 백엔드를 통한 시스템 레벨 접근
 
 ## 🏗️ 아키텍처 개요
 
