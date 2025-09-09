@@ -45,6 +45,7 @@ psutil = ">=5.9.0"           # 시스템 및 프로세스 유틸리티
 - **FastAPI** (>=0.116.0): 최신 Python 웹 프레임워크 (REST API)
 - **Uvicorn** (>=0.35.0): FastAPI용 ASGI 서버
 - **Pydantic**: 데이터 검증 및 설정 관리 (FastAPI에 포함)
+
 # **Textual** - 제거됨 (TUI 인터페이스 삭제)
 
 ### 추가 Python 라이브러리
@@ -217,7 +218,9 @@ api/
 ## 📊 로깅 및 모니터링
 
 - **Python logging**: 표준 로깅 모듈
+
 # **Rich**: 제거됨 (TUI 제거)
+
 - **FastAPI**: 웹 기반 모니터링 대시보드
 
 ## 🏗️ 아키텍처 컴포넌트

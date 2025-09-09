@@ -205,7 +205,7 @@ When working with specific libraries, use Context7 like this:
 **Multi-Interface Dashboard**:
 
 - **Web**: SvelteKit + FastAPI serving static assets
-- **Tauri**: Native desktop app sharing SvelteKit codebase  
+- **Tauri**: Native desktop app sharing SvelteKit codebase
 - Interface auto-detection based on environment capabilities
 
 **Error Handling**:

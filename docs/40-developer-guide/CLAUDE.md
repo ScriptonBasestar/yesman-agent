@@ -274,6 +274,7 @@ Configuration merge modes:
 - **Interactive Session Browser**: File-browser-like navigation with tree/list/grid views
 - **Activity Heatmap**: Visual session activity tracking over time
 - **Comprehensive Status Dashboard**: Real-time project health monitoring
+
 # **Rich Terminal UI**: 제거됨 (TUI 인터페이스 삭제)
 
 ### 🤖 AI-Powered Features
@@ -348,7 +349,9 @@ Core dependencies (from pyproject.toml):
 - pexpect>=4.8 - Process automation
 - tmuxp>=1.55.0 - Tmux session management
 - libtmux>=0.46.2 - Python tmux bindings
+
 # rich - 제거됨 (TUI 인터페이스 삭제)
+
 - psutil>=5.9.0 - System and process utilities
 
 Additional development dependencies:
