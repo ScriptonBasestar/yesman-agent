@@ -32,7 +32,11 @@ fn main() {
             generate_documentation,
             get_setup_steps,
             run_setup_step,
-            get_system_health
+            get_system_health,
+            // AI Provider Detection Commands
+            detect_command_tools,
+            check_environment_variables,
+            check_running_services
         ])
         .setup(|app| {
             // 초기 설정

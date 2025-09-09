@@ -100,6 +100,16 @@ pub struct DocumentationInfo {
     pub size_kb: i32,
 }
 
+// AI Provider related structures
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ProviderDetectionResult {
+    pub provider: String,
+    pub detected: bool,
+    pub version: Option<String>,
+    pub path: Option<String>,
+    pub detection_method: String,
+}
+
 fn execute_python_script(script: &str) -> Result<String, String> {
     let output = Command::new("python")
         .args(["-c", script])
@@ -628,4 +638,114 @@ pub async fn stop_all_controllers() -> Result<i32, String> {
     }
 
     Ok(success_count)
+}
+
+// AI Provider Detection Commands
+#[command]
+pub async fn detect_command_tools(commands: Vec<String>) -> Result<Vec<ProviderDetectionResult>, String> {
+    let mut results = Vec::new();
+    
+    for command in commands {
+        let output = Command::new("which")
+            .arg(&command)
+            .output();
+            
+        match output {
+            Ok(output) if output.status.success() => {
+                let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                
+                // Try to get version info
+                let version_output = Command::new(&command)
+                    .arg("--version")
+                    .output()
+                    .or_else(|_| Command::new(&command).arg("-v").output())
+                    .or_else(|_| Command::new(&command).arg("version").output());
+                    
+                let version = match version_output {
+                    Ok(ver_out) if ver_out.status.success() => {
+                        let version_str = String::from_utf8_lossy(&ver_out.stdout);
+                        Some(version_str.lines().next().unwrap_or("unknown").to_string())
+                    },
+                    _ => None
+                };
+                
+                results.push(ProviderDetectionResult {
+                    provider: command,
+                    detected: true,
+                    version,
+                    path: Some(path),
+                    detection_method: "command".to_string(),
+                });
+            },
+            _ => {
+                results.push(ProviderDetectionResult {
+                    provider: command,
+                    detected: false,
+                    version: None,
+                    path: None,
+                    detection_method: "command".to_string(),
+                });
+            }
+        }
+    }
+    
+    Ok(results)
+}
+
+#[command]
+pub async fn check_environment_variables(env_vars: Vec<String>) -> Result<Vec<ProviderDetectionResult>, String> {
+    let mut results = Vec::new();
+    
+    for env_var in env_vars {
+        match std::env::var(&env_var) {
+            Ok(value) => {
+                results.push(ProviderDetectionResult {
+                    provider: env_var,
+                    detected: true,
+                    version: None,
+                    path: Some(value),
+                    detection_method: "environment".to_string(),
+                });
+            },
+            Err(_) => {
+                results.push(ProviderDetectionResult {
+                    provider: env_var,
+                    detected: false,
+                    version: None,
+                    path: None,
+                    detection_method: "environment".to_string(),
+                });
+            }
+        }
+    }
+    
+    Ok(results)
+}
+
+#[command]
+pub async fn check_running_services(processes: Vec<String>) -> Result<Vec<ProviderDetectionResult>, String> {
+    let mut results = Vec::new();
+    
+    for process in processes {
+        // Use pgrep to check if process is running
+        let output = Command::new("pgrep")
+            .arg("-f")
+            .arg(&process)
+            .output();
+            
+        let detected = match output {
+            Ok(output) => output.status.success() && !output.stdout.is_empty(),
+            Err(_) => false,
+        };
+        
+        results.push(ProviderDetectionResult {
+            provider: process,
+            detected,
+            version: None,
+            path: None,
+            detection_method: "process".to_string(),
+        });
+    }
+    
+    Ok(results)
 }

@@ -1,9 +1,76 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { api, type AIProviderInfo, type AIProviderConfigRequest, type AITaskRequest } from '$lib/utils/api';
+  import { pythonBridge } from '$lib/utils/tauri';
+
+  // Provider state types
+  type ProviderStatus = 'not_installed' | 'detected' | 'registered' | 'active' | 'error';
+  
+  interface KnownProvider {
+    name: string;
+    type: string;
+    description: string;
+    status: ProviderStatus;
+    detected_path?: string;
+    detected_version?: string;
+    auto_detected: boolean;
+    install_guide?: string;
+  }
 
   let providers: AIProviderInfo[] = [];
+  let knownProviders: KnownProvider[] = [
+    {
+      name: 'Claude Code',
+      type: 'claude_code',
+      description: 'Anthropic\'s Claude CLI for code generation',
+      status: 'not_installed',
+      auto_detected: false,
+      install_guide: 'Install via: npm install -g @anthropic-ai/claude-cli'
+    },
+    {
+      name: 'Ollama',
+      type: 'ollama',
+      description: 'Local LLM runtime for various models',
+      status: 'not_installed', 
+      auto_detected: false,
+      install_guide: 'Download from: https://ollama.ai'
+    },
+    {
+      name: 'OpenAI GPT',
+      type: 'openai_gpt',
+      description: 'OpenAI GPT models via API',
+      status: 'not_installed',
+      auto_detected: false,
+      install_guide: 'Requires OpenAI API key'
+    },
+    {
+      name: 'Claude API',
+      type: 'claude_api',
+      description: 'Anthropic Claude via direct API',
+      status: 'not_installed',
+      auto_detected: false,
+      install_guide: 'Requires Anthropic API key'
+    },
+    {
+      name: 'Google Gemini',
+      type: 'gemini',
+      description: 'Google Gemini AI models',
+      status: 'not_installed',
+      auto_detected: false,
+      install_guide: 'Requires Google AI API key'
+    },
+    {
+      name: 'Gemini Code',
+      type: 'gemini_code',
+      description: 'Google Gemini optimized for code',
+      status: 'not_installed',
+      auto_detected: false,
+      install_guide: 'Requires Google AI API key'
+    }
+  ];
+
   let loading = true;
+  let discovering = false;
   let error = '';
   let refreshInterval: number;
   
@@ -35,10 +102,140 @@
     if (response.success) {
       providers = response.data || [];
       error = '';
+      
+      // Update known providers status based on registered providers
+      updateKnownProviderStatus();
     } else {
       error = response.error || 'Failed to load AI providers';
     }
     loading = false;
+  }
+
+  function updateKnownProviderStatus() {
+    knownProviders = knownProviders.map(known => {
+      const registered = providers.find(p => p.provider_type === known.type);
+      if (registered) {
+        return {
+          ...known,
+          status: registered.initialized ? 'active' : 'registered'
+        };
+      }
+      return known;
+    });
+  }
+
+  async function autoDiscoverProviders() {
+    discovering = true;
+    error = '';
+
+    try {
+      // Check for command-line tools
+      await checkCommandTools();
+      
+      // Check for environment variables
+      await checkEnvironmentVariables();
+      
+      // Check for running services
+      await checkRunningServices();
+
+    } catch (err) {
+      error = err instanceof Error ? err.message : 'Discovery failed';
+    }
+    
+    discovering = false;
+  }
+
+  async function checkCommandTools() {
+    const commandMappings = [
+      { tool: 'claude', provider: 'claude_code' },
+      { tool: 'ollama', provider: 'ollama' },
+      { tool: 'gh', provider: 'openai_gpt' }, // GitHub CLI often used with Copilot
+    ];
+
+    try {
+      const commands = commandMappings.map(mapping => mapping.tool);
+      const results = await pythonBridge.detect_command_tools(commands);
+      
+      for (const result of results) {
+        const mapping = commandMappings.find(m => m.tool === result.provider);
+        if (mapping && result.detected) {
+          updateProviderStatus(mapping.provider, 'detected', result.path || undefined, result.version || undefined);
+        }
+      }
+    } catch (e) {
+      console.log('Could not check command tools:', e);
+    }
+  }
+
+  async function checkEnvironmentVariables() {
+    const envMappings = [
+      { env: 'OPENAI_API_KEY', provider: 'openai_gpt' },
+      { env: 'ANTHROPIC_API_KEY', provider: 'claude_api' },
+      { env: 'GOOGLE_API_KEY', provider: 'gemini' },
+    ];
+
+    try {
+      const envVars = envMappings.map(mapping => mapping.env);
+      const results = await pythonBridge.check_environment_variables(envVars);
+      
+      for (const result of results) {
+        const mapping = envMappings.find(m => m.env === result.provider);
+        if (mapping && result.detected) {
+          updateProviderStatus(mapping.provider, 'detected', undefined, undefined);
+        }
+      }
+    } catch (e) {
+      console.log('Could not check environment variables:', e);
+    }
+  }
+
+  async function checkRunningServices() {
+    const processMappings = [
+      { process: 'ollama', provider: 'ollama' },
+    ];
+
+    try {
+      const processes = processMappings.map(mapping => mapping.process);
+      const results = await pythonBridge.check_running_services(processes);
+      
+      for (const result of results) {
+        const mapping = processMappings.find(m => m.process === result.provider);
+        if (mapping && result.detected) {
+          updateProviderStatus(mapping.provider, 'detected', 'running', undefined);
+        }
+      }
+
+      // Also try direct HTTP check for Ollama API
+      try {
+        const response = await fetch('http://127.0.0.1:11434/api/version', {
+          method: 'GET',
+          signal: AbortSignal.timeout(2000) // 2 second timeout
+        });
+        if (response.ok) {
+          const data = await response.json();
+          updateProviderStatus('ollama', 'detected', 'http://127.0.0.1:11434', data.version);
+        }
+      } catch (e) {
+        console.log('Ollama HTTP service not detected');
+      }
+    } catch (e) {
+      console.log('Could not check running services:', e);
+    }
+  }
+
+  function updateProviderStatus(providerType: string, status: ProviderStatus, path?: string, version?: string) {
+    knownProviders = knownProviders.map(p => {
+      if (p.type === providerType) {
+        return {
+          ...p,
+          status,
+          detected_path: path,
+          detected_version: version,
+          auto_detected: true
+        };
+      }
+      return p;
+    });
   }
 
   async function registerProvider() {
@@ -119,6 +316,50 @@
     }
   }
 
+  function getProviderStatusColor(status: ProviderStatus): string {
+    switch (status) {
+      case 'active': return 'text-green-600';
+      case 'registered': return 'text-blue-600';
+      case 'detected': return 'text-yellow-600';
+      case 'error': return 'text-red-600';
+      case 'not_installed': return 'text-gray-400';
+      default: return 'text-gray-600';
+    }
+  }
+
+  function getProviderStatusBadge(status: ProviderStatus): { class: string, text: string } {
+    switch (status) {
+      case 'active': 
+        return { class: 'bg-green-100 text-green-800', text: 'Active' };
+      case 'registered': 
+        return { class: 'bg-blue-100 text-blue-800', text: 'Registered' };
+      case 'detected': 
+        return { class: 'bg-yellow-100 text-yellow-800', text: 'Detected' };
+      case 'error': 
+        return { class: 'bg-red-100 text-red-800', text: 'Error' };
+      case 'not_installed': 
+        return { class: 'bg-gray-100 text-gray-600', text: 'Not Installed' };
+      default: 
+        return { class: 'bg-gray-100 text-gray-600', text: 'Unknown' };
+    }
+  }
+
+  async function registerKnownProvider(provider: KnownProvider) {
+    registerConfig.provider_type = provider.type;
+    registerConfig.name = provider.name;
+    registerConfig.description = provider.description;
+    
+    if (provider.detected_path) {
+      registerConfig.config = { 
+        path: provider.detected_path,
+        version: provider.detected_version
+      };
+      configJson = JSON.stringify(registerConfig.config, null, 2);
+    }
+    
+    showRegisterForm = true;
+  }
+
   function getProviderIcon(providerType: string): string {
     switch (providerType) {
       case 'claude_code': return '🚀';
@@ -179,6 +420,13 @@
     <h1 class="text-3xl font-bold text-gray-800">AI Providers</h1>
     <div class="space-x-4">
       <button 
+        class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded disabled:opacity-50"
+        on:click={autoDiscoverProviders}
+        disabled={discovering}
+      >
+        {discovering ? '🔍 Discovering...' : '🔍 Auto-Discover'}
+      </button>
+      <button 
         class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
         on:click={() => showRegisterForm = true}
       >
@@ -213,83 +461,177 @@
       <p class="mt-2">Loading providers...</p>
     </div>
   {:else}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {#each providers as provider}
-        <div class="bg-white rounded-lg shadow-md overflow-hidden">
-          <div class="p-6">
-            <div class="flex items-center justify-between mb-4">
-              <div class="flex items-center">
-                <span class="text-2xl mr-3">{getProviderIcon(provider.provider_type)}</span>
-                <div>
-                  <h3 class="text-lg font-semibold text-gray-800">
-                    {provider.provider_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                  </h3>
-                  <p class="text-sm {getStatusColor(provider.status)}">
-                    {provider.status.toUpperCase()}
-                  </p>
+    <!-- Available Providers Section -->
+    <div class="mb-8">
+      <h2 class="text-2xl font-semibold text-gray-800 mb-4">Available AI Providers</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {#each knownProviders as provider}
+          {@const statusBadge = getProviderStatusBadge(provider.status)}
+          <div class="bg-white rounded-lg shadow-md border overflow-hidden {
+            provider.status === 'detected' ? 'border-yellow-300' :
+            provider.status === 'active' ? 'border-green-300' :
+            provider.status === 'registered' ? 'border-blue-300' : 'border-gray-200'
+          }">
+            <div class="p-4">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center">
+                  <span class="text-2xl mr-3">{getProviderIcon(provider.type)}</span>
+                  <div>
+                    <h3 class="text-lg font-semibold text-gray-800">{provider.name}</h3>
+                    <p class="text-sm text-gray-600">{provider.description}</p>
+                  </div>
                 </div>
               </div>
-              <div class="flex items-center">
-                {#if provider.initialized}
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Ready
-                  </span>
-                {:else}
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                    Not Ready
-                  </span>
+
+              <div class="mb-3">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {statusBadge.class}">
+                  {statusBadge.text}
+                </span>
+                {#if provider.auto_detected}
+                  <span class="ml-2 text-xs text-blue-600">Auto-detected</span>
                 {/if}
               </div>
-            </div>
 
-            <div class="mb-4">
-              <div class="text-sm text-gray-600 mb-2">
-                <strong>Models:</strong> {provider.available_models.length}
-              </div>
-              <div class="text-xs text-gray-500">
-                {provider.available_models.slice(0, 3).join(', ')}
-                {#if provider.available_models.length > 3}
-                  <span class="text-blue-600 cursor-pointer" title={provider.available_models.join(', ')}>
-                    ... +{provider.available_models.length - 3} more
-                  </span>
-                {/if}
-              </div>
-            </div>
-
-            <div class="mb-4 text-xs text-gray-500">
-              <strong>Config:</strong> {renderConfigSchema(provider.config_schema)}
-            </div>
-
-            <div class="flex justify-between items-center">
-              {#if provider.initialized}
-                <button 
-                  class="bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-1 rounded"
-                  on:click={() => selectProviderForTask(provider)}
-                >
-                  Run Task
-                </button>
-              {:else}
-                <span class="text-gray-400 text-sm">Not Available</span>
+              {#if provider.detected_path}
+                <div class="mb-3 text-xs text-gray-500">
+                  <strong>Path:</strong> <code class="bg-gray-100 px-1 rounded">{provider.detected_path}</code>
+                  {#if provider.detected_version}
+                    <br><strong>Version:</strong> {provider.detected_version}
+                  {/if}
+                </div>
               {/if}
-              
-              <button 
-                class="text-red-600 hover:text-red-800 text-sm"
-                on:click={() => unregisterProvider(provider.provider_type)}
-                disabled={!provider.initialized}
-              >
-                Remove
-              </button>
+
+              {#if provider.status === 'not_installed'}
+                <div class="mb-3 text-xs text-gray-500">
+                  <strong>Install:</strong> {provider.install_guide}
+                </div>
+              {/if}
+
+              <div class="flex justify-between items-center">
+                {#if provider.status === 'detected'}
+                  <button 
+                    class="bg-yellow-500 hover:bg-yellow-600 text-white text-sm px-3 py-1 rounded"
+                    on:click={() => registerKnownProvider(provider)}
+                  >
+                    Register
+                  </button>
+                {:else if provider.status === 'registered' || provider.status === 'active'}
+                  <button 
+                    class="text-red-600 hover:text-red-800 text-sm"
+                    on:click={() => unregisterProvider(provider.type)}
+                  >
+                    Remove
+                  </button>
+                {:else}
+                  <span class="text-gray-400 text-sm">Not Available</span>
+                {/if}
+                
+                {#if provider.status === 'active'}
+                  <button 
+                    class="bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-1 rounded"
+                    on:click={() => {
+                      const registeredProvider = providers.find(p => p.provider_type === provider.type);
+                      if (registeredProvider) selectProviderForTask(registeredProvider);
+                    }}
+                  >
+                    Run Task
+                  </button>
+                {/if}
+              </div>
             </div>
           </div>
-        </div>
-      {/each}
+        {/each}
+      </div>
     </div>
 
-    {#if providers.length === 0}
+    <!-- Registered Providers Section -->
+    {#if providers.length > 0}
+      <div class="mb-8">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Registered Providers Details</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {#each providers as provider}
+            <div class="bg-white rounded-lg shadow-md overflow-hidden border-l-4 border-blue-500">
+              <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                  <div class="flex items-center">
+                    <span class="text-2xl mr-3">{getProviderIcon(provider.provider_type)}</span>
+                    <div>
+                      <h3 class="text-lg font-semibold text-gray-800">
+                        {provider.provider_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </h3>
+                      <p class="text-sm {getStatusColor(provider.status)}">
+                        {provider.status.toUpperCase()}
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex items-center">
+                    {#if provider.initialized}
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Ready
+                      </span>
+                    {:else}
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        Not Ready
+                      </span>
+                    {/if}
+                  </div>
+                </div>
+
+                <div class="mb-4">
+                  <div class="text-sm text-gray-600 mb-2">
+                    <strong>Models:</strong> {provider.available_models.length}
+                  </div>
+                  <div class="text-xs text-gray-500">
+                    {provider.available_models.slice(0, 3).join(', ')}
+                    {#if provider.available_models.length > 3}
+                      <span class="text-blue-600 cursor-pointer" title={provider.available_models.join(', ')}>
+                        ... +{provider.available_models.length - 3} more
+                      </span>
+                    {/if}
+                  </div>
+                </div>
+
+                <div class="mb-4 text-xs text-gray-500">
+                  <strong>Config:</strong> {renderConfigSchema(provider.config_schema)}
+                </div>
+
+                <div class="flex justify-between items-center">
+                  {#if provider.initialized}
+                    <button 
+                      class="bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-1 rounded"
+                      on:click={() => selectProviderForTask(provider)}
+                    >
+                      Run Task
+                    </button>
+                  {:else}
+                    <span class="text-gray-400 text-sm">Not Available</span>
+                  {/if}
+                  
+                  <button 
+                    class="text-red-600 hover:text-red-800 text-sm"
+                    on:click={() => unregisterProvider(provider.provider_type)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
+
+    {#if knownProviders.filter(p => p.status !== 'not_installed').length === 0}
       <div class="text-center py-12 text-gray-500">
-        <div class="text-6xl mb-4">🤖</div>
-        <h3 class="text-xl font-semibold mb-2">No AI Providers Configured</h3>
-        <p>Register your first AI provider to get started.</p>
+        <div class="text-6xl mb-4">🔍</div>
+        <h3 class="text-xl font-semibold mb-2">No AI Providers Detected</h3>
+        <p class="mb-4">Click "Auto-Discover" to scan for installed AI tools, or manually register providers.</p>
+        <button 
+          class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded"
+          on:click={autoDiscoverProviders}
+        >
+          🔍 Start Auto-Discovery
+        </button>
       </div>
     {/if}
   {/if}

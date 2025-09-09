@@ -119,6 +119,49 @@ export const pythonBridge = {
 		return api.userExperience.health.getStatus();
 	},
 
+	// AI Provider Detection Commands
+	detect_command_tools: async (commands: string[]) => {
+		if (isTauri) {
+			return await safeTauriInvoke('detect_command_tools', { commands });
+		}
+		// Fallback for web environment - mock results
+		return commands.map(command => ({
+			provider: command,
+			detected: false,
+			version: null,
+			path: null,
+			detection_method: 'command'
+		}));
+	},
+	
+	check_environment_variables: async (env_vars: string[]) => {
+		if (isTauri) {
+			return await safeTauriInvoke('check_environment_variables', { env_vars });
+		}
+		// Fallback for web environment - mock results
+		return env_vars.map(env_var => ({
+			provider: env_var,
+			detected: false,
+			version: null,
+			path: null,
+			detection_method: 'environment'
+		}));
+	},
+	
+	check_running_services: async (processes: string[]) => {
+		if (isTauri) {
+			return await safeTauriInvoke('check_running_services', { processes });
+		}
+		// Fallback for web environment - mock results
+		return processes.map(process => ({
+			provider: process,
+			detected: false,
+			version: null,
+			path: null,
+			detection_method: 'process'
+		}));
+	},
+
 	// Deprecated functions
 	get_session_info: () => {
 		console.warn('get_session_info is deprecated. Use get_sessions instead.');
