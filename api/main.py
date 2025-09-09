@@ -263,9 +263,9 @@ else:
                     <h3>🛠️ Development Instructions:</h3>
                     <p>To access the full dashboard interface:</p>
                     <ol>
-                        <li>Build the Tauri dashboard: <code>cd tauri-dashboard && npm run build</code></li>
-                        <li>Or use the TUI interface: <code>yesman.py dashboard run -i tui</code></li>
-                        <li>Or access Vite dev server at: <a href="http://localhost:5173" target="_blank">http://localhost:5173</a></li>
+                        <li>Web Dashboard: <code>make dashboard-web</code> - Starts Vite dev server</li>
+                        <li>Desktop App: <code>make dashboard-desktop</code> - Starts Tauri desktop app</li>
+                        <li>Direct access: <a href="http://localhost:5173" target="_blank">http://localhost:5173</a> (if Vite server running)</li>
                     </ol>
                 </div>
             </div>

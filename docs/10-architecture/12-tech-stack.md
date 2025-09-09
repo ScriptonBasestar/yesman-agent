@@ -36,7 +36,7 @@ pyyaml = ">=5.4"             # YAML 설정 파일 파싱
 pexpect = ">=4.8"            # 프로세스 자동화 및 상호작용
 tmuxp = ">=1.55.0"           # tmux 세션 관리
 libtmux = ">=0.46.2"         # Python tmux 라이브러리 바인딩
-rich = ">=13.0.0"            # 터미널 포매팅 및 UI 컴포넌트
+# rich - 제거됨 (TUI 인터페이스 삭제)
 psutil = ">=5.9.0"           # 시스템 및 프로세스 유틸리티
 ```
 
@@ -45,7 +45,7 @@ psutil = ">=5.9.0"           # 시스템 및 프로세스 유틸리티
 - **FastAPI** (>=0.116.0): 최신 Python 웹 프레임워크 (REST API)
 - **Uvicorn** (>=0.35.0): FastAPI용 ASGI 서버
 - **Pydantic**: 데이터 검증 및 설정 관리 (FastAPI에 포함)
-- **Textual** (>=0.41.0): 고급 터미널 UI 프레임워크
+# **Textual** - 제거됨 (TUI 인터페이스 삭제)
 
 ### 추가 Python 라이브러리
 
@@ -217,7 +217,7 @@ api/
 ## 📊 로깅 및 모니터링
 
 - **Python logging**: 표준 로깅 모듈
-- **Rich**: 향상된 터미널 출력
+# **Rich**: 제거됨 (TUI 제거)
 - **FastAPI**: 웹 기반 모니터링 대시보드
 
 ## 🏗️ 아키텍처 컴포넌트

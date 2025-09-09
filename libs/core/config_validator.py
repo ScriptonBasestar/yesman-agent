@@ -257,7 +257,7 @@ class ConfigValidator:
             result.add_error(ValidationError(message=f"Error validating configuration values: {e}", level=ValidationLevel.WARNING, category="configuration_values"))
 
     def display_results(self, result: ValidationResult, verbose: bool = False) -> None:
-        """Display validation results with Rich formatting."""
+        """Display validation results with formatting."""
         if result.is_valid and not result.warnings and not verbose:
             print("✅ All configuration validation passed", style="green bold")
             return

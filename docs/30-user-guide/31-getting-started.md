@@ -235,25 +235,24 @@ uv run ./yesman.py enter my_project
 uv run ./yesman.py down
 ```
 
-## ⌨️ 키보드 단축키
+## 🖱️ 사용자 인터페이스
 
-### TUI 대시보드 단축키
+### 웹 대시보드 인터페이스
 
-| 키 | 동작 | 컨텍스트 | | ----------- | ----------------- | -------- | | `q` | 애플리케이션 종료 | 전역 | | `h` | 도움말 표시 | 전역 | | `r` |
-데이터 새로고침 | 전역 | | `d` | 다크 모드 토글 | 전역 | | `1-5` | 뷰 전환 | 전역 | | `↑/↓` | 항목 탐색 | 리스트 | | `←/→` | 패널 탐색 | 수평 | | `Enter` |
-선택/활성화 | 리스트 | | `Tab` | 다음 포커스 | 폼 | | `Shift+Tab` | 이전 포커스 | 폼 |
+웹 브라우저를 통한 직관적인 GUI 인터페이스를 제공합니다:
 
-### 탐색 컨텍스트
+- **실시간 모니터링**: WebSocket을 통한 실시간 데이터 업데이트
+- **반응형 디자인**: 데스크톱과 모바일 모든 환경 지원
+- **인터랙티브 차트**: 세션과 성능 데이터의 시각화
+- **원격 접근**: 어디서나 브라우저로 접근 가능
 
-다양한 컨텍스트에서 특화된 키보드 단축키를 제공합니다:
+### 데스크톱 앱 인터페이스
 
-**대시보드 컨텍스트**:
+Tauri 기반 네이티브 데스크톱 애플리케이션:
 
-- `s` - 세션 브라우저
-- `h` - 건강 모니터
-- `a` - 활동 추적기
-- `l` - 로그 뷰어
-- `p` - 성능 모니터
+- **네이티브 성능**: 빠른 렌더링과 반응성
+- **시스템 통합**: 트레이 아이콘과 시스템 알림
+- **로컬 저장**: 설정과 데이터의 안전한 로컬 저장
 
 **세션 브라우저 컨텍스트**:
 
@@ -299,17 +298,17 @@ Yesman-Claude는 여러 내장 테마를 포함합니다:
 
 ### 테마 전환
 
-**명령줄 통해**:
+**Makefile 명령어 사용**:
 
 ```bash
-# 사용 가능한 테마 목록
-uv run ./yesman.py dash --theme-list
+# 웹 대시보드 실행
+make dashboard-web
 
-# 특정 테마 사용
-uv run ./yesman.py dash tui --theme dark
+# 데스크톱 앱 실행
+make dashboard-desktop
 
-# 시스템 테마 감지 설정
-uv run ./yesman.py dash tui --theme auto
+# 자동 감지 대시보드 실행
+make dashboard
 ```
 
 **API 통해**:
@@ -495,10 +494,10 @@ optimizer.start_monitoring()
    uv run ./yesman.py dash --install-deps
    ```
 
-1. 대체 인터페이스 시도:
+1. 웹 대시보드 시도:
 
    ```bash
-   uv run ./yesman.py dash tui  # 항상 작동함
+   make dashboard-web  # 브라우저 기반 인터페이스
    ```
 
 #### 성능 저하
@@ -580,7 +579,7 @@ optimizer.start_monitoring()
 ```bash
 # 디버그 모드 활성화
 export YESMAN_DEBUG=1
-uv run ./yesman.py dash tui
+make debug-api
 
 # 디버그 로그 확인
 tail -f ~/.scripton/yesman/logs/debug.log

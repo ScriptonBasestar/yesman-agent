@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 Yesman-Claude is a comprehensive CLI automation tool that manages tmux sessions and automates interactions with Claude
-Code. It features multiple dashboard interfaces (TUI, Web, Tauri), AI-powered learning system, and extensive session
+Code. It features multiple dashboard interfaces (Web, Tauri), AI-powered learning system, and extensive session
 management capabilities using YAML configuration templates.
 
 ## Development Commands
@@ -38,7 +38,7 @@ make install-all
 
 # Dashboard interfaces
 ./yesman.py dashboard run                    # Auto-detect best interface
-./yesman.py dashboard run --interface tui   # Rich terminal interface
+make dashboard-web                          # Web development interface
 ./yesman.py dashboard run --interface web   # SvelteKit web interface
 ./yesman.py dashboard run --interface tauri # Native desktop app
 
@@ -110,10 +110,7 @@ Use Context7 to get up-to-date documentation for project dependencies:
 - Pydantic: `/pydantic/pydantic` - topics: `validators`, `settings`, `models`
 - Click: `/pallets/click` - topics: `commands`, `groups`, `options`
 
-**UI/TUI Libraries:**
-
-- Rich: `/Textualize/rich` - topics: `console`, `table`, `progress`
-- Textual: `/Textualize/textual` - topics: `widgets`, `screens`, `reactive`
+# UI Libraries (Rich/Textual no longer used - TUI interface removed)
 
 **Session Management:**
 
@@ -207,9 +204,8 @@ When working with specific libraries, use Context7 like this:
 
 **Multi-Interface Dashboard**:
 
-- **TUI**: Rich-based terminal interface with live updates
 - **Web**: SvelteKit + FastAPI serving static assets
-- **Tauri**: Native desktop app sharing SvelteKit codebase
+- **Tauri**: Native desktop app sharing SvelteKit codebase  
 - Interface auto-detection based on environment capabilities
 
 **Error Handling**:
@@ -292,8 +288,7 @@ The adaptive response system (`libs/ai/`) learns user patterns:
 **Interface Selection Logic**:
 
 1. Tauri (best UX) if desktop environment detected
-1. Web (universal access) if browser available
-1. TUI (minimal resources) as fallback
+1. Web (universal access) as fallback
 
 **Shared Frontend**: SvelteKit codebase serves both web and Tauri interfaces, with Tauri providing native desktop
 integration (system tray, notifications, file system access).

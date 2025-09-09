@@ -82,7 +82,7 @@ class LayoutManagerMixin(ABC):
 
         Returns:
             Any: The layout object. Type depends on the UI framework being used.
-                For Rich console apps, this might be a Layout object.
+                For console apps, this might be a Layout object.
                 For web apps, this might be a dictionary describing the layout.
         """
         msg = "Subclasses must implement create_layout()"

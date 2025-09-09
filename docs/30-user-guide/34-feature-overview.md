@@ -15,7 +15,7 @@ document outlines all implemented features and capabilities.
 
 ### Dashboard & Monitoring
 
-- **`./yesman.py dashboard`** - Launch TUI dashboard for real-time session monitoring
+- **`make dashboard`** - Launch web or desktop dashboard for real-time session monitoring
 
 ## 📊 Dashboard & Monitoring
 
@@ -23,7 +23,7 @@ document outlines all implemented features and capabilities.
 
 - **Smart Terminal Detection** - Automatically detects terminal capabilities and sets appropriate environment variables
 - **Universal Compatibility** - Works across different terminal types (xterm, tmux, screen, etc.)
-- **Fallback Safe Mode** - Provides simple text-based interface when TUI mode is incompatible
+- **Fallback Safe Mode** - Provides web interface when desktop application is unavailable
 - **Environment Auto-Fix** - Automatically configures TERM and FORCE_COLOR variables for optimal display
 
 ### Real-Time Session Monitoring
@@ -119,7 +119,7 @@ document outlines all implemented features and capabilities.
 
 ### Error Handling
 
-- **Graceful Degradation** - Falls back to simple mode when TUI features fail
+- **Graceful Degradation** - Falls back to web interface when desktop features are unavailable
 - **Connection Recovery** - Automatically reconnects to tmux sessions when possible
 - **Input Validation** - Validates templates and configurations before execution
 - **Safe Defaults** - Sensible fallback behavior when configurations are missing

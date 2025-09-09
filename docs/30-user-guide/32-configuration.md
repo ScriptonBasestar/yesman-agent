@@ -51,7 +51,7 @@ logging:
 
 # Dashboard settings
 dashboard:
-  default_interface: auto  # auto, tui, web, tauri
+  default_interface: auto  # auto, web, tauri
   update_interval: 1.0
   theme: auto  # auto, light, dark, or theme name
   cache_size: 100
@@ -189,7 +189,7 @@ export YESMAN_LOG_LEVEL=DEBUG
 export YESMAN_LOG_FILE=~/.scripton/yesman/logs/debug.log
 
 # Dashboard
-export YESMAN_DASHBOARD_INTERFACE=tui
+export YESMAN_DASHBOARD_INTERFACE=web
 export YESMAN_DASHBOARD_THEME=dark
 export YESMAN_DASHBOARD_UPDATE_INTERVAL=2.0
 
@@ -243,14 +243,9 @@ Configure which dashboard interface to use by default:
 
 ```yaml
 dashboard:
-  default_interface: auto  # Options: auto, tui, web, tauri
+  default_interface: auto  # Options: auto, web, tauri
   
   # Interface-specific settings
-  tui:
-    color_depth: 256
-    mouse_enabled: true
-    scroll_buffer: 1000
-    
   web:
     port: 8000
     host: "0.0.0.0"
