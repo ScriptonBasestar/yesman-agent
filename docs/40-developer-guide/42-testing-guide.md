@@ -1,6 +1,6 @@
 # Testing Guide
 
-Yesman-Agent의 통합 테스트 가이드입니다. 단위 테스트부터 통합 테스트, 성능 테스트까지 모든 테스트 전략을 다룹니다.
+Yesman-Claude의 API 중심 테스트 가이드입니다. Agent 라이프사이클 테스트부터 Claude Code Headless 통합 테스트까지 모든 테스트 전략을 다룹니다.
 
 ## 📚 목차
 
@@ -39,17 +39,18 @@ Yesman-Agent의 통합 테스트 가이드입니다. 단위 테스트부터 통�
 
 ### 요구사항
 
-- Python 3.8+
-- tmux
-- uv (Python package manager)
-- curl (for HTTP testing)
-- git (for repository tests)
+- Python 3.11+
+- Claude CLI (헤드리스 모드용)
+- uv (주요 Python 패키지 매니저)
+- curl (HTTP API 테스트용)
+- tmux (옵션널 세션 관리)
+- pnpm (프론트엔드 테스트용)
 
 ### 설치
 
 ```bash
 # 테스트 의존성 설치
-pip install pytest pytest-cov pytest-asyncio pytest-mock
+uv add --group test pytest pytest-cov pytest-asyncio pytest-mock
 
 # 또는 uv 사용
 uv sync --dev
@@ -195,7 +196,7 @@ tests/
 pytest tests/unit/
 
 # 커버리지 포함 실행
-pytest --cov=libs --cov=commands tests/
+uv run pytest --cov=libs --cov=api tests/
 
 # 특정 테스트 파일 실행
 pytest tests/unit/test_session_manager.py
@@ -448,14 +449,14 @@ jobs:
     
     - name: Install dependencies
       run: |
-        pip install -e .
-        pip install pytest pytest-cov pytest-asyncio
+        uv sync --group test
+        uv add --group test pytest pytest-cov pytest-asyncio
     
     - name: Install tmux
       run: sudo apt-get install -y tmux
     
     - name: Run unit tests
-      run: pytest tests/unit/ --cov=libs --cov-report=xml
+      run: uv run pytest tests/unit/ --cov=libs --cov=api --cov-report=xml
     
     - name: Run integration tests
       run: ./test-integration/run_tests.sh --quick
@@ -473,7 +474,7 @@ repos:
     hooks:
       - id: pytest-check
         name: pytest-check
-        entry: pytest tests/unit/ --tb=short
+        entry: uv run pytest tests/unit/ --tb=short
         language: system
         pass_filenames: false
         
@@ -541,10 +542,10 @@ def test_long_running_operation():
 
 ```bash
 # pytest-xdist를 사용한 병렬 실행
-pip install pytest-xdist
+uv add --group test pytest-xdist
 
 # 4개 워커로 병렬 실행
-pytest -n 4 tests/
+uv run pytest -n 4 tests/
 
 # 자동 워커 수 결정
 pytest -n auto tests/
@@ -554,13 +555,13 @@ pytest -n auto tests/
 
 ```bash
 # 상세 출력으로 테스트 실행
-pytest -v -s tests/unit/test_session_manager.py
+uv run pytest -v -s tests/unit/test_session_manager.py
 
 # 특정 테스트에서 중단점 설정
-pytest --pdb tests/unit/test_session_manager.py::test_create_session
+uv run pytest --pdb tests/unit/test_session_manager.py::test_create_session
 
 # 로그 출력 포함
-pytest --log-cli-level=DEBUG tests/
+uv run pytest --log-cli-level=DEBUG tests/
 ```
 
 ### CI/CD 트러블슈팅
@@ -569,7 +570,7 @@ pytest --log-cli-level=DEBUG tests/
 # CI 환경에서 테스트 실행
 export CI=true
 export YESMAN_TEST_MODE=1
-pytest tests/ --tb=short --maxfail=5
+uv run pytest tests/ --tb=short --maxfail=5
 ```
 
 ## 📊 테스트 메트릭
@@ -578,20 +579,20 @@ pytest tests/ --tb=short --maxfail=5
 
 ```bash
 # 커버리지 보고서 생성
-pytest --cov=libs --cov=commands --cov-report=html
+uv run pytest --cov=libs --cov=api --cov-report=html
 
 # 커버리지 임계값 설정
-pytest --cov=libs --cov-fail-under=80
+uv run pytest --cov=libs --cov=api --cov-fail-under=80
 ```
 
 ### 테스트 실행 시간
 
 ```bash
 # 가장 느린 테스트 10개 표시
-pytest --durations=10
+uv run pytest --durations=10
 
 # 1초 이상 걸리는 테스트만 표시
-pytest --durations=0 | grep -E '\s+[1-9]\d*\.\d+s'
+uv run pytest --durations=0 | grep -E '\s+[1-9]\d*\.\d+s'
 ```
 
 ## 📝 테스트 작성 가이드라인

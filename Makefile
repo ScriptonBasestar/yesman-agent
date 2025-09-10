@@ -109,8 +109,9 @@ help-test: ## show testing help
 
 help-quality: ## show quality help
 	@echo -e "$(GREEN)✨ Code Quality Commands:$(RESET)"
-	@echo -e "  $(CYAN)fmt$(RESET)                Format code with black/isort"
+	@echo -e "  $(CYAN)format$(RESET)             Format Python and Markdown files with ruff"
 	@echo -e "  $(CYAN)format-check$(RESET)       Check formatting without fixing"
+	@echo -e "  $(CYAN)lint$(RESET)               Run comprehensive code linting"
 	@echo -e "  $(CYAN)type-check$(RESET)         Run mypy type checking"
 	@echo -e "  $(CYAN)security$(RESET)           Run security scans"
 	@echo -e "  $(CYAN)analyze$(RESET)            Code complexity analysis"

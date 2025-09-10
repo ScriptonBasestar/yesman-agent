@@ -1,21 +1,23 @@
 # Features
 
-Yesman-Claude is a CLI automation tool that manages tmux sessions and automates interactions with Claude Code. This
-document outlines all implemented features and capabilities.
+Yesman-Claude is an API-first automation platform that uses Claude Code Headless mode for agent lifecycle management. This document outlines all implemented features and capabilities.
 
 ## 🖥️ CLI Commands
 
-### Session Management
+### Agent Management (API-First)
 
-- **`./yesman.py ls`** - List available templates and projects
-- **`./yesman.py show`** - Show running tmux sessions status
-- **`./yesman.py setup`** - Create all tmux sessions from projects.yaml configuration
-- **`./yesman.py teardown`** - Stop and remove all sessions defined in projects.yaml
-- **`./yesman.py enter [session_name]`** - Attach to a tmux session (interactive selection if no name provided)
+- **API Endpoints** - Agent lifecycle management through REST API
+- **Claude Code Headless** - SDK-based automation via Claude CLI
+- **Real-time Streaming** - JSON-based task execution monitoring
+- **Dashboard Interface** - Web and desktop interfaces for agent control
+- **tmux Sessions** - Optional terminal session support for compatibility
 
 ### Dashboard & Monitoring
 
-- **`make dashboard`** - Launch web or desktop dashboard for real-time session monitoring
+- **`make dashboard`** - Smart dashboard launcher (Web/Tauri auto-detection)
+- **`make dashboard-web`** - SvelteKit web dashboard
+- **`make dashboard-desktop`** - Tauri native desktop application
+- **API Server** - FastAPI backend with real-time agent status
 
 ## 📊 Dashboard & Monitoring
 

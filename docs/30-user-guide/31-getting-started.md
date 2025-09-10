@@ -24,65 +24,69 @@ Yesman-Claude 시작 가이드 - 설치부터 기본 사용법까지 모든 것�
    cd yesman-agent
    ```
 
-1. **의존성 설치**:
+2. **uv를 사용한 의존성 설치** (권장):
 
    ```bash
-   # 개발 설치 (권장)
-   make dev-install
-
-   # 또는 uv 사용 (가장 빠름)
-   uv run ./yesman.py --help
-
-   # 모든 개발 의존성 설치
-   make install-all
+   # uv로 모든 의존성 동기화
+   uv sync
+   
+   # 또는 개발 의존성 포함
+   uv sync --group dev
+   
+   # 전체 의존성 (테스트 포함)
+   uv sync --all-groups
    ```
 
-1. **설정 생성**:
+3. **설정 생성**:
 
    ```bash
    mkdir -p ~/.scripton/yesman
-   cp examples/global-yesman/* ~/.scripton/yesman/
+   # Claude Code Headless 모드 설정 (uad8c장)
+   cp config/claude-headless.example.yaml ~/.scripton/yesman/yesman.yaml
    ```
 
-1. **설치 테스트**:
+4. **설치 테스트**:
 
    ```bash
-   ./yesman.py --help
-   # or
+   # API 서버 시작
+   uv run python -m uvicorn api.main:app --host 127.0.0.1 --port 10501
+   
+   # 대시보드 시작
    make dashboard
    ```
 
 ### 첫 번째 단계
 
-1. **사용 가능한 템플릿 확인**:
+1. **API 서버 시작**:
 
    ```bash
-   # Server API를 통해 템플릿 확인
-   make dashboard-web
-   # 브라우저에서 http://localhost:5173 접속
-   ```
-
-1. **첫 번째 세션 생성**:
-
-   ```bash
-   # API 서버 시작
+   # 백그라운드에서 API 서버 시작
    make start
-   # 세션 생성
-   ./yesman.py setup [session-name]
+   # 또는 직접 실행
+   uv run python -m uvicorn api.main:app --host 0.0.0.0 --port 10501
    ```
 
-1. **대시보드 열기**:
+2. **Claude Agent 생성 및 관리**:
+
+   ```bash
+   # REST API를 통한 Agent 생성
+   curl -X POST http://localhost:10501/api/agents/ \
+        -H "Content-Type: application/json" \
+        -d '{"task": "Write a simple hello world function"}'
+   ```
+
+3. **대시보드 열기**:
 
    ```bash
    # 웹 대시보드 실행
-   make dashboard-web
+   make dashboard-web  # http://localhost:5173
    # 또는 Tauri 데스크톱 앱
    make dashboard-desktop
    ```
 
 ## 📊 대시보드 인터페이스
 
-Yesman-Claude는 두 가지 대시보드 인터페이스를 제공하며, 각각 다른 사용 사례에 최적화되어 있습니다.
+Yesman-Claude는 FastAPI 백엔드를 공유하는 두 가지 프론트엔드 인터페이스를 제공합니다. 두 인터페이스 모두 동일한 Claude Agent API를 사용합니다.
 
 ### 웹 인터페이스 (SvelteKit)
 
@@ -157,7 +161,7 @@ make dashboard-full
 
 **적합한 용도**: 일일 개발, 최고의 UX, 데스크톱 통합
 
-## 🎮 세션 관리
+## 🎮 Agent 및 세션 관리
 
 ### 세션 생성
 

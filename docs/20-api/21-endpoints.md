@@ -1,6 +1,6 @@
 # API Endpoints
 
-Yesman-Agent의 FastAPI 기반 REST API 엔드포인트 완전 가이드입니다.
+Yesman-Claude의 Claude Code Headless API 기반 REST 엔드포인트 완전 가이드입니다.
 
 ## 📚 목차
 
@@ -23,17 +23,18 @@ Yesman-Agent의 FastAPI 기반 REST API 엔드포인트 완전 가이드입니�
 - **데이터 형식**: JSON
 - **인증**: Bearer Token (선택사항)
 
-### 서버 실행
+### 서버 실행 (uv 사용)
 
 ```bash
 # 개발 모드
-cd api && python -m uvicorn main:app --reload --host 0.0.0.0 --port 10501
+uv run python -m uvicorn api.main:app --reload --host 0.0.0.0 --port 10501
 
 # 프로덕션 모드
-cd api && python -m uvicorn main:app --host 0.0.0.0 --port 10501
+uv run python -m uvicorn api.main:app --host 0.0.0.0 --port 10501
 
-# 또는 메인 명령어 사용
-./yesman.py dashboard --api-only
+# Make 명령어 사용
+make start              # 백그라운드 실행
+make debug-api          # 디버그 모드
 ```
 
 ### API 문서 접속

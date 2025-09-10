@@ -27,13 +27,13 @@ Yesman-Claude 개발 환경 설정 및 개발 워크플로우 가이드입니다
 git clone <repository-url>
 cd yesman-agent
 
-# 개발 설치 (권장)
-make dev-install
-# 또는 직접:
-pip install -e . --config-settings editable_mode=compat
+# uv 사용 설치 (권장)
+uv sync                             # 기본 의존성 설치
+uv sync --group dev                 # 개발 의존성 포함
+uv sync --all-groups               # 모든 의존성 설치
 
-# uv 사용 (개발용 권장)
-uv sync
+# 대시보드 프론트엔드 의존성 설치
+cd tauri-dashboard && pnpm install
 ```
 
 ### 개발 환경 설정
@@ -44,41 +44,43 @@ export YESMAN_ENV=development
 
 # 설정 파일 생성 (선택적)
 mkdir -p ~/.scripton/yesman
-cp examples/global-yesman/yesman.yaml ~/.scripton/yesman/yesman.yaml
+cp config/claude-headless.example.yaml ~/.scripton/yesman/yesman.yaml
 
-# 모든 의존성 설치
-make install-all
+# Claude CLI 설치 (headless 모드용)
+./scripts/install-claude-cli.sh
+
+# API 서버 시작
+uv run python -m uvicorn api.main:app --host 127.0.0.1 --port 10501
 
 # 코드 품질 검사
-make lint
-make format
+make lint        # Ruff 린팅
+make format      # Ruff 포맷팅
 ```
 
 ## 📁 프로젝트 구조
 
 ### Directory Structure
 
-- `yesman.py` - Main CLI entry point using Click
-- `commands/` - CLI command implementations (ls, show, setup, teardown, dashboard, enter, browse, status, ai, logs)
-- `libs/core/` - Core functionality (SessionManager, ClaudeManager, models, caching)
-- `libs/ai/` - AI learning and adaptive response system
-- `libs/automation/` - [Deprecated] Previously contained automation features
-- `libs/dashboard/` - Dashboard components and health monitoring
-- `libs/logging/` - Asynchronous logging system
-- `libs/` - Additional functionality (YesmanConfig, TmuxManager)
-- `patterns/` - Auto-response patterns for selection prompts
-- `examples/global-yesman/` - Example configuration files
-- `api/` - FastAPI server for REST API endpoints
-- `tauri-dashboard/` - Native desktop app (Tauri + Svelte)
-- `debug/` - Debug utilities and standalone test scripts
-- `test-integration/` - Integration testing utilities
+- `api/` - FastAPI REST API 서버 (주요 백엔드)
+- `tauri-dashboard/` - SvelteKit/Tauri 대시보드 (주요 프론트엔드)
+- `libs/core/` - Agent 관리 및 Claude Code Headless 통합
+- `libs/ai/` - AI 학습 및 적응형 응답 시스템
+- `libs/dashboard/` - 대시보드 컴포넌트 및 상태 모니터링
+- `libs/logging/` - 비동기 로깅 시스템
+- `libs/` - 설정 관리 및 유틸리티 (YesmanConfig)
+- `config/` - 설정 템플릿 및 예제 (claude-headless.example.yaml)
+- `scripts/` - 설치 및 배포 스크립트
+- `debug/` - 디버깅 유틸리티
+- `tests/` - 단위 및 통합 테스트
+- `docs/` - 프로젝트 문서
 
-### Configuration Hierarchy
+### Configuration Hierarchy (Claude Code Headless)
 
-1. Global config: `~/.scripton/yesman/yesman.yaml` (logging, default choices)
-1. Session files: `~/.scripton/yesman/sessions/*.yaml` (individual session definitions)
-1. Templates: `~/.scripton/yesman/templates/*.yaml` (reusable session templates)
-1. Local overrides: `./.scripton/yesman/*` (project-specific configs)
+1. Global config: `~/.scripton/yesman/yesman.yaml` (Claude CLI 설정, 로깅)
+1. Claude CLI binary: `/opt/homebrew/bin/claude` (Headless SDK)
+1. Workspace directories: 격리된 Agent 작업공간
+1. Security policies: 금지 경로, 도구 제한, 할당량
+1. Local overrides: `./.scripton/yesman/*` (프로젝트별 설정)
 
 Configuration merge modes:
 
@@ -90,87 +92,74 @@ Configuration merge modes:
 ### Installation
 
 ```bash
-# Development installation (recommended)
-make dev-install
-# or directly:
-pip install -e . --config-settings editable_mode=compat
+# uv 사용 설치 (권장)
+uv sync                             # 기본 의존성
+uv sync --group dev                 # 개발 의존성
+uv sync --all-groups               # 전체 의존성
 
-# Alternative using uv (recommended for development)
-./yesman.py --help
+# API 서버 상태 확인
+curl http://localhost:10501/healthz
+
+# Agent 생성 테스트
+curl -X POST http://localhost:10501/api/agents/ \
+  -H 'Content-Type: application/json' \
+  -d '{"workspace_path": "/tmp/test", "model": "claude-3-5-sonnet-20241022"}'
 ```
 
 ### Running Commands
 
+**주요 명령어는 API 서버와 대시보드를 통해 실행됩니다:**
+
 ```bash
-# List available templates and projects
-./yesman.py ls
-# or with uv:
-./yesman.py ls
+# API 서버 시작
+make start                          # 백그라운드 실행
+make debug-api                      # 포그라운드 디버그 모드
 
-# Show running tmux sessions  
-./yesman.py show
+# 대시보드 실행 (주요 인터페이스)
+make dashboard                      # 스마트 대시보드 (자동 선택)
+make dashboard-web                  # 웹 대시보드 (http://localhost:5173)
+make dashboard-desktop              # Tauri 데스크톱 앱
 
-# Create all tmux sessions from session files
-./yesman.py setup
+# Agent 생성 및 관리 (API 또는 대시보드)
+curl -X POST http://localhost:10501/api/agents/ \
+  -H 'Content-Type: application/json' \
+  -d '{"workspace_path": "/tmp/test", "model": "claude-3-5-sonnet-20241022"}'
 
-# Create specific session
-./yesman.py setup session-name
+# 상태 확인
+curl http://localhost:10501/api/agents/health    # Agent 상태
+curl http://localhost:10501/healthz              # 시스템 상태
+make status                                     # Make 명령어로 상태 확인
 
-# Teardown all sessions
-./yesman.py teardown
-
-# Teardown specific session
-./yesman.py teardown session-name
-
-# Enter (attach to) a tmux session
-./yesman.py enter [session_name]
-./yesman.py enter  # Interactive selection
-
-# 대시보드 실행
-make dashboard                      # 자동 감지 대시보드
-make dashboard-web                  # 웹 대시보드
-make dashboard-desktop              # 데스크톱 앱
-
-# 상태 모니터링
-./yesman.py status                  # 빠른 상태 확인
-./yesman.py status -d               # 상세 뷰
-
-# AI 학습 시스템 관리
-./yesman.py ai status               # AI 학습 상태
-./yesman.py ai config -t 0.8        # 신뢰도 임계값 조정
-./yesman.py ai history              # 응답 히스토리
-./yesman.py ai export               # 학습 데이터 내보내기
+# 서비스 관리
+make stop                           # 모든 서비스 중단
+make restart                        # 서비스 재시작
 ```
 
 ### Testing and Development Commands
 
 ```bash
-# Run specific test files
-python -m pytest tests/test_prompt_detector.py
-python -m pytest tests/test_content_collector.py
+# 테스트 실행 (uv 사용)
+uv run pytest tests/test_prompt_detector.py      # 특정 테스트
+uv run pytest tests/integration/                # 통합 테스트
+uv run pytest -m "unit"                        # 단위 테스트만
+uv run pytest --cov=libs --cov=api             # 커버리지 포함
 
-# Run integration tests  
-python -m pytest tests/test_full_automation.py
-python -m pytest tests/test_session_manager_cache.py
-
-# Debug specific components (located in debug/ directory)
-# API 서버 시작
-make start                          # API 서버 백그라운드 실행
+# 개발 서버 실행
+make start                          # API 서버 백그라운드
 make debug-api                      # API 서버 디버그 모드
-
-# Tauri 데스크톱 앱 개발
 make dashboard-desktop              # Tauri 개발 모드
+make dashboard-web                  # 웹 개발 서버
 
-# 디버깅 스크립트
-python debug/debug_content.py      # 콘텐츠 수집 디버깅
-python debug/debug_controller.py   # 대시보드 컴트롤러 디버깅
-python debug/debug_tmux.py         # tmux 작업 디버깅
+# 디버깅 스크립트 (uv로 실행)
+uv run python debug/debug_content.py      # 콘텐츠 수집 디버깅
+uv run python debug/debug_controller.py   # 대시보드 컨트롤러 디버깅
+uv run python debug/debug_agent.py        # Agent 라이프사이클 디버깅
 
-# FastAPI server for REST API
-cd api && python -m uvicorn main:app --reload
+# FastAPI 서버 직접 실행
+uv run python -m uvicorn api.main:app --reload --host 0.0.0.0 --port 10501
 
-# Tauri desktop app development
-cd tauri-dashboard && npm run tauri dev
+# Tauri 개발 모드 직접 실행
+cd tauri-dashboard && pnpm tauri dev
 ```
 
 ### Code Quality Tools
@@ -183,14 +172,15 @@ The project uses comprehensive code quality tools:
 - **bandit** for security vulnerability scanning
 - **pre-commit** for automatic quality checks
 
-빠른 명령어:
+빠른 명령어 (전부 uv 기반):
 
 ```bash
-make format      # Ruff로 코드 포맷
-make lint        # 코드 품질 검사
+make format      # Ruff로 코드 포맷팅 및 import 정리
+make lint        # Ruff + mypy 코드 품질 검사
 make lint-fix    # 린팅 문제 자동 수정
-make test        # 모든 테스트 실행
-make dev-full    # 완전한 품질 검사
+make test        # 모든 테스트 실행 (pytest)
+make dev-full    # 완전한 품질 검사 (lint + test + coverage)
+make quick       # 빠른 검사 (dev-fast 별칭)
 ```
 
 ## 🏗️ 아키텍처 개요
@@ -199,15 +189,19 @@ Yesman Claude는 다음과 같은 핵심 패턴들을 사용합니다:
 
 ### Command Pattern
 
-모든 CLI 명령어는 `BaseCommand`를 상속받아 표준화된 방식으로 구현됩니다.
+모든 API 엔드포인트는 FastAPI 라우터를 통해 표준화된 방식으로 구현됩니다.
 
 ```python
-from libs.core.base_command import BaseCommand
+from fastapi import APIRouter
+from libs.core.agent_manager import AgentManager
 
-class MyCommand(BaseCommand):
-    def execute(self, **kwargs) -> dict:
-        # 명령어 실행 로직
-        return {"success": True, "message": "작업 완료"}
+router = APIRouter()
+
+@router.post("/agents/")
+async def create_agent(request: AgentRequest):
+    # Agent 생성 로직
+    agent_id = agent_manager.create_agent(request.workspace_path)
+    return {"agent_id": agent_id, "status": "created"}
 ```
 
 ### Dependency Injection
@@ -215,10 +209,10 @@ class MyCommand(BaseCommand):
 서비스들은 DI 컨테이너를 통해 관리되며, 테스트와 유지보수를 용이하게 합니다.
 
 ```python
-from libs.core.services import get_config, get_tmux_manager
+from libs.core.services import get_config, get_agent_manager
 
 config = get_config()           # YesmanConfig 인스턴스
-tmux_manager = get_tmux_manager()  # TmuxManager 인스턴스
+agent_manager = get_agent_manager()  # AgentManager 인스턴스 (Claude CLI)
 ```
 
 ### Configuration Management
@@ -228,7 +222,7 @@ Pydantic 스키마 기반의 타입 안전한 설정 관리를 제공합니다.
 ```python
 # 타입 안전한 설정 접근
 log_level = config.schema.logging.level
-tmux_shell = config.schema.tmux.default_shell
+claude_binary = config.schema.claude.headless.claude_binary_path
 ```
 
 ### Error Handling
@@ -238,10 +232,10 @@ tmux_shell = config.schema.tmux.default_shell
 ```python
 from libs.core.error_handling import SessionError
 
-raise SessionError(
-    "세션을 찾을 수 없습니다",
-    session_name="myproject",
-    recovery_hint="'yesman show'로 세션 목록을 확인하세요"
+raise AgentError(
+    "Agent를 찾을 수 없습니다",
+    agent_id="agent_123",
+    recovery_hint="GET /api/agents/로 Agent 목록을 확인하세요"
 )
 ```
 
@@ -253,33 +247,34 @@ raise SessionError(
 - Sets up logging based on config
 - Provides config access methods
 
-**TmuxManager** (`libs/tmux_manager.py`):
+**AgentManager** (`libs/core/agent_manager.py`):
 
-- Creates tmux sessions from YAML configs using tmuxp
-- Lists available templates and running sessions
-- Handles project loading and session lifecycle
+- Claude CLI Headless 모드를 통한 Agent 생성/관리
+- 격리된 워크스페이스에서 안전한 Task 실행
+- 실시간 JSON 스트리밍으로 진행 상황 모니터링
 
-**ClaudeManager** (`libs/core/claude_manager.py`):
+**HeadlessAdapter** (`libs/core/headless_adapter.py`):
 
-- Monitors Claude Code sessions for interactive prompts
-- Auto-responds to trust prompts and selection menus
-- Detects idle states and input states in Claude Code
-- Provides real-time feedback with progress indicators
-- **NEW**: AI-powered adaptive response system with machine learning capabilities
+- Claude CLI SDK 통합 및 명령어 실행
+- 보안 샌드박스 내에서 안전한 코드 실행
+- JSON 기반 스트리밍으로 실시간 Task 모니터링
+- 자동 리소스 정리 및 에러 복구
+- 워크스페이스 격리 및 권한 관리
 
 **Tauri Desktop Dashboard** (`tauri-dashboard/`):
 
-- Native desktop application built with Tauri + SvelteKit for monitoring sessions
-- Shows project status, session state, and claude manager activity
-- Real-time updates with auto-refresh capability
-- Interactive controller management and session monitoring
-- High-performance native UI with system integration
+- SvelteKit + Tauri 기반 네이티브 데스크톱 애플리케이션
+- Agent 상태 및 Task 실행 실시간 모니터링
+- WebSocket을 통한 실시간 업데이트
+- Agent 생성/삭제/Task 실행 인터페이스
+- 시스템 트레이 통합 및 네이티브 알림
 
 **FastAPI Server** (`api/main.py`):
 
-- REST API endpoints for session and controller management
-- Provides backend services for external integrations
-- Includes routers for sessions and controllers
+- Agent 라이프사이클 관리 REST API (8개 주요 엔드포인트)
+- Claude CLI Headless 모드 통합 백엔드
+- WebSocket/SSE를 통한 실시간 통신
+- CORS, 미들웨어, 에러 처리 완전 구현
 
 **AI Learning System** (`libs/ai/`):
 
@@ -347,16 +342,17 @@ def example(name):
     command.run(name=name)
 ```
 
-### 2. yesman.py에 명령어 등록
+### 2. API 라우터에 엔드포인트 등록
 
 ```python
-# yesman.py
-from commands.example import example
+# api/main.py
+from api.routers import agents
 
-@cli.command()
-def example_cmd():
-    """예시 명령어"""
-    example()
+app.include_router(
+    agents.router, 
+    prefix="/api/agents", 
+    tags=["agents"]
+)
 ```
 
 ### 3. 명령어 믹스인 사용
@@ -366,17 +362,18 @@ def example_cmd():
 ```python
 from libs.core.base_command import BaseCommand, SessionCommandMixin
 
-class SessionExampleCommand(BaseCommand, SessionCommandMixin):
-    """세션 관련 예시 명령어"""
+@router.get("/agents/{agent_id}")
+async def get_agent_status(agent_id: str):
+    """Agent 상태 조회"""
     
-    def execute(self, session_name: str, **kwargs) -> dict:
-        # 세션 관련 기능 사용
-        session = self.get_session(session_name)
-        if not session:
-            raise SessionError(f"세션 '{session_name}'을 찾을 수 없습니다")
-        
-        # 세션 작업 수행
-        return {"success": True}
+    agent = agent_manager.get_agent(agent_id)
+    if not agent:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Agent '{agent_id}'를 찾을 수 없습니다"
+        )
+    
+    return {"agent_id": agent_id, "status": agent.status}
 ```
 
 ## 🌐 API 엔드포인트 추가
@@ -486,10 +483,10 @@ raise ConfigurationError(
 )
 
 # 세션 관련 에러
-raise SessionError(
-    "세션이 이미 존재합니다",
-    session_name="myproject",
-    recovery_hint="다른 이름을 사용하거나 기존 세션을 종료하세요"
+raise AgentError(
+    "Agent가 이미 실행 중입니다",
+    agent_id="agent_123",
+    recovery_hint="기존 Agent를 종료하거나 다른 워크스페이스를 사용하세요"
 )
 
 # 검증 에러
@@ -527,7 +524,7 @@ make full
 
 ```
 feat(commands): add example command
-fix(api): resolve session creation error
+fix(api): resolve agent creation error
 docs(adr): add configuration management decision
 test(integration): add API endpoint tests
 refactor(core): improve error handling
@@ -550,7 +547,7 @@ export YESMAN_LOGGING_LEVEL=DEBUG
 
 # 특정 모듈만 로깅
 import logging
-logging.getLogger("yesman.tmux_manager").setLevel(logging.DEBUG)
+logging.getLogger("yesman.agent_manager").setLevel(logging.DEBUG)
 ```
 
 ### 에러 추적
@@ -569,7 +566,7 @@ except YesmanError as e:
 
 When working on this codebase:
 
-1. **Adding New Commands**: Create new command files in `commands/` directory and register them in `yesman.py:17-22`
+1. **Adding New API Endpoints**: Create new router files in `api/routers/` directory and register them in `api/main.py`
 1. **Claude Manager Modifications**:
    - Core logic in `libs/core/claude_manager.py` (DashboardController class)
    - Pattern detection in `libs/core/prompt_detector.py` (ClaudePromptDetector class)

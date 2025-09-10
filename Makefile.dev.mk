@@ -7,50 +7,127 @@
 
 # Colors are exported from main Makefile
 
+# PID file management
+PID_DIR := tmp
+API_PID_FILE := $(PID_DIR)/api.pid
+WEB_PID_FILE := $(PID_DIR)/web.pid
+TAURI_PID_FILE := $(PID_DIR)/tauri.pid
+
 # ==============================================================================
 # Quick Start Commands
 # ==============================================================================
 
-.PHONY: start stop restart dev-status logs debug-api
+.PHONY: dev dev-api dev-web dev-tauri stop stop-api stop-web stop-tauri status logs debug-api
 
-# Core application control - most frequently used commands
-start: ## Start API server in background
+# Core development commands - most frequently used commands
+dev-api: ## Start API server in background
 	@echo -e "$(CYAN)Starting API Server...$(RESET)"
-	@if pgrep -f "uvicorn.*api.main:app" > /dev/null; then \
-		echo -e "$(YELLOW)⚠️  API server already running$(RESET)"; \
+	@mkdir -p $(PID_DIR)
+	@if [ -f "$(API_PID_FILE)" ] && kill -0 `cat $(API_PID_FILE)` 2>/dev/null; then \
+		echo -e "$(YELLOW)⚠️  API server already running (PID: `cat $(API_PID_FILE)`)$(RESET)"; \
 	else \
+		rm -f $(API_PID_FILE); \
 		nohup uv run python -m uvicorn api.main:app --reload --host 0.0.0.0 --port 10501 > api.log 2>&1 & \
-		echo -e "$(GREEN)✅ API server started in background (see api.log)$(RESET)"; \
+		echo $$! > $(API_PID_FILE); \
+		echo -e "$(GREEN)✅ API server started in background (PID: `cat $(API_PID_FILE)`)$(RESET)"; \
 		echo -e "$(BLUE)🌐 API available at: http://localhost:10501$(RESET)"; \
 	fi
 
-stop: ## Stop all running servers and processes
-	@echo -e "$(YELLOW)Stopping all servers...$(RESET)"
-	@pkill -f "uvicorn.*api.main:app" || echo -e "$(BLUE)No API server running$(RESET)"
-	@pkill -f "vite.*tauri-dashboard" || echo -e "$(BLUE)No Vite server running$(RESET)"
-	@pkill -f "tauri dev" || echo -e "$(BLUE)No Tauri dev server running$(RESET)"
+dev-web: ## Start web dashboard (Vite dev server)
+	@echo -e "$(CYAN)Starting Web Dashboard...$(RESET)"
+	@mkdir -p $(PID_DIR)
+	@if [ -f "$(WEB_PID_FILE)" ] && kill -0 `cat $(WEB_PID_FILE)` 2>/dev/null; then \
+		echo -e "$(YELLOW)⚠️  Web server already running (PID: `cat $(WEB_PID_FILE)`)$(RESET)"; \
+	elif [ -d "tauri-dashboard" ]; then \
+		rm -f $(WEB_PID_FILE); \
+		cd tauri-dashboard && nohup npm run dev > ../web.log 2>&1 & \
+		echo $$! > ../$(WEB_PID_FILE); \
+		echo -e "$(GREEN)✅ Web server started in background (PID: `cat $(WEB_PID_FILE)`)$(RESET)"; \
+		echo -e "$(BLUE)🌐 Web available at: http://localhost:5173$(RESET)"; \
+	else \
+		echo -e "$(RED)❌ tauri-dashboard directory not found$(RESET)"; \
+		echo -e "$(YELLOW)Run 'make install-dashboard-deps' first$(RESET)"; \
+	fi
+
+dev-tauri: ## Start Tauri desktop app
+	@echo -e "$(CYAN)Starting Tauri Desktop App...$(RESET)"
+	@mkdir -p $(PID_DIR)
+	@if [ -f "$(TAURI_PID_FILE)" ] && kill -0 `cat $(TAURI_PID_FILE)` 2>/dev/null; then \
+		echo -e "$(YELLOW)⚠️  Tauri app already running (PID: `cat $(TAURI_PID_FILE)`)$(RESET)"; \
+	elif [ -d "tauri-dashboard" ]; then \
+		rm -f $(TAURI_PID_FILE); \
+		cd tauri-dashboard && nohup npm run tauri dev > ../tauri.log 2>&1 & \
+		echo $$! > ../$(TAURI_PID_FILE); \
+		echo -e "$(GREEN)✅ Tauri app started in background (PID: `cat $(TAURI_PID_FILE)`)$(RESET)"; \
+		echo -e "$(BLUE)🖥️  Desktop app should be visible on your screen$(RESET)"; \
+	else \
+		echo -e "$(RED)❌ tauri-dashboard directory not found$(RESET)"; \
+		echo -e "$(YELLOW)Run 'make install-dashboard-deps' first$(RESET)"; \
+	fi
+
+dev: dev-api dev-web ## Start API and Web servers together
+	@echo -e "$(GREEN)✅ Development environment started!$(RESET)"
+
+stop: stop-api stop-web stop-tauri ## Stop all running servers and processes
 	@echo -e "$(GREEN)✅ All servers stopped$(RESET)"
 
-restart: stop start ## Restart all servers
+stop-api: ## Stop API server only
+	@echo -e "$(YELLOW)Stopping API server...$(RESET)"
+	@if [ -f "$(API_PID_FILE)" ]; then \
+		if kill -0 `cat $(API_PID_FILE)` 2>/dev/null; then \
+			kill `cat $(API_PID_FILE)` && echo -e "$(GREEN)✅ API server stopped (PID: `cat $(API_PID_FILE)`)$(RESET)"; \
+		else \
+			echo -e "$(BLUE)API server not running (stale PID file)$(RESET)"; \
+		fi; \
+		rm -f $(API_PID_FILE); \
+	else \
+		pkill -f "uvicorn.*api.main:app" || echo -e "$(BLUE)No API server running$(RESET)"; \
+	fi
 
-dev-status: ## Check status of development services (API, Vite, Tauri)
+stop-web: ## Stop web server only
+	@echo -e "$(YELLOW)Stopping web server...$(RESET)"
+	@if [ -f "$(WEB_PID_FILE)" ]; then \
+		if kill -0 `cat $(WEB_PID_FILE)` 2>/dev/null; then \
+			kill `cat $(WEB_PID_FILE)` && echo -e "$(GREEN)✅ Web server stopped (PID: `cat $(WEB_PID_FILE)`)$(RESET)"; \
+		else \
+			echo -e "$(BLUE)Web server not running (stale PID file)$(RESET)"; \
+		fi; \
+		rm -f $(WEB_PID_FILE); \
+	else \
+		pkill -f "vite.*tauri-dashboard" || echo -e "$(BLUE)No web server running$(RESET)"; \
+	fi
+
+stop-tauri: ## Stop Tauri app only
+	@echo -e "$(YELLOW)Stopping Tauri app...$(RESET)"
+	@if [ -f "$(TAURI_PID_FILE)" ]; then \
+		if kill -0 `cat $(TAURI_PID_FILE)` 2>/dev/null; then \
+			kill `cat $(TAURI_PID_FILE)` && echo -e "$(GREEN)✅ Tauri app stopped (PID: `cat $(TAURI_PID_FILE)`)$(RESET)"; \
+		else \
+			echo -e "$(BLUE)Tauri app not running (stale PID file)$(RESET)"; \
+		fi; \
+		rm -f $(TAURI_PID_FILE); \
+	else \
+		pkill -f "tauri dev" || echo -e "$(BLUE)No Tauri app running$(RESET)"; \
+	fi
+
+status: ## Check status of development services (API, Web, Tauri)
 	@echo -e "$(CYAN)Development Service Status:$(RESET)"
 	@echo ""
 	@echo -n -e "  API Server:         "; \
-	if pgrep -f "uvicorn.*api.main:app" > /dev/null; then \
-		echo -e "$(GREEN)✅ Running$(RESET) (port 10501)"; \
+	if [ -f "$(API_PID_FILE)" ] && kill -0 `cat $(API_PID_FILE)` 2>/dev/null; then \
+		echo -e "$(GREEN)✅ Running$(RESET) (PID: `cat $(API_PID_FILE)`, port 10501)"; \
 	else \
 		echo -e "$(RED)❌ Not running$(RESET)"; \
 	fi
-	@echo -n -e "  Vite Dev Server:    "; \
-	if netstat -tlnp 2>/dev/null | grep -q ":5173.*LISTEN" || ss -tlnp 2>/dev/null | grep -q ":5173.*LISTEN"; then \
-		echo -e "$(GREEN)✅ Running$(RESET) (port 5173)"; \
+	@echo -n -e "  Web Server:         "; \
+	if [ -f "$(WEB_PID_FILE)" ] && kill -0 `cat $(WEB_PID_FILE)` 2>/dev/null; then \
+		echo -e "$(GREEN)✅ Running$(RESET) (PID: `cat $(WEB_PID_FILE)`, port 5173)"; \
 	else \
 		echo -e "$(RED)❌ Not running$(RESET)"; \
 	fi
-	@echo -n -e "  Tauri Dev:          "; \
-	if ps aux | grep -E "(tauri|tauri dev)" | grep -v grep > /dev/null 2>&1; then \
-		echo -e "$(GREEN)✅ Running$(RESET)"; \
+	@echo -n -e "  Tauri App:          "; \
+	if [ -f "$(TAURI_PID_FILE)" ] && kill -0 `cat $(TAURI_PID_FILE)` 2>/dev/null; then \
+		echo -e "$(GREEN)✅ Running$(RESET) (PID: `cat $(TAURI_PID_FILE)`)"; \
 	else \
 		echo -e "$(RED)❌ Not running$(RESET)"; \
 	fi
@@ -63,87 +140,6 @@ debug-api: ## Debug API server in foreground with detailed logs
 	@echo -e "$(CYAN)Starting API Server in Debug Mode...$(RESET)"
 	@echo -e "$(YELLOW)Press Ctrl+C to stop$(RESET)"
 	uv run python -m uvicorn api.main:app --reload --host 0.0.0.0 --port 10501 --log-level debug
-
-# ==============================================================================
-# Dashboard Management
-# ==============================================================================
-
-.PHONY: dashboard dashboard-web dashboard-desktop dashboard-full dashboard-open
-
-# Smart dashboard launcher with auto-detection
-dashboard: ## Start dashboard (auto-detect best interface)
-	@echo -e "$(CYAN)Checking Dashboard Status...$(RESET)"
-	@if ps aux | grep -E "(tauri|tauri dev)" | grep -v grep > /dev/null 2>&1; then \
-		echo -e "$(GREEN)✅ Tauri dashboard is already running!$(RESET)"; \
-		echo -e "$(BLUE)🖥️  Desktop app should be visible on your screen$(RESET)"; \
-	elif netstat -tlnp 2>/dev/null | grep -q ":5173.*LISTEN" || ss -tlnp 2>/dev/null | grep -q ":5173.*LISTEN"; then \
-		echo -e "$(GREEN)✅ Vite dev server is running$(RESET)"; \
-		echo -e "$(BLUE)🌐 Web dashboard available at: http://localhost:5173$(RESET)"; \
-	else \
-		echo -e "$(CYAN)Starting Web Dashboard...$(RESET)"; \
-		make dashboard-web; \
-	fi
-
-dashboard-web: ## Start web dashboard (Vite dev server)
-	@echo -e "$(CYAN)Starting Web Dashboard (Vite dev server)...$(RESET)"
-	@if netstat -tlnp 2>/dev/null | grep -q ":5173.*LISTEN" || ss -tlnp 2>/dev/null | grep -q ":5173.*LISTEN"; then \
-		echo -e "$(GREEN)✅ Web dashboard is already running!$(RESET)"; \
-		echo -e "$(BLUE)🌐 Available at: http://localhost:5173$(RESET)"; \
-	elif [ -d "tauri-dashboard" ]; then \
-		cd tauri-dashboard && npm run dev; \
-	else \
-		echo -e "$(RED)❌ tauri-dashboard directory not found$(RESET)"; \
-		echo -e "$(YELLOW)Run 'make install-dashboard-deps' first$(RESET)"; \
-	fi
-
-dashboard-desktop: ## Start Tauri desktop app
-	@echo -e "$(CYAN)Starting Tauri Desktop App...$(RESET)"
-	@if ps aux | grep -E "(tauri|tauri dev)" | grep -v grep > /dev/null 2>&1; then \
-		echo -e "$(GREEN)✅ Tauri desktop app is already running!$(RESET)"; \
-		echo -e "$(BLUE)🖥️  Desktop app should be visible on your screen$(RESET)"; \
-	elif [ -d "tauri-dashboard" ]; then \
-		cd tauri-dashboard && npm run tauri dev; \
-	else \
-		echo -e "$(RED)❌ tauri-dashboard directory not found$(RESET)"; \
-		echo -e "$(YELLOW)Run 'make install-dashboard-deps' first$(RESET)"; \
-	fi
-
-dashboard-full: start dashboard-web ## Full development environment (API + Web dashboard)
-	@echo -e "$(GREEN)✅ Full development environment started!$(RESET)"
-
-dashboard-open: ## Open web dashboard in browser (if running)
-	@if pgrep -f "vite.*tauri-dashboard" > /dev/null; then \
-		echo -e "$(CYAN)Opening web dashboard in browser...$(RESET)"; \
-		python -c "import webbrowser; webbrowser.open('http://localhost:5173')"; \
-	else \
-		echo -e "$(RED)❌ Web dashboard is not running$(RESET)"; \
-		echo -e "$(YELLOW)Run 'make dashboard-web' first$(RESET)"; \
-	fi
-
-# ==============================================================================
-# Development Workflow
-# ==============================================================================
-
-.PHONY: dev dev-fast dev-full dev-verify dev-ci
-
-# Development workflow commands with clear hierarchy
-dev: lint-check test ## Standard development workflow (lint + test)
-	@echo -e "$(GREEN)✅ Standard development workflow completed!$(RESET)"
-
-dev-fast: lint-fast test-unit ## Fast development cycle (quick lint + unit tests only)
-	@echo -e "$(GREEN)✅ Fast development cycle completed!$(RESET)"
-
-dev-full: lint test-coverage ## Full quality check (comprehensive lint + test with coverage)
-	@echo -e "$(GREEN)✅ Full quality check completed!$(RESET)"
-
-dev-verify: lint test cover-report ## Complete verification before PR submission
-	@echo -e "$(GREEN)✅ Complete verification completed - ready for PR!$(RESET)"
-
-dev-ci: clean-all lint-strict test-all cover-check ## Run full CI pipeline locally
-	@echo -e "$(GREEN)✅ Local CI pipeline completed!$(RESET)"
-
-# Legacy alias support (will be deprecated)
-quick: dev-fast ## [DEPRECATED] Use 'dev-fast' instead
 
 # ==============================================================================
 # Development Tools
@@ -160,11 +156,7 @@ console: ## Start IPython console with project loaded
 	@command -v ipython >/dev/null 2>&1 || pip install ipython
 	@uv run ipython
 
-format: ## Format and organize code (imports + formatting)
-	@echo -e "$(CYAN)Formatting code and organizing imports...$(RESET)"
-	@command -v isort >/dev/null 2>&1 || pip install isort
-	@isort . --profile black
-	@echo -e "$(GREEN)✅ Code formatted and imports organized$(RESET)"
+# format command moved to Makefile.quality.mk to avoid duplication
 
 profile: ## Profile the application performance
 	@echo -e "$(CYAN)Starting profiler...$(RESET)"
@@ -191,30 +183,20 @@ dev-info: ## Show complete development environment information
 	@echo -e "║                         $(YELLOW)Development Information$(CYAN)                         ║"
 	@echo "╚══════════════════════════════════════════════════════════════════════════════╝"
 	@echo -e "$(RESET)"
-	@echo -e "$(GREEN)🚀 Quick Start Commands:$(RESET)"
-	@echo -e "  • $(CYAN)start$(RESET)               Start API server"
-	@echo -e "  • $(CYAN)stop$(RESET)                Stop all services"
-	@echo -e "  • $(CYAN)restart$(RESET)             Restart services"
-	@echo -e "  • $(CYAN)dev-status$(RESET)          Check development service status"
-	@echo ""
-	@echo -e "$(GREEN)🖥️  Dashboard Commands:$(RESET)"
-	@echo -e "  • $(CYAN)dashboard$(RESET)           Smart dashboard launcher (auto-detect)"
-	@echo -e "  • $(CYAN)dashboard-web$(RESET)       Web dashboard (Vite dev server)"
-	@echo -e "  • $(CYAN)dashboard-desktop$(RESET)   Desktop dashboard (Tauri app)"
-	@echo -e "  • $(CYAN)dashboard-full$(RESET)      Full development environment (API + Web)"
-	@echo -e "  • $(CYAN)dashboard-open$(RESET)      Open web dashboard in browser"
-	@echo ""
-	@echo -e "$(GREEN)🛠️  Development Workflow:$(RESET)"
-	@echo -e "  • $(CYAN)dev$(RESET)                 Standard development workflow (lint + test)"
-	@echo -e "  • $(CYAN)dev-fast$(RESET)            Quick check (fast lint + unit tests)"
-	@echo -e "  • $(CYAN)dev-full$(RESET)            Full quality check (comprehensive)"
-	@echo -e "  • $(CYAN)dev-verify$(RESET)          Complete verification before PR"
-	@echo -e "  • $(CYAN)dev-ci$(RESET)              Run full CI pipeline locally"
+	@echo -e "$(GREEN)🚀 Development Commands:$(RESET)"
+	@echo -e "  • $(CYAN)dev$(RESET)                 Start API + Web servers"
+	@echo -e "  • $(CYAN)dev-api$(RESET)             Start API server only"
+	@echo -e "  • $(CYAN)dev-web$(RESET)             Start web server only"
+	@echo -e "  • $(CYAN)dev-tauri$(RESET)           Start Tauri desktop app"
+	@echo -e "  • $(CYAN)stop$(RESET)                Stop all servers"
+	@echo -e "  • $(CYAN)stop-api$(RESET)            Stop API server only"
+	@echo -e "  • $(CYAN)stop-web$(RESET)            Stop web server only"
+	@echo -e "  • $(CYAN)stop-tauri$(RESET)          Stop Tauri app only"
+	@echo -e "  • $(CYAN)status$(RESET)              Check server status"
 	@echo ""
 	@echo -e "$(GREEN)🔧 Development Tools:$(RESET)"
 	@echo -e "  • $(CYAN)shell$(RESET)               Python shell with project context"
 	@echo -e "  • $(CYAN)console$(RESET)             IPython console"
-	@echo -e "  • $(CYAN)format$(RESET)              Format code and organize imports"
 	@echo -e "  • $(CYAN)debug-api$(RESET)           Debug API server with detailed logs"
 	@echo -e "  • $(CYAN)logs$(RESET)                Show recent log files"
 	@echo ""
@@ -226,7 +208,7 @@ dev-info: ## Show complete development environment information
 	@echo ""
 	@echo -e "$(GREEN)🌐 Server Ports:$(RESET)"
 	@echo -e "  API Server:     $(YELLOW)10501$(RESET)"
-	@echo -e "  Dev Server:     $(YELLOW)5173$(RESET)"
+	@echo -e "  Web Server:     $(YELLOW)5173$(RESET)"
 
 env-status: ## Show current development environment status  
 	@echo -e "$(CYAN)Development Environment Status$(RESET)"
