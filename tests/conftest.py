@@ -5,13 +5,13 @@ from pathlib import Path
 import pytest
 import yaml
 
-# Dashboard imports
-from libs.dashboard import (
-    DashboardLauncher,
-    KeyboardNavigationManager,
-    PerformanceOptimizer,
-    ThemeManager,
-)
+# Dashboard imports - disabled due to TUI removal
+# from libs.dashboard import (
+#     DashboardLauncher,
+#     KeyboardNavigationManager,
+#     PerformanceOptimizer,
+#     ThemeManager,
+# )
 
 # Fixture imports
 from tests.fixtures.mock_data import (
@@ -130,37 +130,37 @@ def temp_project_root() -> object:
         yield project_root
 
 
-@pytest.fixture
-def launcher(temp_project_root: Path) -> object:
-    """Create DashboardLauncher with temp project root."""
-    return DashboardLauncher(project_root=temp_project_root)
+# @pytest.fixture
+# def launcher(temp_project_root: Path) -> object:
+#     """Create DashboardLauncher with temp project root."""
+#     return DashboardLauncher(project_root=temp_project_root)
 
 
-@pytest.fixture
-def theme_manager() -> object:
-    """Create ThemeManager instance."""
-    with tempfile.TemporaryDirectory() as temp_dir:
-        yield ThemeManager(config_dir=Path(temp_dir))
+# @pytest.fixture
+# def theme_manager() -> object:
+#     """Create ThemeManager instance."""
+#     with tempfile.TemporaryDirectory() as temp_dir:
+#         yield ThemeManager(config_dir=Path(temp_dir))
 
 
-@pytest.fixture
-def keyboard_manager() -> object:
-    """Create KeyboardNavigationManager instance."""
-    manager = KeyboardNavigationManager()
-    yield manager
-    # Cleanup
-    manager.actions.clear()
-    manager.bindings.clear()
+# @pytest.fixture
+# def keyboard_manager() -> object:
+#     """Create KeyboardNavigationManager instance."""
+#     manager = KeyboardNavigationManager()
+#     yield manager
+#     # Cleanup
+#     manager.actions.clear()
+#     manager.bindings.clear()
 
 
-@pytest.fixture
-def performance_optimizer() -> object:
-    """Create PerformanceOptimizer instance."""
-    optimizer = PerformanceOptimizer()
-    yield optimizer
-    # Cleanup
-    if optimizer.monitoring:
-        optimizer.stop_monitoring()
+# @pytest.fixture
+# def performance_optimizer() -> object:
+#     """Create PerformanceOptimizer instance."""
+#     optimizer = PerformanceOptimizer()
+#     yield optimizer
+#     # Cleanup
+#     if optimizer.monitoring:
+#         optimizer.stop_monitoring()
 
 
 # Enhanced pytest configuration with performance monitoring

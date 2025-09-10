@@ -12,7 +12,7 @@ import pytest
 from libs.core.content_collector import ClaudeContentCollector as ContentCollector
 from libs.core.prompt_detector import ClaudePromptDetector
 from libs.core.session_manager import SessionManager
-from libs.dashboard.renderers.optimizations import RenderCache
+# from libs.dashboard.renderers.optimizations import RenderCache  # Disabled - TUI removed
 from libs.tmux_manager import TmuxManager
 from libs.yesman_config import YesmanConfig
 
