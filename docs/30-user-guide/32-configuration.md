@@ -723,14 +723,16 @@ unset YESMAN_DEBUG
 Validate your configuration:
 
 ```bash
-# Validate all configuration
-./yesman.py config --validate
+# API를 통한 설정 검증
+curl http://localhost:10501/api/config/validate
 
-# Check specific configuration file
-./yesman.py config --validate ~/.scripton/yesman/yesman.yaml
+# 특정 설정 파일 검증
+curl -X POST http://localhost:10501/api/config/validate \
+  -H 'Content-Type: application/json' \
+  -d '{"config_path": "~/.scripton/yesman/yesman.yaml"}'
 
-# Export current effective configuration
-./yesman.py config --export > current_config.yaml
+# 현재 설정 내보내기
+curl http://localhost:10501/api/config/export > current_config.yaml
 ```
 
 ### Reset Configuration
@@ -738,13 +740,15 @@ Validate your configuration:
 Reset to defaults:
 
 ```bash
-# Reset to default configuration
-./yesman.py config --reset
+# 기본 설정으로 리셋
+curl -X POST http://localhost:10501/api/config/reset
 
-# Reset specific component
-./yesman.py config --reset dashboard
+# 특정 컴포넌트 리셋
+curl -X POST http://localhost:10501/api/config/reset \
+  -H 'Content-Type: application/json' \
+  -d '{"section": "dashboard"}'
 
-# Backup current config before reset
+# 리셋 전 설정 백업
 cp ~/.scripton/yesman/yesman.yaml ~/.scripton/yesman/yesman.yaml.backup
 ```
 
@@ -753,15 +757,17 @@ cp ~/.scripton/yesman/yesman.yaml ~/.scripton/yesman/yesman.yaml.backup
 Debug configuration loading issues:
 
 ```bash
-# Enable debug logging for config
+# 설정 디버그 로깅 활성화
 export YESMAN_DEBUG=1
-./yesman.py --help
 
-# Check configuration merge
-./yesman.py config --show-merge
+# API 도움말 및 엔드포인트 목록
+curl http://localhost:10501/docs
 
-# Trace configuration loading
-./yesman.py config --trace-loading
+# 설정 병합 상태 확인
+curl http://localhost:10501/api/config/merged
+
+# 설정 로딩 추적
+curl http://localhost:10501/api/config/trace
 ```
 
 ______________________________________________________________________

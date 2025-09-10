@@ -1,6 +1,6 @@
 # Multi-AI Provider Integration Guide
 
-Yesman-Agent에서 다양한 AI 제공업체를 통합 관리하는 가이드입니다.
+Yesman-Claude에서 다양한 AI 제공업체를 통합 관리하는 가이드입니다.
 
 ## 🎯 개요
 
@@ -21,7 +21,10 @@ Multi-AI Provider 시스템을 통해 다음 AI 서비스들을 통합 관리할
 cp config/multi-ai-providers.example.yaml ~/.scripton/yesman/multi-ai-providers.yaml
 
 # API 서버 시작
-./yesman.py dashboard run --interface web
+make start
+
+# 웹 대시보드 실행
+make dashboard-web
 ```
 
 ### 2. 웹 대시보드에서 설정
@@ -305,7 +308,7 @@ security:
 
 문제 발생 시:
 
-1. **로그 확인**: `./yesman.py logs --service ai-providers`
-2. **상태 점검**: `./yesman.py status --detailed`
+1. **로그 확인**: `curl http://localhost:10501/api/logs?service=ai-providers`
+2. **상태 점검**: `curl http://localhost:10501/api/status?detailed=true`
 3. **헬스 체크**: `curl http://localhost:10501/api/ai-providers/health-check`
 4. **이슈 리포트**: [GitHub Issues](https://github.com/your-repo/yesman-agent/issues)

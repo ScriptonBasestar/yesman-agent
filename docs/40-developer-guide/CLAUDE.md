@@ -21,59 +21,34 @@ pip install -e . --config-settings editable_mode=compat
 ./yesman.py --help
 ```
 
-### Running Commands
+### API 및 대시보드 사용
 
 ```bash
-# List available templates and projects
-./yesman.py ls
-# or with uv:
-./yesman.py ls
+# API 서버 시작 (uv 사용)
+make start                              # API 서버 백그라운드 시작
+make debug-api                          # API 서버 디버그 모드
 
-# Show running tmux sessions  
-./yesman.py show
+# 대시보드 실행
+make dashboard                          # 스마트 대시보드 신창어
+make dashboard-web                      # 웹 대시보드 (http://localhost:5173)
+make dashboard-desktop                  # Tauri 데스크톱 앱
 
-# Create all tmux sessions from session files
-./yesman.py setup
+# Agent 관리 (API 호출)
+curl -X POST http://localhost:10501/api/agents/ \
+  -H 'Content-Type: application/json' \
+  -d '{"workspace_path": "/tmp/test", "model": "claude-3-5-sonnet-20241022"}'
 
-# Create specific session
-./yesman.py setup session-name
+# Agent 상태 확인
+curl http://localhost:10501/api/agents/health
+curl http://localhost:10501/api/agents/
 
-# Teardown all sessions
-./yesman.py teardown
+# 시스템 상태 확인
+curl http://localhost:10501/healthz
+make status                             # Make를 통한 상태 확인
 
-# Teardown specific session
-./yesman.py teardown session-name
-
-# Enter (attach to) a tmux session
-./yesman.py enter [session_name]
-./yesman.py enter  # Interactive selection
-
-# Run Tauri desktop dashboard to monitor all sessions
-./yesman.py dashboard --dev  # Development mode
-./yesman.py dashboard        # Production mode
-
-# NEW: Interactive session browser with activity monitoring
-./yesman.py browse           # Interactive session browser
-./yesman.py browse -i 1.0    # Custom update interval
-
-# NEW: Comprehensive project status dashboard
-./yesman.py status           # Quick status overview
-./yesman.py status -i        # Interactive live dashboard
-./yesman.py status -d        # Detailed view
-
-# NEW: AI learning system management
-./yesman.py ai status        # Show AI learning status
-./yesman.py ai config -t 0.8 # Adjust confidence threshold
-./yesman.py ai history       # Show response history
-./yesman.py ai export        # Export learning data
-
-# NEW: Log management and analysis
-./yesman.py logs configure   # Configure async logging
-./yesman.py logs analyze     # Analyze log patterns
-./yesman.py logs tail -f     # Follow logs in real-time
-./yesman.py logs cleanup     # Clean up old logs
-
-# Command removed - automate functionality has been deprecated
+# 서비스 관리
+make stop                               # 모든 서비스 중단
+make restart                            # 서비스 재시작
 ```
 
 ### Testing and Development Commands
@@ -123,10 +98,10 @@ See [Code Quality Guide](/docs/development/code-quality-guide.md) for detailed i
 
 ## Architecture
 
-### Directory Structure
+### Directory Structure (API-First)
 
-- `yesman.py` - Main CLI entry point using Click
-- `commands/` - CLI command implementations (ls, show, setup, teardown, dashboard, enter, browse, status, ai, logs)
+- `api/` - FastAPI REST API 서버 (주요 백엔드)
+- `tauri-dashboard/` - SvelteKit + Tauri 대시보드 (주요 프론트엔드)
 - `libs/core/` - Core functionality (SessionManager, ClaudeManager, models, caching)
 - `libs/ai/` - AI learning and adaptive response system
 - `libs/automation/` - [Deprecated] Previously contained automation features
@@ -317,7 +292,7 @@ Automation**: Workflow chains triggered by project events
 
 When working on this codebase:
 
-1. **Adding New Commands**: Create new command files in `commands/` directory and register them in `yesman.py:17-22`
+1. **Adding New API Endpoints**: Create new router files in `api/routers/` directory and register them in `api/main.py`
 1. **Claude Manager Modifications**:
    - Core logic in `libs/core/claude_manager.py` (DashboardController class)
    - Pattern detection in `libs/core/prompt_detector.py` (ClaudePromptDetector class)
