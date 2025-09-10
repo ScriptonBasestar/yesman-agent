@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>Yesman Claude Dashboard</title>
     <meta charset="utf-8">
@@ -78,9 +78,9 @@
         <div class="status">
             <h3>📊 Dashboard Status</h3>
             <p><strong>Interface:</strong> Web Dashboard</p>
-            <p><strong>Host:</strong> {host}:{port}</p>
-            <p><strong>Theme:</strong> {theme or "default"}</p>
-            <p><strong>Mode:</strong> {"Development" if dev else "Production"}</p>
+            <p><strong>Host:</strong> {{ host }}:{{ port }}</p>
+            <p><strong>Theme:</strong> {{ theme or "default" }}</p>
+            <p><strong>Mode:</strong> {{ "Development" if dev else "Production" }}</p>
         </div>
     </div>
 

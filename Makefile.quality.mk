@@ -21,13 +21,13 @@ VULTURE_WHITELIST ?=
 # Code Formatting Targets
 # ==============================================================================
 
-.PHONY: fmt format format-all format-check format-diff format-imports
+.PHONY: format format-all format-check format-diff format-imports
 .PHONY: format-docstrings format-ci
 .PHONY: lint lint-check lint-fix lint-strict lint-fast lint-help
 .PHONY: hooks-install hooks-uninstall hooks-status pre-commit-install
 .PHONY: pre-commit-run pre-commit-update validate-hooks
 
-fmt: ## format Python and Markdown files
+format: ## format Python and Markdown files
 	@echo -e "$(CYAN)Formatting code...$(RESET)"
 	@echo "1. Running ruff format..."
 	@uv run ruff format $(PYTHON_DIRS) $(EXCLUDE_DIRS)
@@ -36,8 +36,6 @@ fmt: ## format Python and Markdown files
 	@echo "3. Running mdformat..."
 	@uv run mdformat *.md docs/**/*.md --wrap 120
 	@echo -e "$(GREEN)✅ Code formatting complete!$(RESET)"
-
-format: fmt ## alias for fmt
 
 format-all: ## run all formatters including advanced ones
 	@echo -e "$(CYAN)Running comprehensive code formatting...$(RESET)"
@@ -55,12 +53,12 @@ format-check: ## check code formatting without fixing
 	@echo -e "$(CYAN)Checking code formatting...$(RESET)"
 	@if ! uv run ruff format --check $(PYTHON_DIRS) $(EXCLUDE_DIRS) 2>/dev/null; then \
 		echo -e "$(RED)❌ Formatting issues found$(RESET)"; \
-		echo -e "$(YELLOW)Run 'make fmt' to fix.$(RESET)"; \
+		echo -e "$(YELLOW)Run 'make format' to fix.$(RESET)"; \
 		exit 1; \
 	fi
 	@if ! uv run ruff check --select I $(PYTHON_DIRS) $(EXCLUDE_DIRS) 2>/dev/null; then \
 		echo -e "$(RED)❌ Import sorting issues found$(RESET)"; \
-		echo -e "$(YELLOW)Run 'make fmt' to fix.$(RESET)"; \
+		echo -e "$(YELLOW)Run 'make format' to fix.$(RESET)"; \
 		exit 1; \
 	fi
 	@echo -e "$(GREEN)✅ All files are properly formatted$(RESET)"
@@ -532,7 +530,7 @@ lint-help: ## show comprehensive lint system help
 quality: format-check lint-check type-check security-scan ## run standard quality checks
 	@echo -e "$(GREEN)✅ Standard quality checks completed$(RESET)"
 
-quality-fix: fmt lint-fix ## apply automatic quality fixes
+quality-fix: format lint-fix ## apply automatic quality fixes
 	@echo -e "$(GREEN)✅ Quality fixes applied$(RESET)"
 
 quality-strict: format-check lint-strict mypy security-all analyze ## run strict quality checks

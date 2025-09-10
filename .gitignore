@@ -562,3 +562,5 @@ performance_data/
 requirements.txt
 
 .idea/
+
+api.log

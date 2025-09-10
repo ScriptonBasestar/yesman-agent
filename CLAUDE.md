@@ -14,52 +14,54 @@ auto-discovery, and extensive session management capabilities using YAML configu
 
 ```bash
 # Development installation (recommended approach)
-make dev-install
-# or directly:
-pip install -e . --config-settings editable_mode=compat
+make install             # Install in development mode with basic deps
+make install-dev         # Install with development dependencies
+make install-all         # Install with all dependencies (dev + test)
 
 # Using uv (fastest, preferred for development)
-uv run ./yesman.py --help
+uv run python -m pytest   # Run tests with uv
+export UV_SYSTEM_PYTHON=true  # Use system Python with uv
 
-# Install all development dependencies
-make install-all
+# All commands should use uv instead of direct python execution
+
+# Frontend dependencies
+make install-dashboard-deps    # Install Tauri dashboard dependencies
+cd tauri-dashboard && npm install  # Or install directly
 ```
 
 ### Core Commands
 
+**Note**: The CLI interface is managed through Make commands and the API server. Direct Python module execution may not be available for all commands.
+
 ```bash
-# Session management
-./yesman.py ls                    # List templates and projects
-./yesman.py setup [session-name]  # Create tmux sessions
-./yesman.py teardown [session-name] # Remove sessions
-./yesman.py show                  # List running sessions
-./yesman.py enter [session-name]  # Attach to session
-./yesman.py validate             # Validate configurations
+# Primary interface through Make commands
+make start                              # Start API server
+make stop                               # Stop all services
+make status                             # Check service status
+make dashboard                          # Launch dashboard interface
+
+# Session management (via API or dashboard)
+# Note: Direct CLI commands may not be implemented - use dashboard interface
 
 # Dashboard interfaces
-./yesman.py dashboard run                    # Auto-detect best interface
 make dashboard                              # Smart dashboard launcher
 make dashboard-web                          # SvelteKit web interface
 make dashboard-desktop                      # Native desktop app
 make dashboard-full                         # Full development environment
 
-# AI learning system
-./yesman.py ai status           # Show AI learning status
-./yesman.py ai config -t 0.8    # Set confidence threshold
-./yesman.py ai history          # View response history
-./yesman.py ai export           # Export learning data
-./yesman.py ai cleanup          # Clean old data
+# AI learning system (via dashboard interface)
+# Access dashboard for AI configuration and monitoring
+# Web interface provides full AI management capabilities
 
 # AI provider management (via dashboard)
 # Access /ai-providers page for:
-# - Auto-discovery of installed AI tools (Claude Code, Ollama, etc.)
+# - Auto-discovery of installed AI tools (Claude Code, Ollama, etc.)  
 # - Provider registration and configuration
 # - System-level detection via Tauri commands
 
 # Status and monitoring
-./yesman.py status              # Quick status overview
-./yesman.py status -i           # Interactive live dashboard
-./yesman.py status -d           # Detailed view
+make dev-status                         # Check development service status
+# Use dashboard for comprehensive monitoring and status
 ```
 
 ### Development Workflow
@@ -71,19 +73,25 @@ make build-dashboard            # Build SvelteKit components only
 cd tauri-dashboard && npm run build  # Build frontend assets
 
 # Development servers
-make dashboard-full             # Full development environment
-make dashboard-web              # Web dashboard only
+make start                      # Start API server in background
+make stop                       # Stop all running servers
+make restart                    # Restart all servers
+make dashboard-full             # Full development environment (API + Web)
+make dashboard-web              # Web dashboard only (Vite dev server)
 make dashboard-desktop          # Tauri development mode
-make start                      # API server only
+make dev-status                 # Check development service status
 
 # API development
-cd api && python -m uvicorn main:app --reload --host 0.0.0.0 --port 10501
+make debug-api                  # Start API server with debug logs in foreground
+cd api && uv run python -m uvicorn main:app --reload --host 0.0.0.0 --port 10501
 
 # Quality checks
-make dev-fast                   # Fast check (lint + unit tests)
-make dev-full                   # Complete quality check
-make format                     # Code formatting
-make test                       # Run all tests
+make quick                      # Quick check (fast lint + unit tests) - alias for dev-fast
+make dev-fast                   # Fast development cycle
+make dev-full                   # Full quality check (comprehensive lint + test with coverage)
+make full                       # Full quality check - alias for lint + test-coverage
+make format                     # Code formatting and import organization
+make test                       # Run all tests with coverage
 make test-unit                  # Unit tests only
 make test-integration           # Integration tests only
 ```
@@ -97,13 +105,22 @@ pytest tests/unit/                      # Unit tests only
 pytest tests/integration/               # Integration tests only
 pytest tests/test_specific_file.py      # Single test file
 pytest -k "test_session"                # Tests matching pattern
-pytest --cov=libs --cov=commands        # With coverage
+pytest --cov=libs --cov=api             # With coverage (note: covers libs and api, not commands)
 
-# Test categories (via markers)
+# Test categories (via markers from pyproject.toml)
 pytest -m "unit"                        # Unit tests
-pytest -m "integration"                 # Integration tests
+pytest -m "integration"                 # Integration tests  
 pytest -m "slow"                        # Long-running tests
-pytest -m "security"                    # Security tests
+pytest -m "security"                    # Security validation tests
+pytest -m "performance"                 # Performance monitoring tests
+pytest -m "property"                    # Property-based tests using Hypothesis
+pytest -m "benchmark"                   # Performance benchmark tests
+pytest -m "smoke"                       # Basic functionality validation
+
+# Additional test options (configured in pyproject.toml)
+pytest --timeout=120                    # Tests timeout after 120 seconds
+pytest -n=auto                         # Run tests in parallel
+pytest --maxfail=5                      # Stop after 5 failures
 ```
 
 ## Library Documentation with Context7
@@ -118,7 +135,7 @@ Use Context7 to get up-to-date documentation for project dependencies:
 - Pydantic: `/pydantic/pydantic` - topics: `validators`, `settings`, `models`
 - Click: `/pallets/click` - topics: `commands`, `groups`, `options`
 
-# UI Libraries (Rich/Textual no longer used - TUI interface removed)
+**Note**: TUI libraries (Rich/Textual) were removed - the project now uses Web and Tauri interfaces only.
 
 **Session Management:**
 
@@ -147,6 +164,13 @@ Use Context7 to get up-to-date documentation for project dependencies:
 - TailwindCSS: `/tailwindlabs/tailwindcss` - topics: `utilities`, `components`, `responsive`
 - DaisyUI: `/saadeghi/daisyui` - topics: `themes`, `components`, `modifiers`
 
+**Package Management:**
+
+- The project uses **pnpm** as the package manager for frontend dependencies (see `packageManager` in package.json)
+- Python dependencies managed through `pyproject.toml` with `uv` as the preferred tool
+- Development dependencies are organized in `[dependency-groups]` sections
+- **Project package name**: `yesman-claude` (not `yesman-agent`) as defined in pyproject.toml
+
 ### Context7 Usage Examples
 
 When working with specific libraries, use Context7 like this:
@@ -173,12 +197,13 @@ When working with specific libraries, use Context7 like this:
 
 ### Core Design Patterns
 
-**Command Pattern**: All CLI commands inherit from `BaseCommand` (`libs/core/base_command.py`) providing:
+**API-First Architecture**: The project uses a web API and dashboard-centric approach:
 
+- FastAPI backend server as the primary interface
+- Web and desktop dashboards for user interaction
+- Service-based architecture with dependency injection
 - Consistent error handling with recovery hints
-- Dependency injection integration
-- Standardized logging and configuration access
-- Type-safe service resolution
+- Type-safe service resolution through container pattern
 
 **Dependency Injection**: Central DI container (`libs/core/container.py`) manages:
 
@@ -235,16 +260,15 @@ When working with specific libraries, use Context7 like this:
 
 ```
 libs/core/              # Core architecture components
-├── base_command.py        # Command pattern implementation
 ├── container.py           # Dependency injection system
-├── config_*.py           # Configuration management
+├── config_*.py           # Configuration management (schema, loader, cache, validator)
 ├── error_handling.py     # Centralized error handling
 ├── services.py           # Service registration and factories
-└── interfaces.py         # Type definitions and contracts
-
-commands/               # CLI command implementations
-├── [command].py          # Each inherits from BaseCommand
-└── __init__.py          # Command registration
+├── interfaces.py         # Type definitions and contracts
+├── models.py             # Data models and types
+├── claude_manager.py     # Claude Code automation controller
+├── session_manager.py    # Session lifecycle management
+└── mixins.py             # Shared functionality mixins
 
 api/                   # FastAPI web service
 ├── main.py              # FastAPI app with CORS and middleware
@@ -253,9 +277,15 @@ api/                   # FastAPI web service
 └── background_tasks.py  # Async task management
 
 tauri-dashboard/       # SvelteKit frontend (shared by web/tauri)
-├── src/routes/          # SvelteKit pages
+├── src/routes/          # SvelteKit pages and layouts
 ├── src/lib/            # Reusable components
-└── src-tauri/          # Rust backend for desktop app
+├── src-tauri/          # Rust backend for desktop app
+└── package.json        # Frontend dependencies and scripts
+
+tests/                 # Test suites
+├── unit/              # Unit tests for individual components
+├── integration/       # Integration tests
+└── conftest.py        # Pytest configuration and fixtures
 ```
 
 ### Service Registration Pattern
