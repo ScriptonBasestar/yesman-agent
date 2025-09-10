@@ -681,8 +681,9 @@
             }}
             rows="8"
             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 font-mono text-xs"
-            placeholder={`{"api_key": "your-key", "base_url": "https://api.example.com"}`} <!-- pragma: allowlist secret -->
+            placeholder={`{"api_key": "your-key", "base_url": "https://api.example.com"}`}
           ></textarea>
+          <!-- pragma: allowlist secret -->
           <div class="text-xs text-gray-500 mt-1">
             Example configs vary by provider. Check documentation for required fields.
           </div>
