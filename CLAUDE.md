@@ -4,9 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Yesman-Claude is a comprehensive CLI automation tool that manages tmux sessions and automates interactions with Claude
-Code. It features multiple dashboard interfaces (Web, Tauri), AI-powered learning system, AI provider management with
-auto-discovery, and extensive session management capabilities using YAML configuration templates.
+Yesman-Claude is a comprehensive workspace automation platform that manages tmux sessions and automates interactions with Claude Code. It features:
+
+- **FastAPI Backend Server** (port 10501) - RESTful API and WebSocket support
+- **Multi-Interface Dashboard** - SvelteKit web interface (port 5173) and Tauri desktop app
+- **AI-Powered Learning System** - Adaptive response system with pattern recognition
+- **AI Provider Management** - Auto-discovery and integration with AI tools (Claude Code, Ollama, etc.)
+- **Session Management** - YAML-based configuration templates with Jinja2 support
+- **Event-Driven Architecture** - Async event bus for real-time monitoring and automation
 
 ## Development Commands
 
@@ -26,7 +31,7 @@ export UV_SYSTEM_PYTHON=true  # Use system Python with uv
 
 # Frontend dependencies
 make install-dashboard-deps    # Install Tauri dashboard dependencies
-cd tauri-dashboard && npm install  # Or install directly
+cd tauri-dashboard && pnpm install  # Or install directly (project uses pnpm)
 ```
 
 ### Core Commands
@@ -34,20 +39,25 @@ cd tauri-dashboard && npm install  # Or install directly
 **Note**: The CLI interface is managed through Make commands and the API server. Direct Python module execution may not be available for all commands.
 
 ```bash
-# Primary interface through Make commands
-make start                              # Start API server
+# Development servers (primary interface)
+make dev-api                            # Start API server (port 10501)
+make dev-web                            # Start SvelteKit web interface (port 5173)
+make dev-tauri                          # Start Tauri desktop app
+make dev                                # Start API + Web servers together
+
+# Stop services
 make stop                               # Stop all services
-make status                             # Check service status
-make dashboard                          # Launch dashboard interface
+make stop-api                           # Stop API server only
+make stop-web                           # Stop web server only
+make stop-tauri                         # Stop Tauri app only
+
+# Status and monitoring
+make status                             # Check development service status
+make logs                               # Show recent log files
+make debug-api                          # Debug API server in foreground
 
 # Session management (via API or dashboard)
 # Note: Direct CLI commands may not be implemented - use dashboard interface
-
-# Dashboard interfaces
-make dashboard                              # Smart dashboard launcher
-make dashboard-web                          # SvelteKit web interface
-make dashboard-desktop                      # Native desktop app
-make dashboard-full                         # Full development environment
 
 # AI learning system (via dashboard interface)
 # Access dashboard for AI configuration and monitoring
@@ -55,13 +65,9 @@ make dashboard-full                         # Full development environment
 
 # AI provider management (via dashboard)
 # Access /ai-providers page for:
-# - Auto-discovery of installed AI tools (Claude Code, Ollama, etc.)  
+# - Auto-discovery of installed AI tools (Claude Code, Ollama, etc.)
 # - Provider registration and configuration
 # - System-level detection via Tauri commands
-
-# Status and monitoring
-make dev-status                         # Check development service status
-# Use dashboard for comprehensive monitoring and status
 ```
 
 ### Development Workflow
@@ -70,30 +76,30 @@ make dev-status                         # Check development service status
 # Build and development
 make build-all                  # Build complete project
 make build-dashboard            # Build SvelteKit components only
-cd tauri-dashboard && npm run build  # Build frontend assets
+make build-tauri                # Build Tauri desktop app
+cd tauri-dashboard && pnpm run build  # Build frontend assets (using pnpm)
 
 # Development servers
-make start                      # Start API server in background
+make dev                        # Start API + Web servers (API: 10501, Web: 5173)
+make dev-api                    # Start API server only
+make dev-web                    # Start web dashboard only (Vite dev server)
+make dev-tauri                  # Start Tauri desktop app
 make stop                       # Stop all running servers
-make restart                    # Restart all servers
-make dashboard-full             # Full development environment (API + Web)
-make dashboard-web              # Web dashboard only (Vite dev server)
-make dashboard-desktop          # Tauri development mode
-make dev-status                 # Check development service status
+make status                     # Check development service status
 
 # API development
 make debug-api                  # Start API server with debug logs in foreground
-cd api && uv run python -m uvicorn main:app --reload --host 0.0.0.0 --port 10501
+cd api && uv run python -m uvicorn api.main:app --reload --host 0.0.0.0 --port 10501
 
 # Quality checks
-make quick                      # Quick check (fast lint + unit tests) - alias for dev-fast
-make dev-fast                   # Fast development cycle
-make dev-full                   # Full quality check (comprehensive lint + test with coverage)
-make full                       # Full quality check - alias for lint + test-coverage
+make quick                      # Quick check (lint-fast + test-unit) - alias for dev-fast
+make full                       # Full quality check (lint + test-coverage)
 make format                     # Code formatting and import organization
+make lint                       # Run comprehensive code linting
 make test                       # Run all tests with coverage
 make test-unit                  # Unit tests only
 make test-integration           # Integration tests only
+make test-e2e                   # End-to-end tests
 ```
 
 ### Testing
@@ -109,13 +115,20 @@ pytest --cov=libs --cov=api             # With coverage (note: covers libs and a
 
 # Test categories (via markers from pyproject.toml)
 pytest -m "unit"                        # Unit tests
-pytest -m "integration"                 # Integration tests  
-pytest -m "slow"                        # Long-running tests
+pytest -m "integration"                 # Integration tests
+pytest -m "slow"                        # Long-running tests (>5 seconds)
 pytest -m "security"                    # Security validation tests
 pytest -m "performance"                 # Performance monitoring tests
 pytest -m "property"                    # Property-based tests using Hypothesis
-pytest -m "benchmark"                   # Performance benchmark tests
+pytest -m "contract"                    # API contract tests for interface validation
+pytest -m "chaos"                       # Chaos engineering tests for system resilience
+pytest -m "benchmark"                   # Performance benchmark tests with detailed metrics
+pytest -m "regression"                  # Performance regression detection tests
+pytest -m "resilience"                  # System resilience and fault tolerance tests
+pytest -m "load"                        # Load testing and scalability tests
 pytest -m "smoke"                       # Basic functionality validation
+pytest -m "requires_network"            # Tests that require network access
+pytest -m "asyncio"                     # Tests that use asyncio
 
 # Additional test options (configured in pyproject.toml)
 pytest --timeout=120                    # Tests timeout after 120 seconds
@@ -133,19 +146,28 @@ Use Context7 to get up-to-date documentation for project dependencies:
 
 - FastAPI: `/tiangolo/fastapi` - topics: `middleware`, `dependency-injection`, `websocket`
 - Pydantic: `/pydantic/pydantic` - topics: `validators`, `settings`, `models`
-- Click: `/pallets/click` - topics: `commands`, `groups`, `options`
+- Uvicorn: ASGI server for FastAPI (port 10501)
+- Starlette: ASGI framework and toolkit
 
-**Note**: TUI libraries (Rich/Textual) were removed - the project now uses Web and Tauri interfaces only.
+**Note**: The project uses Make commands for CLI interface, not Click. TUI libraries (Rich/Textual) were removed - the project now uses Web and Tauri interfaces only.
 
 **Session Management:**
 
 - tmuxp: `/tmux-python/tmuxp` - topics: `session`, `config`, `builder`
 - libtmux: `/tmux-python/libtmux` - topics: `server`, `session`, `window`
 
+**AI and LLM Integration:**
+
+- LangChain: `/langchain-ai/langchain` - topics: `chains`, `agents`, `prompts`
+
 **Testing:**
 
 - pytest: `/pytest-dev/pytest` - topics: `fixtures`, `markers`, `plugins`
+- pytest-asyncio: Async testing support
+- pytest-xdist: Parallel test execution
 - Hypothesis: `/HypothesisWorks/hypothesis` - topics: `strategies`, `stateful`, `properties`
+- Factory Boy: Test data factories for complex object creation
+- Faker: Realistic fake data generation
 
 ### JavaScript/Frontend Libraries
 
@@ -166,10 +188,11 @@ Use Context7 to get up-to-date documentation for project dependencies:
 
 **Package Management:**
 
-- The project uses **pnpm** as the package manager for frontend dependencies (see `packageManager` in package.json)
+- The project uses **pnpm@10.12.1** as the package manager for frontend dependencies (see `packageManager` in package.json)
 - Python dependencies managed through `pyproject.toml` with `uv` as the preferred tool
-- Development dependencies are organized in `[dependency-groups]` sections
+- Development dependencies are organized in `[dependency-groups]` sections (dev, test)
 - **Project package name**: `yesman-claude` (not `yesman-agent`) as defined in pyproject.toml
+- **Environment variable**: `UV_SYSTEM_PYTHON=true` (exported in Makefile)
 
 ### Context7 Usage Examples
 
@@ -231,8 +254,13 @@ When working with specific libraries, use Context7 like this:
 **Claude Code Automation**:
 
 - `libs/core/claude_manager.py` - Main automation controller
+- `libs/core/claude_monitor.py` - Synchronous Claude monitoring
+- `libs/core/claude_monitor_async.py` - Asynchronous Claude monitoring
+- `libs/core/claude_session_manager.py` - Claude session management
+- `libs/core/claude_status_manager.py` - Status tracking and reporting
 - `libs/core/prompt_detector.py` - Pattern-based prompt recognition
 - `libs/core/content_collector.py` - Real-time content capture
+- `libs/core/async_event_bus.py` - Event-driven architecture
 - AI learning system with confidence scoring and pattern adaptation
 
 **Multi-Interface Dashboard**:
@@ -250,11 +278,12 @@ When working with specific libraries, use Context7 like this:
 
 ### Data Flow Architecture
 
-1. **Command Execution**: CLI commands → BaseCommand → Service resolution → Business logic
+1. **Command Execution**: Make commands → Service resolution → Business logic → API/Dashboard
 1. **Configuration Loading**: YAML files → Pydantic validation → Config cache → Service injection
 1. **Session Creation**: Template selection → Variable substitution → tmux session creation → Claude automation setup
 1. **Real-time Monitoring**: Content collection → Pattern detection → AI decision → Automated response
-1. **Dashboard Updates**: Service events → FastAPI/WebSocket → Frontend updates
+1. **Dashboard Updates**: Service events → Async Event Bus → FastAPI/WebSocket → Frontend updates (SSE/WebSocket)
+1. **Async Operations**: Background tasks → Event bus → Monitoring → Status updates
 
 ### File Structure Logic
 
@@ -266,26 +295,48 @@ libs/core/              # Core architecture components
 ├── services.py           # Service registration and factories
 ├── interfaces.py         # Type definitions and contracts
 ├── models.py             # Data models and types
+├── types.py              # Type definitions
+├── settings.py           # Application settings
 ├── claude_manager.py     # Claude Code automation controller
+├── claude_monitor.py     # Claude monitoring (sync)
+├── claude_monitor_async.py  # Claude monitoring (async)
+├── claude_session_manager.py  # Claude session management
+├── claude_status_manager.py   # Claude status tracking
 ├── session_manager.py    # Session lifecycle management
+├── session_setup.py      # Session setup utilities
+├── content_collector.py  # Real-time content capture
+├── prompt_detector.py    # Pattern-based prompt recognition
+├── progress_tracker.py   # Progress tracking utilities
+├── async_event_bus.py    # Async event system
+├── base_batch_processor.py  # Batch processing base
 └── mixins.py             # Shared functionality mixins
+
+libs/ai/                # AI and machine learning components
+├── adaptive_response.py  # Adaptive response system
+├── response_analyzer.py  # Response analysis
+├── provider_interface.py # AI provider interface
+└── providers/           # AI provider implementations
 
 api/                   # FastAPI web service
 ├── main.py              # FastAPI app with CORS and middleware
 ├── routers/             # API endpoint groupings
 ├── middleware/          # Custom middleware
-└── background_tasks.py  # Async task management
+├── background_tasks.py  # Async task management
+└── utils/              # API utilities
 
 tauri-dashboard/       # SvelteKit frontend (shared by web/tauri)
 ├── src/routes/          # SvelteKit pages and layouts
 ├── src/lib/            # Reusable components
 ├── src-tauri/          # Rust backend for desktop app
-└── package.json        # Frontend dependencies and scripts
+└── package.json        # Frontend dependencies (pnpm@10.12.1)
 
 tests/                 # Test suites
 ├── unit/              # Unit tests for individual components
 ├── integration/       # Integration tests
-└── conftest.py        # Pytest configuration and fixtures
+├── e2e/               # End-to-end tests
+├── security/          # Security tests
+├── conftest.py        # Pytest configuration and fixtures
+└── README.md          # Testing documentation
 ```
 
 ### Service Registration Pattern
