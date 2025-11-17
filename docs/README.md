@@ -1,168 +1,59 @@
-# 📚 Yesman-Agent 문서
+# 📚 Yesman Agent 문서 안내
 
-Yesman-Agent의 공식 문서 디렉토리입니다. 모든 문서는 체계적으로 구조화되어 있으며 숫자 prefix를 통해 우선순위와 읽기 순서를 나타냅니다.
-
-## 📋 문서 구조
-
-### 00-overview - 프로젝트 개요
-
-- **01-project-overview.md** - 프로젝트 소개, 목표, 핵심 기능
-
-### 10-architecture - 시스템 아키텍처
-
-- **12-tech-stack.md** - 기술 스택 및 의존성 상세 정보
-
-### 20-api - API 문서
-
-- **21-endpoints.md** - REST API 및 WebSocket 완전 가이드
-
-### 30-user-guide - 사용자 가이드
-
-- **31-getting-started.md** - 설치 및 시작 가이드
-- **32-configuration.md** - 설정 시스템 가이드
-- **33-templates.md** - 템플릿 시스템 사용법
-- **34-feature-overview.md** - 주요 기능 개요
-
-### 40-developer-guide - 개발자 가이드
-
-- **41-development-setup.md** - 개발 환경 설정 및 기여 가이드
-- **42-testing-guide.md** - 테스트 전략 및 실행 방법
-- **CLAUDE.md** - Claude Code 전용 개발 가이드
-
-### 50-operations - 운영 가이드
-
-- **51-monitoring-setup.md** - 모니터링, 로깅, 성능 관리
-
-### 60-project-management - 프로젝트 관리
-
-- **61-roadmap.md** - 프로젝트 로드맵 및 개발 계획
-
-### 70-examples - 예제 및 템플릿
-
-- **71-configuration-examples.md** - 다양한 설정 예제 모음
-
-## 🎯 빠른 네비게이션
-
-### 새로운 사용자
-
-1. [프로젝트 개요](00-overview/01-project-overview.md) - 프로젝트 이해
-1. [시작하기](30-user-guide/31-getting-started.md) - 설치 및 첫 실행
-1. [설정 가이드](30-user-guide/32-configuration.md) - 기본 설정
-1. [설정 예제](70-examples/71-configuration-examples.md) - 실제 사용 예제
-
-### 개발자
-
-1. [개발 환경 설정](40-developer-guide/41-development-setup.md) - 개발 환경 구축
-1. [기술 스택](10-architecture/12-tech-stack.md) - 아키텍처 이해
-1. [API 문서](20-api/21-endpoints.md) - API 개발
-1. [테스트 가이드](40-developer-guide/42-testing-guide.md) - 테스트 실행
-
-### 운영자
-
-1. [모니터링 설정](50-operations/51-monitoring-setup.md) - 운영 환경 설정
-1. [프로젝트 로드맵](60-project-management/61-roadmap.md) - 개발 계획 확인
-
-### Claude Code 사용자
-
-1. [Claude 전용 가이드](40-developer-guide/CLAUDE.md) - Claude Code 최적화 정보
-
-## 📖 문서 사용 가이드
-
-### 네이밍 규칙
-
-문서는 다음 패턴을 따릅니다:
-
-- **숫자 prefix**: 중요도/우선순위 (00-09 개요, 10-19 아키텍처, 20-29 API, ...)
-- **kebab-case**: 파일명은 하이픈으로 구분
-- **명확한 제목**: 내용을 정확히 표현
-
-### 상호 참조
-
-문서 간 링크는 상대 경로를 사용합니다:
-
-```markdown
-[API 문서](../20-api/21-endpoints.md)
-[설정 가이드](../30-user-guide/32-configuration.md)
-```
-
-### 업데이트 정책
-
-모든 문서는 다음 정보를 포함합니다:
-
-- **마지막 업데이트**: 문서 수정 날짜
-- **버전**: 해당하는 경우 버전 정보
-- **호환성**: 지원 플랫폼 또는 의존성
-
-## 🔧 문서 기여
-
-### 수정 가이드라인
-
-1. **정확성**: 코드베이스와 일치하는 정보만 포함
-1. **명확성**: 기술적 내용을 이해하기 쉽게 설명
-1. **완성도**: 예제와 실제 사용법 포함
-1. **일관성**: 기존 문서의 스타일과 구조 유지
-
-### 새 문서 추가
-
-1. 적절한 카테고리 디렉토리 선택
-1. 숫자 prefix 할당 (기존 문서와 중복 방지)
-1. 명확한 파일명 사용
-1. 이 README.md에 새 문서 링크 추가
-
-### 문서 구조 템플릿
-
-새 문서는 다음 구조를 권장합니다:
-
-```markdown
-# 문서 제목
-
-문서에 대한 간단한 설명.
-
-## 📚 목차
-
-1. [섹션 1](#섹션-1)
-2. [섹션 2](#섹션-2)
-
-## 🎯 주요 내용
-
-### 섹션 1
-내용...
-
-### 섹션 2  
-내용...
-
-## 📝 예제
-
-실제 사용 예제...
-
-## 🔧 문제 해결
-
-일반적인 문제와 해결책...
+> `PRODUCT.md`와 `docs/product/` 디렉터리는 모든 제품·기능 설명의 **단일 출처(Single Source of Truth)** 입니다. 이 README는 나머지
+> 문서 세트를 어떻게 탐색하고, 어떤 정보를 어디에 추가해야 하는지에 집중합니다.
 
 ---
 
-**마지막 업데이트**: YYYY-MM-DD  
-**버전**: vX.X  
-**호환성**: 지원 플랫폼/의존성
-```
+## 🧭 Canonical Entry Points
+| 문서 | 용도 | 참고 |
+| --- | --- | --- |
+| [`PRODUCT.md`](../PRODUCT.md) | 방문자가 프로젝트 목적·핵심 구성·빠른 실행 절차를 한눈에 파악할 수 있는 랜딩 문서 | 요약 전용, 세부 내용은 아래 `docs/product/` 참고 |
+| `docs/product/01-11*.md` | 개요, 사용자, 기능, 아키텍처, 구성, 보안, 로드맵 등 제품 설명 전반 | 다른 문서에서 동일 주제를 다룰 때는 **이 파일로 링크** 후 보충 설명만 작성 |
 
-## 🚀 프로젝트 상태
+> ✅ **중복 금지 원칙**: 개요·구성·로드맵과 같이 `docs/product/`에 이미 있는 내용은 그대로 복사하지 말고, 필요한 경우 “추가 참고:
+> `../product/0X-*.md`” 형태로 링크하세요.
 
-- **현재 버전**: v2.1 (API 중심 아키텍처)
-- **아키텍처**: Claude Code Headless + FastAPI Backend + SvelteKit/Tauri Dashboard
-- **문서 커버리지**: 100% (모든 주요 기능 문서화 완료)
-- **마지막 대규모 정리**: 2025-01-10
-- **다음 업데이트 계획**: 2025-02-01
+---
 
-## 📞 도움이 필요한 경우
+## 🗂️ 디렉터리 지도
+| 디렉터리 | 주요 파일 | 주요 내용 | 주석 |
+| --- | --- | --- | --- |
+| `00-overview/` | `01-project-overview.md` | 기존 서술 → 제품 문서 링크 모음 | 별도 서술 금지, 링크만 유지 |
+| `10-architecture/` | `12-tech-stack.md`, `adr-process.md`, `adrs/` | 제품 아키텍처를 뒷받침하는 세부 기술 스택·ADR | 제품 개요와 겹치는 문장은 요약 후 세부 근거, 도표, 의사결정 기록만 유지 |
+| `20-api/` | `21-endpoints.md` | REST/SSE/WebSocket 명세, 예제 요청 | API는 이곳을 단일 출처로 유지 |
+| `30-user-guide/` | `31-34*.md` | 사용자 여정, 설정, 템플릿, 기능 맵 | 제품 문서를 보강하는 **실행 관점 가이드** |
+| `40-developer-guide/` | `41-development-setup.md`, `42-testing-guide.md`, `CLAUDE.md` | 기여자/개발자 환경 세팅, 품질, Claude 전용 가이드 | 사용자 가이드와 겹칠 경우 개발 관점 정보만 유지 |
+| `50-operations/` | `51-monitoring-setup.md` | 운영, 모니터링, 관측 가이드 | 제품 보안·운영 목표에 대한 세부 실행책 |
+| `50-integration/` | _coming soon_ | 외부 시스템 연동 예제 | 템플릿/예제 재사용, 중복 설명 금지 |
+| `60-project-management/` | `61-roadmap.md` | 상세 일정·마일스톤 | 제품 로드맵을 보완하는 데이터/지표 중심 |
+| `70-examples/` | `71-configuration-examples.md` | 설정·세션 샘플 모음 | 제품/설정 문서에서 링크만 두고 예제 본문은 여기 유지 |
 
-1. **일반적인 사용법**: [사용자 가이드](30-user-guide/) 참조
-1. **개발 관련**: [개발자 가이드](40-developer-guide/) 참조
-1. **API 사용**: [API 문서](20-api/) 참조
-1. **설정 문제**: [예제 문서](70-examples/) 참조
+---
 
-______________________________________________________________________
+## 👥 추천 탐색 경로
+| 페르소나 | 읽기 순서 | 초점 |
+| --- | --- | --- |
+| 신규 사용자 | `PRODUCT.md` → `docs/product/06-getting-started.md` → `docs/30-user-guide/31-getting-started.md` | 설치, 첫 자동화 흐름 |
+| 운영·플랫폼 | `PRODUCT.md` → `docs/product/07-10*.md` → `docs/30-user-guide/32-configuration.md` → `docs/50-operations/51-monitoring-setup.md` | 설정 계층, 모니터링, 보안 |
+| 기여자/개발자 | `PRODUCT.md` → `docs/product/04-architecture.md` → `docs/10-architecture/` → `docs/40-developer-guide/` | 컴포넌트, ADR, 품질/테스트 |
 
-**문서 관리**: Development Team\
-**최종 검토**: 2025-01-10\
-**구조 버전**: v2.1 (Headless + API)
+---
+
+## ✍️ 문서 기여 원칙
+1. **중복 최소화**: 제품 설명은 `docs/product/`에서, 실행/예제는 각 가이드에서 유지합니다.
+2. **상호 참조**: 동일 주제를 언급할 때는 상대 경로 링크로 원문을 가리키고, 현재 문서는 시나리오·워크플로·예제 위주로 보충합니다.
+3. **LLM 친화성**:
+   - 제목, 표, 목차를 활용해 구조를 명확히 합니다.
+   - 긴 코드 블록 대신 필요한 최소 예제와 `docs/70-examples/` 참조 링크를 제공합니다.
+4. **변경 이력**: 새 문서를 만들거나 파일을 크게 수정할 때는 상단에 “Last Updated” 메모 혹은 릴리스 노트를 추가하세요.
+
+---
+
+## 🧪 품질 체크리스트
+- [ ] 문서가 참조하는 설정/명령/경로가 실제 저장소와 일치하는가?
+- [ ] 제품 문서와 동일한 문장을 반복하지 않고 링크로 대체했는가?
+- [ ] 예제·샘플은 `docs/70-examples/` 또는 관련 디렉터리와 연결되어 있는가?
+- [ ] 독자가 다음 단계 문서를 쉽게 찾을 수 있도록 링크/표를 제공했는가?
+
+필요한 새로운 문서나 구조 변경 제안은 Issue 또는 Discussion으로 공유해주세요.
