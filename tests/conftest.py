@@ -5,13 +5,13 @@ from pathlib import Path
 import pytest
 import yaml
 
-# Dashboard imports
-from libs.dashboard import (
-    DashboardLauncher,
-    KeyboardNavigationManager,
-    PerformanceOptimizer,
-    ThemeManager,
-)
+# Dashboard imports - commented out as these classes are not yet implemented
+# from libs.dashboard import (
+#     DashboardLauncher,
+#     KeyboardNavigationManager,
+#     PerformanceOptimizer,
+#     ThemeManager,
+# )
 
 # Fixture imports
 from tests.fixtures.mock_data import (

@@ -1,7 +1,9 @@
 import asyncio
 import pathlib
 from datetime import UTC, datetime
-from typing import TypedDict, cast
+from typing import cast
+
+from typing_extensions import TypedDict
 
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError

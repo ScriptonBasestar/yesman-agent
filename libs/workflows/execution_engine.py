@@ -5,7 +5,7 @@ import logging
 from datetime import UTC, datetime
 from pathlib import Path
 
-from langChain.langchain_claude_integration import ClaudeAgent
+from libs.langchain_integration import ClaudeAgent
 from libs.core.error_handling import ErrorSeverity, YesmanError
 from libs.tmux_manager import TmuxManager
 from libs.yesman_config import YesmanConfig
