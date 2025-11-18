@@ -1,7 +1,7 @@
-"""DEPRECATED: Workflow template management with YAML configuration support.
+"""Workflow template management with YAML configuration support.
 
-This module is deprecated as templates have been removed from the new configuration system.
-Please use direct session configurations instead.
+This module manages workflow templates for LangChain-based automation workflows.
+Templates are loaded from user and project-specific directories.
 """
 
 import logging

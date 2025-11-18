@@ -3,8 +3,6 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from libs.core.settings import ContentLimits, ValidationPatterns
-
 # !/usr/bin/env python3
 # Copyright notice.
 # Copyright (c) 2024 Yesman Claude Project
@@ -14,6 +12,28 @@ from libs.core.settings import ContentLimits, ValidationPatterns
 This module provides common validation functions used throughout the project
 for validating session names, project names, paths, and other inputs.
 """
+
+
+class ContentLimits:
+    """Content size and line limits."""
+
+    MAX_PANE_LINES = 2000
+    MAX_LOG_LINES = 50
+    MAX_OUTPUT_CHARS = 30000
+    MAX_SESSION_NAME_LENGTH = 64
+    MAX_WINDOW_NAME_LENGTH = 32
+    MAX_COMMAND_LENGTH = 1024
+    MAX_WINDOWS_PER_SESSION = 10
+    MAX_PANES_PER_WINDOW = 4
+
+
+class ValidationPatterns:
+    """Common validation regex patterns."""
+
+    SESSION_NAME = r"^[a-zA-Z0-9_-]+$"
+    WINDOW_NAME = r"^[a-zA-Z0-9_\-\s]+$"
+    PORT_NUMBER = r"^[0-9]{1,5}$"
+    LOG_LEVEL = r"^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$"
 
 
 class ValidationError(Exception):

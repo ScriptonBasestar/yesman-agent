@@ -296,7 +296,6 @@ libs/core/              # Core architecture components
 ├── interfaces.py         # Type definitions and contracts
 ├── models.py             # Data models and types
 ├── types.py              # Type definitions
-├── settings.py           # Application settings
 ├── claude_manager.py     # Claude Code automation controller
 ├── claude_monitor.py     # Claude monitoring (sync)
 ├── claude_monitor_async.py  # Claude monitoring (async)
